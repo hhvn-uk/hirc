@@ -4,6 +4,7 @@
 #include "struct.h"
 #include "config.h"
 #define PARAM_MAX 64
+#define INPUT_MAX 8192
 
 /* main.c */
 void *		emalloc(size_t size);

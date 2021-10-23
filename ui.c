@@ -19,7 +19,7 @@ struct Channel *selected_channel = NULL;
 struct Server *selected_server = NULL;
 
 struct {
-	char string[8192];
+	char string[INPUT_MAX];
 	unsigned counter;
 } input;
 
