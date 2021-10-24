@@ -14,6 +14,7 @@ struct Handler handlers[] = {
 	{ "NOTICE",	handle_PRIVMSG	  	},
 	{ "005",	handle_ISUPPORT		},
 	{ "353",	handle_NAMREPLY		},
+	{ "366",	NULL /* end of names */	},
 	{ "433",	handle_NICKNAMEINUSE	},
 	{ NULL,		NULL 			},
 };
@@ -49,10 +50,15 @@ handle_JOIN(char *msg, char **params, struct Server *server, time_t timestamp) {
 
 	hist_add(server, server->history, nick, msg, params, Activity_status, timestamp, HIST_LOG);
 	hist_add(server, chan->history, nick, msg, params, Activity_status, timestamp, HIST_SHOW);
-	nick_free(nick);
 
-	selected_server = server;
-	selected_channel = chan;
+	if (nick_isself(nick)) {
+		selected_server = server;
+		selected_channel = chan;
+	} else if (selected_channel == chan) {
+		ui_draw_nicklist();
+	}
+
+	nick_free(nick);
 }
 
 void
@@ -72,8 +78,12 @@ handle_PART(char *msg, char **params, struct Server *server, time_t timestamp) {
 	if (nick_isself(nick)) {
 		chan_setold(chan, 1);
 		nick_free_list(&chan->nicks);
+		if (chan == selected_channel)
+			selected_channel = NULL;
 	} else {
 		nick_remove(&chan->nicks, nick->nick);
+		if (chan == selected_channel)
+			ui_draw_nicklist();
 	}
 
 	hist_add(server, server->history, nick, msg, params, Activity_status, timestamp, HIST_LOG);
@@ -100,6 +110,8 @@ handle_QUIT(char *msg, char **params, struct Server *server, time_t timestamp) {
 		if (nick_get(&chan->nicks, nick->nick) != NULL) {
 			nick_remove(&chan->nicks, nick->nick);
 			hist_add(server, chan->history, nick, msg, params, Activity_status, timestamp, HIST_SHOW);
+			if (chan == selected_channel)
+				ui_draw_nicklist();
 		}
 	}
 
@@ -181,6 +193,7 @@ handle_ISUPPORT(char *msg, char **params, struct Server *server, time_t timestam
 void
 handle_NAMREPLY(char *msg, char **params, struct Server *server, time_t timestamp) {
 	struct Channel *chan;
+	struct Nick *oldnick;
 	char *nick, priv, *target;
 	char **nicks, **nicksref;
 	char *supportedprivs;
@@ -198,7 +211,11 @@ handle_NAMREPLY(char *msg, char **params, struct Server *server, time_t timestam
 		chan = chan_add(server, &server->channels, target);
 	params++;
 
-	supportedprivs = struntil(support_get(server, "PREFIX"), ')') + 1;
+	supportedprivs = strchr(support_get(server, "PREFIX"), ')');
+	if (supportedprivs == NULL || supportedprivs[0] == '\0')
+		supportedprivs = "";
+	else
+		supportedprivs++;
 
 	nicksref = nicks = param_create(*params);
 	for (; *nicks && **nicks; nicks++) {
@@ -209,11 +226,14 @@ handle_NAMREPLY(char *msg, char **params, struct Server *server, time_t timestam
 			while (chrcmp(*nick, supportedprivs))
 				nick++;
 		}
-		if (nick_get(&chan->nicks, nick) != NULL)
-			nick_remove(&chan->nicks, nick);
-		nick_add(&chan->nicks, nick, priv, server);
+		if ((oldnick = nick_get(&chan->nicks, nick)) == NULL)
+			nick_add(&chan->nicks, nick, priv, server);
+		else
+			oldnick->priv = priv;
 	}
 
+	if (selected_channel == chan)
+		ui_draw_nicklist();
 	param_free(nicksref);
 }
 
@@ -255,6 +275,8 @@ handle_NICK(char *msg, char **params, struct Server *server, time_t timestamp) {
 		if ((chnick = nick_get(&chan->nicks, nick->nick)) != NULL) {
 			nick_add(&chan->nicks, newnick, chnick->priv, server);
 			nick_remove(&chan->nicks, nick->nick);
+			if (selected_channel == chan)
+				ui_draw_nicklist();
 		}
 	}
 }

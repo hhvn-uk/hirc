@@ -176,6 +176,8 @@ sighandler(int signal) {
 
 int
 main(int argc, char **argv) {
+	struct Channel *old_selected_channel;
+	struct Server *old_selected_server;
 	struct Server *sp;
 	FILE *file;
 	struct pollfd fds[] = {
@@ -226,13 +228,18 @@ main(int argc, char **argv) {
 			}
 		}
 
-		ui_read();
-		wrefresh(nicklist.window);
+		if (old_selected_channel != selected_channel || old_selected_server != selected_server) {
+			ui_draw_nicklist();
+			wrefresh(nicklist.window);
+		}
+
 		wrefresh(winlist.window);
 		wrefresh(mainwindow.window);
 
-		/* always refresh input last */
-		wrefresh(inputwindow.window);
+		ui_read();
+
+		old_selected_channel = selected_channel;
+		old_selected_server = selected_server;
 	}
 
 	return 0;

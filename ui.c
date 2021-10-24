@@ -98,7 +98,6 @@ ui_init(void) {
 
 	ui_redraw();
 
-	wprintw(nicklist.window, "nicklist");
 	wprintw(winlist.window, "winlist");
 }
 
@@ -116,37 +115,32 @@ ui_read(void) {
 	int key;
 
 	switch (key = wgetch(stdscr)) {
+	case ERR:
+		/* this happens due to nodelay */
+		return;
 	case KEY_RESIZE: 
 		ui_redraw(); 
-		break;
+		return;
 	case KEY_BACKSPACE:
 		if (input.counter) {
 			memmove(&input.string[input.counter - 1], 
 					&input.string[input.counter], 
 					strlen(&input.string[input.counter]) + 1);
 			input.counter--;
-			ui_draw_input();
 		}
 		break;
 	case KEY_LEFT:
-		if (input.counter) {
+		if (input.counter)
 			input.counter--;
-			ui_draw_input();
-		}
 		break;
 	case KEY_RIGHT:
-		if (input.string[input.counter]) {
+		if (input.string[input.counter])
 			input.counter++;
-			ui_draw_input();
-		}
 		break;
 	case '\n':
-			exit(0);
-		}
 		command_eval(input.string);
 		memset(input.string, '\0', sizeof(input.string));
 		input.counter = 0;
-		ui_draw_input();
 		break;
 	default:
 		if (isprint(key) || iscntrl(key)) {
@@ -154,9 +148,10 @@ ui_read(void) {
 					&input.string[input.counter],
 					strlen(&input.string[input.counter]));
 			input.string[input.counter++] = key;
-			ui_draw_input();
 		}
 	}
+
+	ui_draw_input();
 }
 
 void
@@ -212,6 +207,7 @@ ui_redraw(void) {
 
 	mvhline(LINES - 2, x, '-', COLS - x - rx);
 
+	ui_draw_nicklist();
 	ui_draw_input();
 }
 
@@ -235,4 +231,24 @@ ui_draw_input(void) {
 		} else waddnstr(inputwindow.window, p, 1);
 	}
 	wmove(inputwindow.window, 0, input.counter - offset);
+	wrefresh(inputwindow.window);
+}
+
+void
+ui_draw_nicklist(void) {
+	struct Nick *p;
+
+	wclear(nicklist.window);
+	if (!selected_channel || !nicklist.location)
+		return;
+
+	wmove(nicklist.window, 0, 0);
+
+	/* TODO: sort nicks here
+	 * TODO: more nicks than screen height? */
+	for (p = selected_channel->nicks; p; p = p->next) {
+		/* TODO: colourize nicks */
+		wprintw(nicklist.window, "%c%s\n", p->priv, p->nick);
+	}
+	wrefresh(nicklist.window);
 }

@@ -93,6 +93,7 @@ void		ui_init(void);
 void		ui_read(void);
 void		ui_redraw(void);
 void		ui_draw_input(void);
+void		ui_draw_nicklist(void);
 void		ui_error_(char *file, int line, char *format, ...);
 #define		ui_error(format, ...) ui_error_(__FILE__, __LINE__, format, __VA_ARGS__);
 void		ui_perror_(char *file, int line, char *str);

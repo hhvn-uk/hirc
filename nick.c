@@ -177,6 +177,7 @@ nick_remove(struct Nick **head, char *nick) {
 	if (p->next != NULL)
 		p->next->prev = p->prev;
 	nick_free(p);
+
 	return 1;
 }
 
