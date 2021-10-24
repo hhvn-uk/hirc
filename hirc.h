@@ -54,8 +54,6 @@ struct History *hist_add(struct Server *server, struct HistInfo *histinfo,
 struct History *hist_format(struct Server *server, struct HistInfo *history, 
 		enum Activity activity, enum HistOpt options, char *format, ...);
 int		hist_len(struct History **history);
-void		hist_print(struct HistInfo *histinfo, char *prefix); /* debug */
-void		hist_print_server(struct Server *server); /* debug */
 int		hist_log(char *msg, struct Nick *from, time_t timestamp, struct Server *server);
 
 /* serv.c */

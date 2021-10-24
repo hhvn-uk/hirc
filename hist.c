@@ -170,27 +170,3 @@ hist_len(struct History **history) {
 		i++;
 	return i;
 }
-
-void
-hist_print(struct HistInfo *histinfo, char *prefix) { /* debug */
-	struct History *p;
-
-	for (p = histinfo->history; p; p = p->next)
-		printf("%s: %s\n", prefix, p->raw);
-}
-
-void
-hist_print_server(struct Server *server) { /* debug */
-	struct Channel *channel;
-	char prefix[1024];
-
-	hist_print(server->history, server->name);
-	for (channel = server->channels; channel; channel = channel->next) {
-		snprintf(prefix, sizeof(prefix), "%s on %s", channel->name, server->name);
-		hist_print(channel->history, prefix);
-	}
-	for (channel = server->privs; channel; channel = channel->next) {
-		snprintf(prefix, sizeof(prefix), "query with %s on %s", channel->name, server->name);
-		hist_print(channel->history, prefix);
-	}
-}

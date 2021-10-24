@@ -30,34 +30,6 @@ handle_PING(char *msg, char **params, struct Server *server, time_t timestamp) {
 }
 
 void
-chan_printlist(struct Server *server) {
-	struct Channel *channel;
-	struct Nick *nick;
-
-	printf("---\n");
-	for (channel = server->channels; channel; channel = channel->next) {
-		if (chan_isold(channel))
-			printf("%s (old)", channel->name);
-		else
-			printf("%s: ", channel->name);
-		for (nick = channel->nicks; nick; nick = nick->next) {
-			if (nick_isself(nick))
-				printf("%c%s(me) ", nick->priv, nick->nick);
-			else
-				printf("%c%s ", nick->priv, nick->nick);
-		}
-		printf("\n");
-	}
-	for (channel = server->privs; channel; channel = channel->next) {
-		if (chan_isold(channel))
-			printf("%s (old\n)", channel->name);
-		else
-			printf("%s\n", channel->name);
-	}
-	printf("---\n");
-}
-
-void
 handle_JOIN(char *msg, char **params, struct Server *server, time_t timestamp) {
 	struct Channel *chan;
 	struct Nick *nick;
@@ -79,7 +51,8 @@ handle_JOIN(char *msg, char **params, struct Server *server, time_t timestamp) {
 	hist_add(server, chan->history, nick, msg, params, Activity_status, timestamp, HIST_SHOW);
 	nick_free(nick);
 
-	chan_printlist(server);
+	selected_server = server;
+	selected_channel = chan;
 }
 
 void
@@ -106,8 +79,6 @@ handle_PART(char *msg, char **params, struct Server *server, time_t timestamp) {
 	hist_add(server, server->history, nick, msg, params, Activity_status, timestamp, HIST_LOG);
 	hist_add(server, chan->history, nick, msg, params, Activity_status, timestamp, HIST_SHOW);
 	nick_free(nick);
-
-	chan_printlist(server);
 }
 
 void
@@ -133,8 +104,6 @@ handle_QUIT(char *msg, char **params, struct Server *server, time_t timestamp) {
 	}
 
 	nick_free(nick);
-
-	chan_printlist(server);
 }
 
 void
@@ -179,8 +148,6 @@ handle_PRIVMSG(char *msg, char **params, struct Server *server, time_t timestamp
 	}
 
 	nick_free(nick);
-	chan_printlist(server);
-	hist_print_server(server);
 }
 
 void
@@ -248,8 +215,6 @@ handle_NAMREPLY(char *msg, char **params, struct Server *server, time_t timestam
 	}
 
 	param_free(nicksref);
-
-	chan_printlist(server);
 }
 
 void
