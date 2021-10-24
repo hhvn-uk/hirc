@@ -72,6 +72,9 @@ hist_add(struct Server *server, struct HistInfo *histinfo, struct Nick *from,
 			ui_error("HIST_MAIN specified, but history is &main_buf", NULL);
 	}
 
+	if (options & HIST_SELF && server)
+		from = server->self;
+
 	new = hist_create(server, from, msg, params, activity, timestamp, options);
 
 	if (histinfo && options & HIST_SHOW && activity > histinfo->activity)
@@ -97,7 +100,7 @@ hist_add(struct Server *server, struct HistInfo *histinfo, struct Nick *from,
 
 	// XXX 
 	if (options & HIST_SHOW) {
-		wprintw(mainwindow.window, "!%lld :%s %s\n", (long long)timestamp, nick_strprefix(from), msg);
+		wprintw(mainwindow.window, "!%lld :%s %s\n", (long long)new->timestamp, nick_strprefix(new->from), new->raw);
 		refresh();
 	}
 

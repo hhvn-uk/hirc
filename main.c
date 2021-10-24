@@ -190,7 +190,7 @@ main(int argc, char **argv) {
 	main_buf->history = NULL;
 
 	ui_init();
-	serv_add(&servers, "hlircnet", "irc.hhvn.uk", "6667", "hhvn", "Fanatic", "gopher://hhvn.uk", 1, 0);
+	selected_server = serv_add(&servers, "hlircnet", "irc.hhvn.uk", "6667", "hhvn", "Fanatic", "gopher://hhvn.uk", 1, 0);
 	/* serv_add(&servers, "dataswamp", "127.0.0.1", "6697", "hhvn", "Fanatic", "gopher://hhvn.uk", 1, 0); */
 	for (sp = servers; sp; sp = sp->next)
 		serv_connect(sp);

@@ -1,7 +1,8 @@
 PREFIX	= /usr/local
 BINDIR	= $(PREFIX)/bin
 BIN	= hirc
-OBJ	= main.o handle.o hist.o nick.o chan.o serv.o ui.o
+OBJ	= main.o handle.o hist.o nick.o \
+	  chan.o serv.o ui.o commands.o
 
 # Comment to disable TLS
 LDTLS	= -ltls

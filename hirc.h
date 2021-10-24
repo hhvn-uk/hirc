@@ -5,6 +5,9 @@
 #include "config.h"
 #define PARAM_MAX 64
 #define INPUT_MAX 8192
+#define COMMANDARG_MAX (INPUT_MAX / 5)
+        /* Theoretical max: -a o -b o -c o *
+	 *                  12345          */
 
 /* main.c */
 void *		emalloc(size_t size);
@@ -101,6 +104,9 @@ void		ui_tls_config_error_(char *file, int line, struct tls_config *config, char
 void		ui_tls_error_(char *file, int line, struct tls *ctx, char *str);
 #define		ui_tls_error(ctx, str) ui_tls_error_(__FILE__, __LINE__, ctx, str);
 #endif /* TLS */
+
+/* commands.c */
+void		command_eval(char *str);
 
 /* main.c */
 extern struct HistInfo *main_buf;

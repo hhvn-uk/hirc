@@ -20,6 +20,7 @@ struct Nick {
 
 enum Activity {
 	Activity_ignore,
+	Activity_self = Activity_ignore,
 	Activity_status,
 	Activity_notice = Activity_status,
 	Activity_error,
@@ -31,6 +32,7 @@ enum HistOpt {
 	HIST_SHOW = 1, /* show in buffer */
 	HIST_LOG = 2,  /* log to server->logfd */
 	HIST_MAIN = 4, /* copy to &main_buf */
+	HIST_SELF = 8, /* from = self */
 	HIST_DFL = HIST_SHOW|HIST_LOG
 };
 

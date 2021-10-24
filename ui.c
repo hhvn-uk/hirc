@@ -141,11 +141,9 @@ ui_read(void) {
 		}
 		break;
 	case '\n':
-		if (strcmp(input.string, "/quit") == 0) {
-			endwin();
 			exit(0);
 		}
-		wprintw(mainwindow.window, "%s\n", input.string);
+		command_eval(input.string);
 		memset(input.string, '\0', sizeof(input.string));
 		input.counter = 0;
 		ui_draw_input();
