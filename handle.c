@@ -52,9 +52,9 @@ handle_JOIN(char *msg, char **params, struct Server *server, time_t timestamp) {
 	hist_add(server, chan->history, nick, msg, params, Activity_status, timestamp, HIST_SHOW);
 
 	if (nick_isself(nick)) {
-		selected_server = server;
-		selected_channel = chan;
-	} else if (selected_channel == chan) {
+		selected.server = server;
+		selected.channel = chan;
+	} else if (selected.channel == chan) {
 		ui_draw_nicklist();
 	}
 
@@ -78,11 +78,11 @@ handle_PART(char *msg, char **params, struct Server *server, time_t timestamp) {
 	if (nick_isself(nick)) {
 		chan_setold(chan, 1);
 		nick_free_list(&chan->nicks);
-		if (chan == selected_channel)
-			selected_channel = NULL;
+		if (chan == selected.channel)
+			selected.channel = NULL;
 	} else {
 		nick_remove(&chan->nicks, nick->nick);
-		if (chan == selected_channel)
+		if (chan == selected.channel)
 			ui_draw_nicklist();
 	}
 
@@ -110,7 +110,7 @@ handle_QUIT(char *msg, char **params, struct Server *server, time_t timestamp) {
 		if (nick_get(&chan->nicks, nick->nick) != NULL) {
 			nick_remove(&chan->nicks, nick->nick);
 			hist_add(server, chan->history, nick, msg, params, Activity_status, timestamp, HIST_SHOW);
-			if (chan == selected_channel)
+			if (chan == selected.channel)
 				ui_draw_nicklist();
 		}
 	}
@@ -232,7 +232,7 @@ handle_NAMREPLY(char *msg, char **params, struct Server *server, time_t timestam
 			oldnick->priv = priv;
 	}
 
-	if (selected_channel == chan)
+	if (selected.channel == chan)
 		ui_draw_nicklist();
 	param_free(nicksref);
 }
@@ -275,7 +275,7 @@ handle_NICK(char *msg, char **params, struct Server *server, time_t timestamp) {
 		if ((chnick = nick_get(&chan->nicks, nick->nick)) != NULL) {
 			nick_add(&chan->nicks, newnick, chnick->priv, server);
 			nick_remove(&chan->nicks, nick->nick);
-			if (selected_channel == chan)
+			if (selected.channel == chan)
 				ui_draw_nicklist();
 		}
 	}

@@ -48,7 +48,7 @@ chan_create(struct Server *server, char *name) {
 
 int
 chan_selected(struct Channel *channel) {
-	if (selected_channel == channel)
+	if (selected.channel == channel)
 		return 1;
 	else
 		return 0;

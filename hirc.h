@@ -113,8 +113,7 @@ void		command_eval(char *str);
 extern struct HistInfo *main_buf;
 
 /* ui.c */
-extern struct Channel *selected_channel;
-extern struct Server *selected_server;
+extern struct Selected selected;
 extern struct Window mainwindow;
 extern struct Window inputwindow;
 extern struct Window nicklist;

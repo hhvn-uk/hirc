@@ -14,9 +14,7 @@ struct Window mainwindow;
 struct Window inputwindow;
 struct Window nicklist;
 struct Window winlist;
-
-struct Channel *selected_channel = NULL;
-struct Server *selected_server = NULL;
+struct Selected selected;
 
 struct {
 	char string[INPUT_MAX];
@@ -239,14 +237,14 @@ ui_draw_nicklist(void) {
 	struct Nick *p;
 
 	wclear(nicklist.window);
-	if (!selected_channel || !nicklist.location)
+	if (!selected.channel || !nicklist.location)
 		return;
 
 	wmove(nicklist.window, 0, 0);
 
 	/* TODO: sort nicks here
 	 * TODO: more nicks than screen height? */
-	for (p = selected_channel->nicks; p; p = p->next) {
+	for (p = selected.channel->nicks; p; p = p->next) {
 		/* TODO: colourize nicks */
 		wprintw(nicklist.window, "%c%s\n", p->priv, p->nick);
 	}

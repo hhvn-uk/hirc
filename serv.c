@@ -284,7 +284,7 @@ serv_disconnect(struct Server *server, int reconnect) {
 
 int
 serv_selected(struct Server *server) {
-	if (!selected_channel && selected_server == server)
+	if (!selected.channel && selected.server == server)
 		return 1;
 	else
 		return 0;

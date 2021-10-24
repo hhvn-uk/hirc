@@ -143,4 +143,11 @@ struct Window {
 	WINDOW *window;
 };
 
+struct Selected {
+	struct Channel *channel;
+	struct Server *server;
+	struct Channel *oldchannel;
+	struct Server *oldserver;
+};
+
 #endif /* H_STRUCT */

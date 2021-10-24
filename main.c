@@ -176,8 +176,6 @@ sighandler(int signal) {
 
 int
 main(int argc, char **argv) {
-	struct Channel *old_selected_channel;
-	struct Server *old_selected_server;
 	struct Server *sp;
 	FILE *file;
 	struct pollfd fds[] = {
@@ -192,7 +190,7 @@ main(int argc, char **argv) {
 	main_buf->history = NULL;
 
 	ui_init();
-	selected_server = serv_add(&servers, "hlircnet", "irc.hhvn.uk", "6667", "hhvn", "Fanatic", "gopher://hhvn.uk", 1, 0);
+	selected.server = serv_add(&servers, "hlircnet", "irc.hhvn.uk", "6667", "hhvn", "Fanatic", "gopher://hhvn.uk", 1, 0);
 	/* serv_add(&servers, "dataswamp", "127.0.0.1", "6697", "hhvn", "Fanatic", "gopher://hhvn.uk", 1, 0); */
 	for (sp = servers; sp; sp = sp->next)
 		serv_connect(sp);
@@ -228,7 +226,7 @@ main(int argc, char **argv) {
 			}
 		}
 
-		if (old_selected_channel != selected_channel || old_selected_server != selected_server) {
+		if (selected.oldchannel != selected.channel || selected.oldserver != selected.server) {
 			ui_draw_nicklist();
 			wrefresh(nicklist.window);
 		}
@@ -238,8 +236,8 @@ main(int argc, char **argv) {
 
 		ui_read();
 
-		old_selected_channel = selected_channel;
-		old_selected_server = selected_server;
+		selected.oldchannel = selected.channel;
+		selected.oldserver = selected.server;
 	}
 
 	return 0;
