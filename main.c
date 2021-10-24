@@ -228,11 +228,10 @@ main(int argc, char **argv) {
 
 		if (selected.oldchannel != selected.channel || selected.oldserver != selected.server) {
 			ui_draw_nicklist();
-			wrefresh(nicklist.window);
 		}
 
-		wrefresh(winlist.window);
-		wrefresh(mainwindow.window);
+		wrefresh(windows[Win_winlist].window);
+		wrefresh(windows[Win_main].window);
 
 		ui_read();
 

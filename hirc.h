@@ -114,9 +114,6 @@ extern struct HistInfo *main_buf;
 
 /* ui.c */
 extern struct Selected selected;
-extern struct Window mainwindow;
-extern struct Window inputwindow;
-extern struct Window nicklist;
-extern struct Window winlist;
+extern struct Window windows[Win_last];
 
 #endif /* H_HIRC */

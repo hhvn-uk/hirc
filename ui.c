@@ -10,10 +10,7 @@
 #include "hirc.h"
 
 struct HistInfo *error_buf;
-struct Window mainwindow;
-struct Window inputwindow;
-struct Window nicklist;
-struct Window winlist;
+struct Window windows[Win_last];
 struct Selected selected;
 
 struct {
@@ -78,25 +75,25 @@ ui_init(void) {
 
 	if (nicklistlocation != 0 && nicklistlocation == winlistlocation) {
 		ui_error("nicklist and winlist can't be set to same location in config.h", NULL);
-		winlist.location = LEFT;
-		nicklist.location = RIGHT;
+		windows[Win_winlist].location = LEFT;
+		windows[Win_nicklist].location = RIGHT;
 	} else {
-		winlist.location = winlistlocation;
-		nicklist.location = nicklistlocation;
+		windows[Win_winlist].location = winlistlocation;
+		windows[Win_nicklist].location = nicklistlocation;
 	}
 
-	mainwindow.window = newwin(0, 0, 0, 0);
-	inputwindow.window = newwin(0, 0, 0, 0);
-	mainwindow.location = -1;
-	inputwindow.location = -1;
-	if (nicklist.location)
-		nicklist.window = newwin(0, 0, 0, 0);
-	if (winlist.location)
-		winlist.window = newwin(0, 0, 0, 0);
+	windows[Win_main].window = newwin(0, 0, 0, 0);
+	windows[Win_input].window = newwin(0, 0, 0, 0);
+	windows[Win_main].location = -1;
+	windows[Win_input].location = -1;
+	if (windows[Win_nicklist].location)
+		windows[Win_nicklist].window = newwin(0, 0, 0, 0);
+	if (windows[Win_winlist].location)
+		windows[Win_winlist].window = newwin(0, 0, 0, 0);
 
 	ui_redraw();
 
-	wprintw(winlist.window, "winlist");
+	wprintw(windows[Win_winlist].window, "winlist");
 }
 
 void
@@ -156,47 +153,47 @@ void
 ui_redraw(void) {
 	int x = 0, rx = 0;
 
-	if (winlist.location == LEFT) {
-		winlist.x = winlist.y = 0;
-		winlist.h = LINES;
-		winlist.w = winlistwidth;
-		x = winlist.w + 1;
+	if (windows[Win_winlist].location == LEFT) {
+		windows[Win_winlist].x = windows[Win_winlist].y = 0;
+		windows[Win_winlist].h = LINES;
+		windows[Win_winlist].w = winlistwidth;
+		x = windows[Win_winlist].w + 1;
 	}
-	if (nicklist.location == LEFT) {
-		nicklist.x = winlist.y = 0;
-		nicklist.h = LINES;
-		nicklist.w = nicklistwidth;
-		x = nicklist.w + 1;
+	if (windows[Win_nicklist].location == LEFT) {
+		windows[Win_nicklist].x = windows[Win_winlist].y = 0;
+		windows[Win_nicklist].h = LINES;
+		windows[Win_nicklist].w = nicklistwidth;
+		x = windows[Win_nicklist].w + 1;
 	}
-	if (winlist.location == RIGHT) {
-		winlist.x = COLS - winlistwidth;
-		winlist.y = 0;
-		winlist.h = LINES;
-		winlist.w = winlistwidth;
+	if (windows[Win_winlist].location == RIGHT) {
+		windows[Win_winlist].x = COLS - winlistwidth;
+		windows[Win_winlist].y = 0;
+		windows[Win_winlist].h = LINES;
+		windows[Win_winlist].w = winlistwidth;
 		rx = winlistwidth + 1;
 	}
-	if (nicklist.location == RIGHT) {
-		nicklist.x = COLS - nicklistwidth;
-		nicklist.y = 0;
-		nicklist.h = LINES;
-		nicklist.w = nicklistwidth;
+	if (windows[Win_nicklist].location == RIGHT) {
+		windows[Win_nicklist].x = COLS - nicklistwidth;
+		windows[Win_nicklist].y = 0;
+		windows[Win_nicklist].h = LINES;
+		windows[Win_nicklist].w = nicklistwidth;
 		rx = nicklistwidth + 1;
 	}
 
-	mainwindow.x = x;
-	mainwindow.y = 0;
-	mainwindow.h = LINES - 2;
-	mainwindow.w = COLS - x - rx;
+	windows[Win_main].x = x;
+	windows[Win_main].y = 0;
+	windows[Win_main].h = LINES - 2;
+	windows[Win_main].w = COLS - x - rx;
 
-	inputwindow.x = x;
-	inputwindow.y = LINES - 1;
-	inputwindow.h = 1;
-	inputwindow.w = COLS - x - rx;
+	windows[Win_input].x = x;
+	windows[Win_input].y = LINES - 1;
+	windows[Win_input].h = 1;
+	windows[Win_input].w = COLS - x - rx;
 
-	ui_placewindow(&nicklist);
-	ui_placewindow(&winlist);
-	ui_placewindow(&mainwindow);
-	ui_placewindow(&inputwindow);
+	ui_placewindow(&windows[Win_nicklist]);
+	ui_placewindow(&windows[Win_winlist]);
+	ui_placewindow(&windows[Win_main]);
+	ui_placewindow(&windows[Win_input]);
 
 	if (x)
 		mvvline(0, x - 1, '|', LINES);
@@ -215,38 +212,38 @@ ui_draw_input(void) {
 	char tmp;
 	int offset;
 
-	wclear(inputwindow.window);
-	/* Round input.counter down to the nearest inputwindow.w.
+	wclear(windows[Win_input].window);
+	/* Round input.counter down to the nearest windows[Win_input].w.
 	 * This gives "pages" that are each as long as the width of the input window */
-	offset = ((int) input.counter / inputwindow.w) * inputwindow.w;
+	offset = ((int) input.counter / windows[Win_input].w) * windows[Win_input].w;
 	for (p = input.string + offset; p && *p; p++) {
 		if (iscntrl(*p)) {
 			/* adding 64 will turn ^C into C */
 			tmp = *p + 64;
-			wattron(inputwindow.window, A_REVERSE);
-			waddnstr(inputwindow.window, &tmp, 1);
-			wattroff(inputwindow.window, A_REVERSE);
-		} else waddnstr(inputwindow.window, p, 1);
+			wattron(windows[Win_input].window, A_REVERSE);
+			waddnstr(windows[Win_input].window, &tmp, 1);
+			wattroff(windows[Win_input].window, A_REVERSE);
+		} else waddnstr(windows[Win_input].window, p, 1);
 	}
-	wmove(inputwindow.window, 0, input.counter - offset);
-	wrefresh(inputwindow.window);
+	wmove(windows[Win_input].window, 0, input.counter - offset);
+	wrefresh(windows[Win_input].window);
 }
 
 void
 ui_draw_nicklist(void) {
 	struct Nick *p;
 
-	wclear(nicklist.window);
-	if (!selected.channel || !nicklist.location)
+	wclear(windows[Win_nicklist].window);
+	if (!selected.channel || !windows[Win_nicklist].location)
 		return;
 
-	wmove(nicklist.window, 0, 0);
+	wmove(windows[Win_nicklist].window, 0, 0);
 
 	/* TODO: sort nicks here
 	 * TODO: more nicks than screen height? */
 	for (p = selected.channel->nicks; p; p = p->next) {
 		/* TODO: colourize nicks */
-		wprintw(nicklist.window, "%c%s\n", p->priv, p->nick);
+		wprintw(windows[Win_nicklist].window, "%c%s\n", p->priv, p->nick);
 	}
-	wrefresh(nicklist.window);
+	wrefresh(windows[Win_nicklist].window);
 }

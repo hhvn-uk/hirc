@@ -143,6 +143,14 @@ struct Window {
 	WINDOW *window;
 };
 
+enum {
+	Win_main,
+	Win_input,
+	Win_nicklist,
+	Win_winlist,
+	Win_last,
+};
+
 struct Selected {
 	struct Channel *channel;
 	struct Server *server;
