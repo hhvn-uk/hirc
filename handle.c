@@ -253,6 +253,7 @@ void
 handle_NICK(char *msg, char **params, struct Server *server, time_t timestamp) {
 	struct Nick *nick, *chnick;
 	struct Channel *chan;
+	char prefix[128];
 	char *newnick;
 
 	if (**params != ':' || !*(params+1) || !*(params+2))
@@ -273,7 +274,9 @@ handle_NICK(char *msg, char **params, struct Server *server, time_t timestamp) {
 
 	for (chan = server->channels; chan; chan = chan->next) {
 		if ((chnick = nick_get(&chan->nicks, nick->nick)) != NULL) {
-			nick_add(&chan->nicks, newnick, chnick->priv, server);
+			snprintf(prefix, sizeof(prefix), ":%s!%s@%s", 
+					newnick, chnick->ident, chnick->host);
+			nick_add(&chan->nicks, prefix, chnick->priv, server);
 			nick_remove(&chan->nicks, nick->nick);
 			if (selected.channel == chan)
 				ui_draw_nicklist();

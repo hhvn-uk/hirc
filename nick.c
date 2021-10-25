@@ -2,6 +2,7 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
+#include <limits.h>
 #include "hirc.h"
 
 #define MAX(var1, var2)	(var1 > var2 ? var1 : var2)
@@ -136,6 +137,7 @@ nick_add(struct Nick **head, char *prefix, char priv, struct Server *server) {
 	p->next = nick;
 	nick->prev = p;
 
+	nick_sort(head, server);
 	return nick;
 }
 
@@ -198,4 +200,96 @@ nick_strprefix(struct Nick *nick) {
 		snprintf(ret, sizeof(ret), "");
 
 	return ret;
+}
+
+static void
+nick_swap(struct Nick **head, struct Nick *first, struct Nick *second) {
+	struct Nick *next[2];
+	struct Nick *prev[2];
+
+	next[0] = first->next  != second ? first->next  : first;
+	next[1] = second->next != first  ? second->next : second;
+	prev[0] = first->prev  != second ? first->prev  : first;
+	prev[1] = second->prev != first  ? second->prev : second;
+
+	if (*head == first)
+		*head = second;
+	else if (*head == second)
+		*head = first;
+
+	first->next = next[1];
+	first->prev = prev[1];
+	if (first->next)
+		first->next->prev = first;
+	if (first->prev)
+		first->prev->next = first;
+
+	second->next = next[0];
+	second->prev = prev[0];
+	if (second->next)
+		second->next->prev = second;
+	if (second->prev)
+		second->prev->next = second;
+}
+
+enum {
+	S_0, S_1, S_2, S_3, S_4, S_5, S_6, S_7, S_8, S_9,
+	S_a, S_b, S_c, S_d, S_e, S_f, S_g, S_h, S_i, S_j, S_k,
+	S_l, S_m, S_n, S_o, S_p, S_q, S_r, S_s, S_t, S_u, S_v,
+	S_dash, S_lbrace, S_rbrace, S_pipe, S_grave, S_caret,
+	S_null,
+};
+
+void
+nick_sort(struct Nick **head, struct Server *server) {
+	char *supportedprivs, *s[2];
+	struct Nick *p, *next;
+	int i, swapped;
+	int map[CHAR_MAX] = {
+		['\0'] = S_null,
+		['-'] = S_dash,
+		['{'] = S_lbrace, ['['] = S_lbrace,
+		['}'] = S_rbrace, ['}'] = S_rbrace,
+		['|'] = S_pipe,  ['\\'] = S_pipe,
+		['`'] = S_grave,
+		['^'] = S_caret,
+		['a'] = S_a, S_b, S_c, S_d, S_e, S_f,
+			S_g, S_h, S_i, S_j, S_k, S_l,
+			S_m, S_n, S_o, S_p, S_q, S_r,
+			S_s, S_t, S_u, S_v,
+		['A'] = S_a, S_b, S_c, S_d, S_e, S_f,
+			S_g, S_h, S_i, S_j, S_k, S_l,
+			S_m, S_n, S_o, S_p, S_q, S_r,
+			S_s, S_t, S_u, S_v,
+		['0'] = S_0, S_1, S_2, S_3, S_4, S_5,
+			S_6, S_7, S_8, S_9,
+	};
+
+	supportedprivs = strchr(support_get(server, "PREFIX"), ')');
+	if (supportedprivs == NULL || supportedprivs[0] == '\0')
+		supportedprivs = "";
+	else
+		supportedprivs++;
+
+	for (i=0; *supportedprivs; supportedprivs++)
+		map[*supportedprivs] = S_0 - i;
+
+	/* TODO: something better than bubblesort */
+	do {
+		swapped = 0;
+		for (p = (*head)->next; p; p = next) {
+			next = p->next;
+			if (map[p->priv] < map[p->prev->priv]) {
+				nick_swap(head, p, p->prev);
+				swapped = 1;
+			} else {
+				for (s[0] = p->nick, s[1] = p->prev->nick; s[0] && s[1] && map[*s[0]] == map[*s[1]]; s[0]++, s[1]++);
+				if (s[0] && s[1] && map[*s[0]] < map[*s[1]]) {
+					nick_swap(head, p, p->prev);
+					swapped = 1;
+				}
+			}
+		}
+	} while (swapped);
+	ui_draw_nicklist();
 }
