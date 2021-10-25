@@ -176,8 +176,10 @@ sighandler(int signal) {
 
 int
 main(int argc, char **argv) {
+	struct Selected oldselected;
 	struct Server *sp;
 	FILE *file;
+	int i;
 	struct pollfd fds[] = {
 		{ .fd = fileno(stdin), .events = POLLIN },
 	};
@@ -190,7 +192,7 @@ main(int argc, char **argv) {
 	main_buf->history = NULL;
 
 	ui_init();
-	selected.server = serv_add(&servers, "hlircnet", "irc.hhvn.uk", "6667", "hhvn", "Fanatic", "gopher://hhvn.uk", 1, 0);
+	ui_select(serv_add(&servers, "hlircnet", "irc.hhvn.uk", "6667", "hhvn", "Fanatic", "gopher://hhvn.uk", 1, 0), NULL);
 	/* serv_add(&servers, "dataswamp", "127.0.0.1", "6697", "hhvn", "Fanatic", "gopher://hhvn.uk", 1, 0); */
 	for (sp = servers; sp; sp = sp->next)
 		serv_connect(sp);
@@ -226,17 +228,26 @@ main(int argc, char **argv) {
 			}
 		}
 
-		if (selected.oldchannel != selected.channel || selected.oldserver != selected.server) {
-			ui_draw_nicklist();
+		if (oldselected.channel != selected.channel || oldselected.server != selected.server) {
+			windows[Win_nicklist].redraw = 1;
+			windows[Win_winlist].redraw = 1;
 		}
 
-		wrefresh(windows[Win_winlist].window);
-		wrefresh(windows[Win_main].window);
+		oldselected.channel = selected.channel;
+		oldselected.server = selected.server;
+		oldselected.history = selected.history;
+		oldselected.name = selected.name;
+
+		for (i=0; i < Win_last; i++) {
+			if (windows[i].redraw) {
+				if (windows[i].handler)
+					windows[i].handler();
+				wrefresh(windows[i].window);
+				windows[i].redraw = 0;
+			}
+		}
 
 		ui_read();
-
-		selected.oldchannel = selected.channel;
-		selected.oldserver = selected.server;
 	}
 
 	return 0;

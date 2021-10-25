@@ -139,7 +139,9 @@ enum WindowLocation {
 struct Window {
 	int x, y;
 	int h, w;
+	int redraw;
 	enum WindowLocation location;
+	void (*handler)(void);
 	WINDOW *window;
 };
 
@@ -154,8 +156,8 @@ enum {
 struct Selected {
 	struct Channel *channel;
 	struct Server *server;
-	struct Channel *oldchannel;
-	struct Server *oldserver;
+	struct Histinfo *history;
+	char *name;
 };
 
 #endif /* H_STRUCT */

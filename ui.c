@@ -10,7 +10,12 @@
 #include "hirc.h"
 
 struct HistInfo *error_buf;
-struct Window windows[Win_last];
+struct Window windows[Win_last] = {
+	[Win_main]	= {.handler = NULL},
+	[Win_input]	= {.handler = ui_draw_input},
+	[Win_nicklist]	= {.handler = ui_draw_nicklist},
+	[Win_winlist]	= {.handler = NULL},
+};
 struct Selected selected;
 
 struct {
@@ -144,9 +149,10 @@ ui_read(void) {
 					strlen(&input.string[input.counter]));
 			input.string[input.counter++] = key;
 		}
+		break;
 	}
 
-	ui_draw_input();
+	windows[Win_input].redraw = 1;
 }
 
 void
@@ -202,8 +208,8 @@ ui_redraw(void) {
 
 	mvhline(LINES - 2, x, '-', COLS - x - rx);
 
-	ui_draw_nicklist();
-	ui_draw_input();
+	windows[Win_nicklist].redraw = 1;
+	windows[Win_input].redraw = 1;
 }
 
 void
@@ -226,7 +232,6 @@ ui_draw_input(void) {
 		} else waddnstr(windows[Win_input].window, p, 1);
 	}
 	wmove(windows[Win_input].window, 0, input.counter - offset);
-	wrefresh(windows[Win_input].window);
 }
 
 void
@@ -245,5 +250,12 @@ ui_draw_nicklist(void) {
 		/* TODO: colourize nicks */
 		wprintw(windows[Win_nicklist].window, "%c%s\n", p->priv, p->nick);
 	}
-	wrefresh(windows[Win_nicklist].window);
+}
+
+void
+ui_select(struct Server *server, struct Channel *channel) {
+	selected.channel = channel;
+	selected.server  = server;
+	selected.history = channel ? channel->history : server->history;
+	selected.name    = channel ? channel->name    : server->name;
 }

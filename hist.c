@@ -101,7 +101,7 @@ hist_add(struct Server *server, struct HistInfo *histinfo, struct Nick *from,
 	// XXX 
 	if (options & HIST_SHOW) {
 		wprintw(windows[Win_main].window, "!%lld :%s %s\n", (long long)new->timestamp, nick_strprefix(new->from), new->raw);
-		refresh();
+		windows[Win_main].redraw = 1;
 	}
 
 	if (options & HIST_LOG) {

@@ -291,5 +291,5 @@ nick_sort(struct Nick **head, struct Server *server) {
 			}
 		}
 	} while (swapped);
-	ui_draw_nicklist();
+	windows[Win_nicklist].redraw = 1;
 }
