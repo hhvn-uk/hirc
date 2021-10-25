@@ -1,6 +1,6 @@
 #include <ncurses.h>
-#include <ncurses.h>
-#include <ncurses.h>
+#include <stdlib.h>
+#include <string.h>
 #include "hirc.h"
 
 void
