@@ -91,10 +91,11 @@ void		handle_NICK(char *msg, char **params, struct Server *server, time_t timest
 
 /* ui.c */
 void		ui_init(void);
-void		ui_read(void);
+void		ui_read(int refresh);
 void		ui_redraw(void);
 void		ui_draw_input(void);
 void		ui_draw_nicklist(void);
+void		ui_draw_winlist(void);
 void		ui_select(struct Server *server, struct Channel *channel);
 void		ui_error_(char *file, int line, char *format, ...);
 #define		ui_error(format, ...) ui_error_(__FILE__, __LINE__, format, __VA_ARGS__);
@@ -112,6 +113,7 @@ void		ui_tls_error_(char *file, int line, struct tls *ctx, char *str);
 void		command_eval(char *str);
 
 /* main.c */
+extern struct Server *servers;
 extern struct HistInfo *main_buf;
 
 /* ui.c */

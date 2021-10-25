@@ -179,7 +179,7 @@ main(int argc, char **argv) {
 	struct Selected oldselected;
 	struct Server *sp;
 	FILE *file;
-	int i;
+	int i, refreshed;
 	struct pollfd fds[] = {
 		{ .fd = fileno(stdin), .events = POLLIN },
 	};
@@ -229,8 +229,10 @@ main(int argc, char **argv) {
 		}
 
 		if (oldselected.channel != selected.channel || oldselected.server != selected.server) {
-			windows[Win_nicklist].redraw = 1;
-			windows[Win_winlist].redraw = 1;
+			if (windows[Win_nicklist].location)
+				windows[Win_nicklist].redraw = 1;
+			if (windows[Win_winlist].location)
+				windows[Win_winlist].redraw = 1;
 		}
 
 		oldselected.channel = selected.channel;
@@ -238,16 +240,18 @@ main(int argc, char **argv) {
 		oldselected.history = selected.history;
 		oldselected.name = selected.name;
 
+		refreshed = 0;
 		for (i=0; i < Win_last; i++) {
 			if (windows[i].redraw) {
 				if (windows[i].handler)
 					windows[i].handler();
 				wrefresh(windows[i].window);
 				windows[i].redraw = 0;
+				refreshed = 1;
 			}
 		}
 
-		ui_read();
+		ui_read(refreshed);
 	}
 
 	return 0;

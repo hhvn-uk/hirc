@@ -14,7 +14,7 @@ struct Window windows[Win_last] = {
 	[Win_main]	= {.handler = NULL},
 	[Win_input]	= {.handler = ui_draw_input},
 	[Win_nicklist]	= {.handler = ui_draw_nicklist},
-	[Win_winlist]	= {.handler = NULL},
+	[Win_winlist]	= {.handler = ui_draw_winlist},
 };
 struct Selected selected;
 
@@ -111,12 +111,14 @@ ui_placewindow(struct Window *window) {
 }
 
 void
-ui_read(void) {
+ui_read(int refresh) {
 	int key;
 
 	switch (key = wgetch(stdscr)) {
 	case ERR:
 		/* this happens due to nodelay */
+		if (refreshalways)
+			wrefresh(window[Win_input].window);
 		return;
 	case KEY_RESIZE: 
 		ui_redraw(); 
@@ -249,6 +251,45 @@ ui_draw_nicklist(void) {
 	for (p = selected.channel->nicks; p; p = p->next) {
 		/* TODO: colourize nicks */
 		wprintw(windows[Win_nicklist].window, "%c%s\n", p->priv, p->nick);
+	}
+}
+
+void
+ui_draw_winlist(void) {
+	struct Server *sp;
+	struct Channel *chp;
+	int i = 0, len, tmp;
+
+	wclear(windows[Win_winlist].window);
+	if (!windows[Win_winlist].location)
+		return;
+
+	if (selected.history == main_buf)
+		wattron(windows[Win_winlist].window, A_BOLD);
+	len = wprintw(windows[Win_winlist].window, "%02d: %s\n", i++, "hirc");
+	wattroff(windows[Win_winlist].window, A_BOLD);
+
+	for (sp = servers; sp; sp = sp->next) {
+		if (selected.server == sp && !selected.channel)
+			wattron(windows[Win_winlist].window, A_BOLD);
+		else if (sp->status != ConnStatus_connected)
+			wattron(windows[Win_winlist].window, A_DIM);
+
+		len = wprintw(windows[Win_winlist].window, "%02d: %c- %s\n", i++, sp->next ? '|' : '`', sp->name);
+		wattroff(windows[Win_winlist].window, A_BOLD);
+		wattroff(windows[Win_winlist].window, A_DIM);
+
+		for (chp = sp->channels; chp; chp = chp->next) {
+			if (selected.channel == chp)
+				wattron(windows[Win_winlist].window, A_BOLD);
+			else if (chp->old)
+				wattron(windows[Win_winlist].window, A_DIM);
+
+			len = wprintw(windows[Win_winlist].window, "%02d: %c  %c- %s\n", i++, 
+					sp->next ? '|' : ' ', chp->next ? '|' : '`', chp->name);
+			wattroff(windows[Win_winlist].window, A_BOLD);
+			wattroff(windows[Win_winlist].window, A_DIM);
+		}
 	}
 }
 
