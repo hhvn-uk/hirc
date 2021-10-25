@@ -156,7 +156,7 @@ enum {
 struct Selected {
 	struct Channel *channel;
 	struct Server *server;
-	struct Histinfo *history;
+	struct HistInfo *history;
 	char *name;
 };
 
