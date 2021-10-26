@@ -149,7 +149,7 @@ enum {
 	Win_main,
 	Win_input,
 	Win_nicklist,
-	Win_winlist,
+	Win_buflist,
 	Win_last,
 };
 

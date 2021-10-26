@@ -231,8 +231,8 @@ main(int argc, char **argv) {
 		if (oldselected.channel != selected.channel || oldselected.server != selected.server) {
 			if (windows[Win_nicklist].location)
 				windows[Win_nicklist].redraw = 1;
-			if (windows[Win_winlist].location)
-				windows[Win_winlist].redraw = 1;
+			if (windows[Win_buflist].location)
+				windows[Win_buflist].redraw = 1;
 		}
 
 		oldselected.channel = selected.channel;

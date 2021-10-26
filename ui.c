@@ -15,7 +15,7 @@ struct Window windows[Win_last] = {
 	[Win_main]	= {.handler = NULL},
 	[Win_input]	= {.handler = ui_draw_input},
 	[Win_nicklist]	= {.handler = ui_draw_nicklist},
-	[Win_winlist]	= {.handler = ui_draw_winlist},
+	[Win_buflist]	= {.handler = ui_draw_buflist},
 };
 struct Selected selected;
 
@@ -80,12 +80,12 @@ ui_init(void) {
 	error_buf->channel = NULL;
 	error_buf->history = NULL;
 
-	if (nicklistlocation != 0 && nicklistlocation == winlistlocation) {
-		ui_error("nicklist and winlist can't be set to same location in config.h", NULL);
-		windows[Win_winlist].location = LEFT;
+	if (nicklistlocation != 0 && nicklistlocation == buflistlocation) {
+		ui_error("nicklist and buflist can't be set to same location in config.h", NULL);
+		windows[Win_buflist].location = LEFT;
 		windows[Win_nicklist].location = RIGHT;
 	} else {
-		windows[Win_winlist].location = winlistlocation;
+		windows[Win_buflist].location = buflistlocation;
 		windows[Win_nicklist].location = nicklistlocation;
 	}
 
@@ -95,12 +95,12 @@ ui_init(void) {
 	windows[Win_input].location = -1;
 	if (windows[Win_nicklist].location)
 		windows[Win_nicklist].window = newwin(0, 0, 0, 0);
-	if (windows[Win_winlist].location)
-		windows[Win_winlist].window = newwin(0, 0, 0, 0);
+	if (windows[Win_buflist].location)
+		windows[Win_buflist].window = newwin(0, 0, 0, 0);
 
 	ui_redraw();
 
-	wprintw(windows[Win_winlist].window, "winlist");
+	wprintw(windows[Win_buflist].window, "buflist");
 }
 
 void
@@ -177,24 +177,24 @@ void
 ui_redraw(void) {
 	int x = 0, rx = 0;
 
-	if (windows[Win_winlist].location == LEFT) {
-		windows[Win_winlist].x = windows[Win_winlist].y = 0;
-		windows[Win_winlist].h = LINES;
-		windows[Win_winlist].w = winlistwidth;
-		x = windows[Win_winlist].w + 1;
+	if (windows[Win_buflist].location == LEFT) {
+		windows[Win_buflist].x = windows[Win_buflist].y = 0;
+		windows[Win_buflist].h = LINES;
+		windows[Win_buflist].w = buflistwidth;
+		x = windows[Win_buflist].w + 1;
 	}
 	if (windows[Win_nicklist].location == LEFT) {
-		windows[Win_nicklist].x = windows[Win_winlist].y = 0;
+		windows[Win_nicklist].x = windows[Win_buflist].y = 0;
 		windows[Win_nicklist].h = LINES;
 		windows[Win_nicklist].w = nicklistwidth;
 		x = windows[Win_nicklist].w + 1;
 	}
-	if (windows[Win_winlist].location == RIGHT) {
-		windows[Win_winlist].x = COLS - winlistwidth;
-		windows[Win_winlist].y = 0;
-		windows[Win_winlist].h = LINES;
-		windows[Win_winlist].w = winlistwidth;
-		rx = winlistwidth + 1;
+	if (windows[Win_buflist].location == RIGHT) {
+		windows[Win_buflist].x = COLS - buflistwidth;
+		windows[Win_buflist].y = 0;
+		windows[Win_buflist].h = LINES;
+		windows[Win_buflist].w = buflistwidth;
+		rx = buflistwidth + 1;
 	}
 	if (windows[Win_nicklist].location == RIGHT) {
 		windows[Win_nicklist].x = COLS - nicklistwidth;
@@ -215,7 +215,7 @@ ui_redraw(void) {
 	windows[Win_input].w = COLS - x - rx;
 
 	ui_placewindow(&windows[Win_nicklist]);
-	ui_placewindow(&windows[Win_winlist]);
+	ui_placewindow(&windows[Win_buflist]);
 	ui_placewindow(&windows[Win_main]);
 	ui_placewindow(&windows[Win_input]);
 
@@ -227,6 +227,7 @@ ui_redraw(void) {
 	mvhline(LINES - 2, x, '-', COLS - x - rx);
 
 	windows[Win_nicklist].redraw = 1;
+	windows[Win_buflist].redraw = 1;
 	windows[Win_input].redraw = 1;
 }
 
@@ -271,40 +272,40 @@ ui_draw_nicklist(void) {
 }
 
 void
-ui_draw_winlist(void) {
+ui_draw_buflist(void) {
 	struct Server *sp;
 	struct Channel *chp;
 	int i = 0, len, tmp;
 
-	wclear(windows[Win_winlist].window);
-	if (!windows[Win_winlist].location)
+	wclear(windows[Win_buflist].window);
+	if (!windows[Win_buflist].location)
 		return;
 
 	if (selected.history == main_buf)
-		wattron(windows[Win_winlist].window, A_BOLD);
-	len = wprintw(windows[Win_winlist].window, "%02d: %s\n", i++, "hirc");
-	wattroff(windows[Win_winlist].window, A_BOLD);
+		wattron(windows[Win_buflist].window, A_BOLD);
+	len = wprintw(windows[Win_buflist].window, "%02d: %s\n", i++, "hirc");
+	wattroff(windows[Win_buflist].window, A_BOLD);
 
 	for (sp = servers; sp; sp = sp->next) {
 		if (selected.server == sp && !selected.channel)
-			wattron(windows[Win_winlist].window, A_BOLD);
+			wattron(windows[Win_buflist].window, A_BOLD);
 		else if (sp->status != ConnStatus_connected)
-			wattron(windows[Win_winlist].window, A_DIM);
+			wattron(windows[Win_buflist].window, A_DIM);
 
-		len = wprintw(windows[Win_winlist].window, "%02d: %s─ %s\n", i++, sp->next ? "├" : "└", sp->name);
-		wattroff(windows[Win_winlist].window, A_BOLD);
-		wattroff(windows[Win_winlist].window, A_DIM);
+		len = wprintw(windows[Win_buflist].window, "%02d: %s─ %s\n", i++, sp->next ? "├" : "└", sp->name);
+		wattroff(windows[Win_buflist].window, A_BOLD);
+		wattroff(windows[Win_buflist].window, A_DIM);
 
 		for (chp = sp->channels; chp; chp = chp->next) {
 			if (selected.channel == chp)
-				wattron(windows[Win_winlist].window, A_BOLD);
+				wattron(windows[Win_buflist].window, A_BOLD);
 			else if (chp->old)
-				wattron(windows[Win_winlist].window, A_DIM);
+				wattron(windows[Win_buflist].window, A_DIM);
 
-			len = wprintw(windows[Win_winlist].window, "%02d: %s  %s─ %s\n", i++,
+			len = wprintw(windows[Win_buflist].window, "%02d: %s  %s─ %s\n", i++,
 					sp->next ? "│" : " ", chp->next ? "├" : "└", chp->name);
-			wattroff(windows[Win_winlist].window, A_BOLD);
-			wattroff(windows[Win_winlist].window, A_DIM);
+			wattroff(windows[Win_buflist].window, A_BOLD);
+			wattroff(windows[Win_buflist].window, A_DIM);
 		}
 	}
 }

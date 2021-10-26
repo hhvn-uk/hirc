@@ -141,11 +141,11 @@ static short nicklistlocation = RIGHT;
 /* width of nicklist in columns */
 static int nicklistwidth = 15;
 
-/* window list location:
+/* buffer list location:
  * HIDDEN, LEFT, RIGHT */
-static short winlistlocation = LEFT;
+static short buflistlocation = LEFT;
 
-/* width of window list in columns */
-static int winlistwidth = 25;
+/* width of buffer list in columns */
+static int buflistwidth = 25;
 
 #endif /* H_CONFIG */
