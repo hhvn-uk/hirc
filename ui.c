@@ -112,13 +112,27 @@ ui_placewindow(struct Window *window) {
 
 void
 ui_read(int refresh) {
+	static int needredraw;
 	int key;
 
 	switch (key = wgetch(stdscr)) {
-	case ERR:
-		/* this happens due to nodelay */
-		if (refreshalways)
-			wrefresh(window[Win_input].window);
+	case ERR: /* no input received */
+		if (needredraw) {
+			/* Only redraw the input window if there
+			 * hasn't been any input received - this
+			 * is to avoid forcing a redraw for each
+			 * keystroke if they arrive in very fast
+			 * succession, i.e. text that is pasted.
+			 * KEY_RESIZE will still force a redraw.
+			 *
+			 * Theoretically this could be done with
+			 * bracketed paste stuff, but a solution
+			 * that works with all terminals is nice */
+			windows[Win_input].redraw = 1;
+			needredraw = 0;
+		} else if (refresh) {
+			wrefresh(windows[Win_input].window);
+		}
 		return;
 	case KEY_RESIZE: 
 		ui_redraw(); 
@@ -154,7 +168,7 @@ ui_read(int refresh) {
 		break;
 	}
 
-	windows[Win_input].redraw = 1;
+	needredraw = 1;
 }
 
 void
