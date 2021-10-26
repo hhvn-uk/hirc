@@ -65,10 +65,10 @@ hist_add(struct Server *server, struct HistInfo *histinfo, struct Nick *from,
 	struct History *new, *p;
 	int i;
 
-	if (options & HIST_MAIN || activity == Activity_error) {
+	if (options & HIST_MAIN) {
 		if (histinfo->history != main_buf->history)
 			hist_add(server, main_buf, from, msg, params, activity, timestamp, HIST_SHOW);
-		else if (options & HIST_MAIN)
+		else
 			ui_error("HIST_MAIN specified, but history is &main_buf", NULL);
 	}
 
