@@ -66,8 +66,6 @@ ui_init(void) {
 	initscr();
 	raw();
 	noecho();
-	nodelay(stdscr, TRUE);
-	keypad(stdscr, TRUE);
 
 	memset(input.string, '\0', sizeof(input.string));
 	input.counter = 0;
@@ -90,6 +88,9 @@ ui_init(void) {
 	if (windows[Win_buflist].location)
 		windows[Win_buflist].window = newwin(0, 0, 0, 0);
 
+	nodelay(windows[Win_input].window, TRUE);
+	keypad(windows[Win_input].window, TRUE);
+
 	ui_redraw();
 
 	wprintw(windows[Win_buflist].window, "buflist");
@@ -109,7 +110,7 @@ ui_read(int refresh) {
 	static int needredraw;
 	int key;
 
-	switch (key = wgetch(stdscr)) {
+	switch (key = wgetch(windows[Win_input].window)) {
 	case ERR: /* no input received */
 		if (needredraw) {
 			/* Only redraw the input window if there
@@ -217,6 +218,7 @@ ui_redraw(void) {
 		mvvline(0, COLS - rx, '|', LINES);
 
 	mvhline(LINES - 2, x, '-', COLS - x - rx);
+	refresh();
 
 	windows[Win_nicklist].redraw = 1;
 	windows[Win_buflist].redraw = 1;
