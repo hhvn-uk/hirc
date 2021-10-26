@@ -237,7 +237,7 @@ enum {
 	S_j, S_k, S_l, S_m, S_n, S_o, S_p, S_q, S_r,
 	S_s, S_t, S_u, S_v, S_w, S_x, S_y, S_z,
 	S_dash, S_lbrace, S_rbrace, S_pipe, S_grave, S_caret,
-	S_null,
+	S_null, S_space,
 };
 
 void
@@ -247,6 +247,7 @@ nick_sort(struct Nick **head, struct Server *server) {
 	int i, swapped;
 	int map[CHAR_MAX] = {
 		['\0'] = S_null,
+		[' '] = S_space, /* default p->priv */
 		['-'] = S_dash,
 		['{'] = S_lbrace, ['['] = S_lbrace,
 		['}'] = S_rbrace, ['}'] = S_rbrace,
@@ -262,29 +263,27 @@ nick_sort(struct Nick **head, struct Server *server) {
 		['0'] = S_0, S_1, S_2, S_3, S_4, S_5, S_6, S_7, S_8, S_9,
 	};
 
+	/*
 	supportedprivs = strchr(support_get(server, "PREFIX"), ')');
 	if (supportedprivs == NULL || supportedprivs[0] == '\0')
 		supportedprivs = "";
 	else
 		supportedprivs++;
 
-	for (i=0; *supportedprivs; supportedprivs++)
-		map[*supportedprivs] = S_0 - i;
+	for (i = strlen(supportedprivs); *supportedprivs; supportedprivs++, i--)
+		map[*supportedprivs] = S_ - i;
+	*/
 
 	/* TODO: something better than bubblesort */
 	do {
 		swapped = 0;
 		for (p = (*head)->next; p; p = next) {
 			next = p->next;
-			if (map[p->priv] < map[p->prev->priv]) {
+			/* TODO: sort using privs here, without causing infinite loop */
+			for (s[0] = p->nick, s[1] = p->prev->nick; s[0] && s[1] && map[*s[0]] == map[*s[1]]; s[0]++, s[1]++);
+			if (s[0] && s[1] && map[*s[0]] < map[*s[1]]) {
 				nick_swap(head, p, p->prev);
 				swapped = 1;
-			} else {
-				for (s[0] = p->nick, s[1] = p->prev->nick; s[0] && s[1] && map[*s[0]] == map[*s[1]]; s[0]++, s[1]++);
-				if (s[0] && s[1] && map[*s[0]] < map[*s[1]]) {
-					nick_swap(head, p, p->prev);
-					swapped = 1;
-				}
 			}
 		}
 	} while (swapped);
