@@ -115,7 +115,7 @@ static unsigned short othercolour[2] = {28, 63};
 static char *default_chantypes = "#&!+";
 
 /* default prefixes/priveledges, (symbols)modes */
-static char *default_prefixes = "(@+)ov";
+static char *default_prefixes = "(ov)@+";
 
 /* send ping to server after n seconds of inactivity */
 static int pinginact = 200;
