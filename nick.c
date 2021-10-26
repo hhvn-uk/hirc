@@ -137,7 +137,6 @@ nick_add(struct Nick **head, char *prefix, char priv, struct Server *server) {
 	p->next = nick;
 	nick->prev = p;
 
-	nick_sort(head, server);
 	return nick;
 }
 
@@ -234,8 +233,9 @@ nick_swap(struct Nick **head, struct Nick *first, struct Nick *second) {
 
 enum {
 	S_0, S_1, S_2, S_3, S_4, S_5, S_6, S_7, S_8, S_9,
-	S_a, S_b, S_c, S_d, S_e, S_f, S_g, S_h, S_i, S_j, S_k,
-	S_l, S_m, S_n, S_o, S_p, S_q, S_r, S_s, S_t, S_u, S_v,
+	S_a, S_b, S_c, S_d, S_e, S_f, S_g, S_h, S_i,
+	S_j, S_k, S_l, S_m, S_n, S_o, S_p, S_q, S_r,
+	S_s, S_t, S_u, S_v, S_w, S_x, S_y, S_z,
 	S_dash, S_lbrace, S_rbrace, S_pipe, S_grave, S_caret,
 	S_null,
 };
@@ -253,16 +253,13 @@ nick_sort(struct Nick **head, struct Server *server) {
 		['|'] = S_pipe,  ['\\'] = S_pipe,
 		['`'] = S_grave,
 		['^'] = S_caret,
-		['a'] = S_a, S_b, S_c, S_d, S_e, S_f,
-			S_g, S_h, S_i, S_j, S_k, S_l,
-			S_m, S_n, S_o, S_p, S_q, S_r,
-			S_s, S_t, S_u, S_v,
-		['A'] = S_a, S_b, S_c, S_d, S_e, S_f,
-			S_g, S_h, S_i, S_j, S_k, S_l,
-			S_m, S_n, S_o, S_p, S_q, S_r,
-			S_s, S_t, S_u, S_v,
-		['0'] = S_0, S_1, S_2, S_3, S_4, S_5,
-			S_6, S_7, S_8, S_9,
+		['a'] = S_a, S_b, S_c, S_d, S_e, S_f, S_g, S_h, S_i, S_j, 
+			S_k, S_l, S_m, S_n, S_o, S_p, S_q, S_r, S_s, S_t, 
+			S_u, S_v, S_w, S_x, S_y, S_z,
+		['A'] = S_a, S_b, S_c, S_d, S_e, S_f, S_g, S_h, S_i, S_j, 
+			S_k, S_l, S_m, S_n, S_o, S_p, S_q, S_r, S_s, S_t, 
+			S_u, S_v, S_w, S_x, S_y, S_z,
+		['0'] = S_0, S_1, S_2, S_3, S_4, S_5, S_6, S_7, S_8, S_9,
 	};
 
 	supportedprivs = strchr(support_get(server, "PREFIX"), ')');
@@ -291,5 +288,4 @@ nick_sort(struct Nick **head, struct Server *server) {
 			}
 		}
 	} while (swapped);
-	windows[Win_nicklist].redraw = 1;
 }

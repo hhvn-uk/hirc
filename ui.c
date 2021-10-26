@@ -260,8 +260,8 @@ ui_draw_nicklist(void) {
 
 	wmove(windows[Win_nicklist].window, 0, 0);
 
-	/* TODO: sort nicks here
-	 * TODO: more nicks than screen height? */
+	nick_sort(&selected.channel->nicks, selected.server);
+	/* TODO: more nicks than screen height? */
 	for (p = selected.channel->nicks; p; p = p->next) {
 		/* TODO: colourize nicks */
 		wprintw(windows[Win_nicklist].window, "%c%s\n", p->priv, p->nick);
