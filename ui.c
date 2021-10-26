@@ -3,6 +3,7 @@
 #include <stdarg.h>
 #include <string.h>
 #include <stdlib.h>
+#include <locale.h>
 #include <ncurses.h>
 #ifdef TLS
 #include <tls.h>
@@ -62,6 +63,7 @@ ui_tls_error_(char *file, int line, struct tls *ctx, char *str) {
 
 void
 ui_init(void) {
+	setlocale(LC_ALL, "");
 	initscr();
 	raw();
 	noecho();
@@ -289,7 +291,7 @@ ui_draw_winlist(void) {
 		else if (sp->status != ConnStatus_connected)
 			wattron(windows[Win_winlist].window, A_DIM);
 
-		len = wprintw(windows[Win_winlist].window, "%02d: %c- %s\n", i++, sp->next ? '|' : '`', sp->name);
+		len = wprintw(windows[Win_winlist].window, "%02d: %s─ %s\n", i++, sp->next ? "├" : "└", sp->name);
 		wattroff(windows[Win_winlist].window, A_BOLD);
 		wattroff(windows[Win_winlist].window, A_DIM);
 
@@ -299,8 +301,8 @@ ui_draw_winlist(void) {
 			else if (chp->old)
 				wattron(windows[Win_winlist].window, A_DIM);
 
-			len = wprintw(windows[Win_winlist].window, "%02d: %c  %c- %s\n", i++, 
-					sp->next ? '|' : ' ', chp->next ? '|' : '`', chp->name);
+			len = wprintw(windows[Win_winlist].window, "%02d: %s  %s─ %s\n", i++,
+					sp->next ? "│" : " ", chp->next ? "├" : "└", chp->name);
 			wattroff(windows[Win_winlist].window, A_BOLD);
 			wattroff(windows[Win_winlist].window, A_DIM);
 		}

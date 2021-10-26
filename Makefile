@@ -9,7 +9,7 @@ LDTLS	= -ltls
 CTLS	= -DTLS
 
 CFLAGS	= -g -O0 $(CTLS)
-LDFLAGS = -lncurses $(LDTLS)
+LDFLAGS = -lncursesw $(LDTLS)
 
 $(BIN): $(OBJ)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(OBJ)
