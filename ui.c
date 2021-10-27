@@ -263,6 +263,24 @@ ui_draw_nicklist(void) {
 	}
 }
 
+int
+ui_buflist_count(int *ret_servers, int *ret_channels) {
+	struct Server *sp;
+	struct Channel *chp;
+	int sc, cc;
+
+	for (sc = cc = 0, sp = servers; sp; sp = sp->next, sc++)
+		for (chp = sp->channels; chp; chp = chp->next, cc++)
+			;
+
+	if (ret_servers)
+		*ret_servers = sc;
+	if (ret_channels)
+		*ret_channels = cc;
+
+	return sc + cc;
+}
+
 void
 ui_draw_buflist(void) {
 	struct Server *sp;
