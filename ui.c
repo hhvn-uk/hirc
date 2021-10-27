@@ -64,6 +64,8 @@ void
 ui_init(void) {
 	setlocale(LC_ALL, "");
 	initscr();
+	start_color();
+	use_default_colors();
 	raw();
 	noecho();
 
