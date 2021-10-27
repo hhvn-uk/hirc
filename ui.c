@@ -286,6 +286,7 @@ ui_draw_buflist(void) {
 	struct Server *sp;
 	struct Channel *chp;
 	int i = 0, len, tmp;
+	int sc, cc;
 
 	wclear(windows[Win_buflist].window);
 	if (!windows[Win_buflist].location)
@@ -296,7 +297,7 @@ ui_draw_buflist(void) {
 	len = wprintw(windows[Win_buflist].window, "%02d: %s\n", i++, "hirc");
 	wattroff(windows[Win_buflist].window, A_BOLD);
 
-	for (sp = servers; sp; sp = sp->next) {
+	for (sc = cc = 0, sp = servers; sp; sp = sp->next, sc++) {
 		if (selected.server == sp && !selected.channel)
 			wattron(windows[Win_buflist].window, A_BOLD);
 		else if (sp->status != ConnStatus_connected)
@@ -306,7 +307,7 @@ ui_draw_buflist(void) {
 		wattroff(windows[Win_buflist].window, A_BOLD);
 		wattroff(windows[Win_buflist].window, A_DIM);
 
-		for (chp = sp->channels; chp; chp = chp->next) {
+		for (chp = sp->channels; chp; chp = chp->next, cc++) {
 			if (selected.channel == chp)
 				wattron(windows[Win_buflist].window, A_BOLD);
 			else if (chp->old)
@@ -318,6 +319,12 @@ ui_draw_buflist(void) {
 			wattroff(windows[Win_buflist].window, A_DIM);
 		}
 	}
+
+	/* One could use ui_buflist_count here (and I have tested it: works) but
+	 * it requires two passes over the servers and channels, whilst only one
+	 * when integrated to the loop above. */
+	wmove(windows[Win_buflist].window, windows[Win_buflist].h - 1, 0);
+	len = wprintw(windows[Win_buflist].window, "[S: %02d | C: %02d]", sc, cc);
 }
 
 void
