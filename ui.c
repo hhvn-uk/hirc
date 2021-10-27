@@ -306,6 +306,6 @@ void
 ui_select(struct Server *server, struct Channel *channel) {
 	selected.channel = channel;
 	selected.server  = server;
-	selected.history = channel ? channel->history : server->history;
-	selected.name    = channel ? channel->name    : server->name;
+	selected.history = channel ? channel->history : server->history ? server->history : main_buf;
+	selected.name    = channel ? channel->name    : server->name    ? server->name    : "hirc";
 }
