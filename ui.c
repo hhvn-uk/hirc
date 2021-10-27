@@ -92,8 +92,6 @@ ui_init(void) {
 	keypad(windows[Win_input].window, TRUE);
 
 	ui_redraw();
-
-	wprintw(windows[Win_buflist].window, "buflist");
 }
 
 void
