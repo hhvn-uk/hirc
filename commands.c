@@ -6,6 +6,7 @@
 void
 command_eval(char *str) {
 	char msg[512];
+	char *s;
 
 	if (*str != '/' || strncmp(str, "/ /", sizeof("/ /")) == 0) {
 		if (strncmp(str, "/ /", sizeof("/ /")) == 0)
@@ -25,6 +26,14 @@ command_eval(char *str) {
 	if (strcmp(str, "/quit") == 0) {
 		endwin();
 		exit(0);
+	}
+
+	if (strncmp(str, "/select", strlen("/select")) == 0) {
+		if ((s = strchr(str, ' ')) != NULL) {
+			s++;
+			ui_buflist_select(atoi(s));
+			return;
+		}
 	}
 
 	str++;

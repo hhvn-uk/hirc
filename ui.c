@@ -282,6 +282,32 @@ ui_buflist_count(int *ret_servers, int *ret_channels) {
 }
 
 void
+ui_buflist_select(int num) {
+	struct Server *sp;
+	struct Channel *chp;
+	int i;
+
+	if (num == 0) {
+		ui_select(NULL, NULL);
+		return;
+	}
+
+	for (i = 1, sp = servers; sp; sp = sp->next, i++) {
+		if (i == num) {
+			ui_select(sp, NULL);
+			return;
+		}
+
+		for (i++, chp = sp->channels; chp; chp = chp->next, i++) {
+			if (i == num) {
+				ui_select(sp, chp);
+				return;
+			}
+		}
+	}
+}
+
+void
 ui_draw_buflist(void) {
 	struct Server *sp;
 	struct Channel *chp;
