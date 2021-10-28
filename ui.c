@@ -96,6 +96,31 @@ ui_init(void) {
 	ui_redraw();
 }
 
+int
+ui_get_pair(short fg, short bg) {
+	static unsigned short pair_map[HIRC_COLOURS][HIRC_COLOURS];
+	static int needinit = 1;
+	short j, k;
+	int i;
+
+	if (needinit) {
+		init_pair(1, -1, -1);
+		for (i=2, j=0; j < HIRC_COLOURS; j++) {
+			for (k=0; k < HIRC_COLOURS; k++) {
+				init_pair(i, colourmap[j], colourmap[k]);
+				pair_map[j][k] = i;
+				i++;
+			}
+		}
+		needinit = 0;
+	}
+
+	if (fg >= HIRC_COLOURS || bg >= HIRC_COLOURS)
+		return 1;
+
+	return pair_map[fg][bg];
+}
+
 void
 ui_placewindow(struct Window *window) {
 	if (window->location != HIDDEN) {
@@ -360,6 +385,9 @@ ui_wprintc(WINDOW *window, char *format, ...) {
 	char str[1024], *s;
 	va_list ap;
 	int ret;
+	attr_t curattr;
+	int temp; /* used only for wattr_get, 
+		     because ncurses is dumb */
 	char colourbuf[2][3];
 	int colours[2];
 	int colour = 0;
@@ -412,11 +440,11 @@ ui_wprintc(WINDOW *window, char *format, ...) {
 				s += 2;
 			}
 
-			colours[0] = colourbuf[0][0] ? colourmap[atoi(colourbuf[0])] : -1;
-			colours[1] = colourbuf[1][0] ? colourmap[atoi(colourbuf[1])] : -1;
+			colours[0] = colourbuf[0][0] ? atoi(colourbuf[0]) : 99;
+			colours[1] = colourbuf[1][0] ? atoi(colourbuf[1]) : 99;
 
-			init_pair(1, colours[0], colours[1]);
-			wattron(window, COLOR_PAIR(1));
+			wattr_get(window, &curattr, &temp, NULL);
+			wattr_set(window, curattr, ui_get_pair(colours[0], colours[1]), NULL);
 			colour = 1;
 			break;
 		case 9: /* ^I */

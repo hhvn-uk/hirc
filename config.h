@@ -84,7 +84,8 @@ static struct Netconfig netconfig[] = {
 /* real maximum = MAX_HISTORY * (channels + servers + queries) */
 #define MAX_HISTORY 1024
 
-static unsigned short colourmap[] = {
+#define HIRC_COLOURS 100
+static unsigned short colourmap[HIRC_COLOURS] = {
 	/* original 16 mirc colours
 	 * some clients use the first 16 ansi colours for this,
 	 * but here I use the 256 colours to ensure terminal-agnosticism */
