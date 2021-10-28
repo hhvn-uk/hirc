@@ -98,6 +98,7 @@ void		ui_draw_nicklist(void);
 void		ui_draw_buflist(void);
 int		ui_buflist_count(int *ret_servers, int *ret_channels);
 void		ui_buflist_select(int num);
+int		ui_get_pair(short fg, short bg);
 int		ui_wprintc(WINDOW *window, char *format, ...);
 void		ui_select(struct Server *server, struct Channel *channel);
 void		ui_error_(char *file, int line, char *format, ...);
