@@ -435,9 +435,9 @@ ui_wprintc(WINDOW *window, char *format, ...) {
 				colourbuf[1][0] = *(s+2);
 				s += 2;
 			}
-			if (colourbuf[1][0] && *s && *(s+1) && isdigit(*(s+2))) {
-				colourbuf[1][1] = *(s+2);
-				s += 2;
+			if (colourbuf[1][0] && *s && isdigit(*(s+1))) {
+				colourbuf[1][1] = *(s+1);
+				s += 1;
 			}
 
 			colours[0] = colourbuf[0][0] ? atoi(colourbuf[0]) : 99;
