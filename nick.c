@@ -263,6 +263,9 @@ nick_sort(struct Nick **head, struct Server *server) {
 		['0'] = S_0, S_1, S_2, S_3, S_4, S_5, S_6, S_7, S_8, S_9,
 	};
 
+	if (!head || !*head)
+		return;
+
 	/*
 	supportedprivs = strchr(support_get(server, "PREFIX"), ')');
 	if (supportedprivs == NULL || supportedprivs[0] == '\0')
