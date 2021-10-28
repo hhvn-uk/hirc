@@ -355,6 +355,115 @@ ui_draw_buflist(void) {
 	len = wprintw(windows[Win_buflist].window, "[S: %02d | C: %02d]", sc, cc);
 }
 
+int
+ui_wprintc(WINDOW *window, char *format, ...) {
+	char str[1024], *s;
+	va_list ap;
+	int ret;
+	char colourbuf[2][3];
+	int colours[2];
+	int colour = 0;
+	int bold = 0;
+	int underline = 0;
+	int reverse = 0;
+	int italic = 0;
+
+	va_start(ap, format);
+	if ((ret = vsnprintf(str, sizeof(str), format, ap)) < 0) {
+		va_end(ap);
+		return ret;
+	}
+
+	for (s = str; s && *s; s++) {
+		switch (*s) {
+		case 2: /* ^B */
+			if (bold)
+				wattroff(window, A_BOLD);
+			else
+				wattron(window, A_BOLD);
+			bold = bold ? 0 : 1;
+			break;
+		case 3: /* ^C */
+			memset(colourbuf, '\0', sizeof(colourbuf));
+			/* This section may look a little confusing, but I didn't know
+			 * what better way I could do it (a loop for two things? ehm).
+			 *
+			 * If you want to understand it, I would start with simulating
+			 * it on a peice of paper, something like this:
+			 *
+			 * {   ,   ,'\0'}   ^C01,02
+			 * {   ,   ,'\0'}
+			 *
+			 * Draw a line over *s each time you advance s. */
+			if (*s && isdigit(*(s+1))) {
+				colourbuf[0][0] = *(s+1);
+				s += 1;
+			}
+			if (*s && isdigit(*(s+1))) {
+				colourbuf[0][1] = *(s+1);
+				s += 1;
+			}
+			if (*s && *(s+1) == ',' && isdigit(*(s+2))) {
+				colourbuf[1][0] = *(s+2);
+				s += 2;
+			}
+			if (colourbuf[1][0] && *s && *(s+1) && isdigit(*(s+2))) {
+				colourbuf[1][1] = *(s+2);
+				s += 2;
+			}
+
+			colours[0] = colourbuf[0][0] ? colourmap[atoi(colourbuf[0])] : -1;
+			colours[1] = colourbuf[1][0] ? colourmap[atoi(colourbuf[1])] : -1;
+
+			init_pair(1, colours[0], colours[1]);
+			wattron(window, COLOR_PAIR(1));
+			colour = 1;
+			break;
+		case 9: /* ^I */
+			if (italic)
+				wattroff(window, A_ITALIC);
+			else
+				wattron(window, A_ITALIC);
+			italic = italic ? 0 : 1;
+			break;
+		case 15: /* ^O */
+			colour = 0;
+			bold = 0;
+			underline =0;
+			reverse = 0;
+			italic = 0;
+			/* Setting A_NORMAL turns everything off, 
+			 * without using 5 different attroffs */
+			wattrset(window, A_NORMAL);
+			break;
+		case 18: /* ^R */
+			if (reverse)
+				wattroff(window, A_REVERSE);
+			else
+				wattron(window, A_REVERSE);
+			reverse = reverse ? 0 : 1;
+			break;
+		case 21: /* ^U */
+			if (underline)
+				wattroff(window, A_UNDERLINE);
+			else
+				wattron(window, A_UNDERLINE);
+			underline = underline ? 0 : 1;
+			break;
+		default:
+			waddch(window, *s);
+			break;
+		}
+	}
+
+	colour = 0;
+	bold = 0;
+	underline =0;
+	reverse = 0;
+	italic = 0;
+	wattrset(window, A_NORMAL);
+}
+
 void
 ui_select(struct Server *server, struct Channel *channel) {
 	selected.channel = channel;
