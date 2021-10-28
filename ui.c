@@ -490,6 +490,9 @@ ui_wprintc(WINDOW *window, char *format, ...) {
 	reverse = 0;
 	italic = 0;
 	wattrset(window, A_NORMAL);
+
+	va_end(ap);
+	return ret;
 }
 
 void
