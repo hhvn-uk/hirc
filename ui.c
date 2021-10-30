@@ -267,7 +267,7 @@ ui_draw_input(void) {
 			wattron(windows[Win_input].window, A_REVERSE);
 			waddnstr(windows[Win_input].window, &tmp, 1);
 			wattroff(windows[Win_input].window, A_REVERSE);
-		} else waddnstr(windows[Win_input].window, p, 1);
+		} else waddch(windows[Win_input].window, *p);
 	}
 	wmove(windows[Win_input].window, 0, input.counter - offset);
 }
