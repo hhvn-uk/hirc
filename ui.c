@@ -306,7 +306,7 @@ ui_buflist_count(int *ret_servers, int *ret_channels) {
 	if (ret_channels)
 		*ret_channels = cc;
 
-	return sc + cc;
+	return sc + cc + 1;
 }
 
 void
@@ -315,12 +315,17 @@ ui_buflist_select(int num) {
 	struct Channel *chp;
 	int i;
 
-	if (num == 0) {
+	if (num <= 0) {
+		ui_error("buffer index greater than 0 expected", NULL);
+		return;
+	}
+
+	if (num == 1) {
 		ui_select(NULL, NULL);
 		return;
 	}
 
-	for (i = 1, sp = servers; sp; sp = sp->next, i++) {
+	for (i = 2, sp = servers; sp; sp = sp->next, i++) {
 		if (i == num) {
 			ui_select(sp, NULL);
 			return;
@@ -339,7 +344,7 @@ void
 ui_draw_buflist(void) {
 	struct Server *sp;
 	struct Channel *chp;
-	int i = 0, len, tmp;
+	int i = 1, len, tmp;
 	int sc, cc;
 
 	wclear(windows[Win_buflist].window);
