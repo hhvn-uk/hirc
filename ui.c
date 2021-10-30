@@ -251,19 +251,22 @@ ui_redraw(void) {
 void
 ui_draw_input(void) {
 	char *p;
-	char tmp;
 	int offset;
+	int y;
 
-	wclear(windows[Win_input].window);
+	wmove(windows[Win_input].window, 0, 0);
+	for (y = 0; y < windows[Win_input].w; y++)
+		waddch(windows[Win_input].window, ' ');
+	wmove(windows[Win_input].window, 0, 0);
+
 	/* Round input.counter down to the nearest windows[Win_input].w.
 	 * This gives "pages" that are each as long as the width of the input window */
 	offset = ((int) input.counter / windows[Win_input].w) * windows[Win_input].w;
-	for (p = input.string + offset; p && *p; p++) {
+	for (y=0, p = input.string + offset; p && *p && y < windows[Win_input].w; p++, y++) {
 		if (iscntrl(*p)) {
 			/* adding 64 will turn ^C into C */
-			tmp = *p + 64;
 			wattron(windows[Win_input].window, A_REVERSE);
-			waddnstr(windows[Win_input].window, &tmp, 1);
+			waddch(windows[Win_input].window, *p + 64);
 			wattroff(windows[Win_input].window, A_REVERSE);
 		} else waddch(windows[Win_input].window, *p);
 	}
