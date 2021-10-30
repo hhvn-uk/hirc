@@ -147,9 +147,10 @@ struct Window {
 
 enum {
 	Win_main,
-	Win_input,
 	Win_nicklist,
 	Win_buflist,
+	Win_input, /* should always be
+		     last to refresh */
 	Win_last,
 };
 

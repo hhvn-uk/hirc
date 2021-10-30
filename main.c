@@ -240,18 +240,26 @@ main(int argc, char **argv) {
 		oldselected.history = selected.history;
 		oldselected.name = selected.name;
 
-		refreshed = 0;
+		refreshed = inputrefreshed = 0;
 		for (i=0; i < Win_last; i++) {
 			if (windows[i].redraw) {
 				if (windows[i].handler)
 					windows[i].handler();
-				wrefresh(windows[i].window);
+				wnoutrefresh(windows[i].window);
 				windows[i].redraw = 0;
 				refreshed = 1;
+				if (i == Win_input)
+					inputrefreshed = 1;
 			}
 		}
+		doupdate();
 
-		ui_read(refreshed);
+		/* refresh Win_input after any other window to
+		 * force ncurses to place the cursor here. */
+		if (refreshed && !inputrefreshed)
+			wrefresh(windows[Win_input].window);
+
+		ui_read();
 	}
 
 	return 0;

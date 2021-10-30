@@ -91,7 +91,7 @@ void		handle_NICK(char *msg, char **params, struct Server *server, time_t timest
 
 /* ui.c */
 void		ui_init(void);
-void		ui_read(int refresh);
+void		ui_read(void);
 void		ui_redraw(void);
 void		ui_draw_input(void);
 void		ui_draw_nicklist(void);

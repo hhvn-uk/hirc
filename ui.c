@@ -131,7 +131,7 @@ ui_placewindow(struct Window *window) {
 }
 
 void
-ui_read(int refresh) {
+ui_read(void) {
 	static int needredraw;
 	int key;
 
@@ -150,8 +150,6 @@ ui_read(int refresh) {
 			 * that works with all terminals is nice */
 			windows[Win_input].redraw = 1;
 			needredraw = 0;
-		} else if (refresh) {
-			wrefresh(windows[Win_input].window);
 		}
 		return;
 	case KEY_RESIZE: 
