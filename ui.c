@@ -249,17 +249,17 @@ void
 ui_draw_input(void) {
 	char *p;
 	int offset;
-	int y;
+	int x;
 
 	wmove(windows[Win_input].window, 0, 0);
-	for (y = 0; y < windows[Win_input].w; y++)
+	for (x = 0; x < windows[Win_input].w; x++)
 		waddch(windows[Win_input].window, ' ');
 	wmove(windows[Win_input].window, 0, 0);
 
 	/* Round input.counter down to the nearest windows[Win_input].w.
 	 * This gives "pages" that are each as long as the width of the input window */
 	offset = ((int) input.counter / windows[Win_input].w) * windows[Win_input].w;
-	for (y=0, p = input.string + offset; p && *p && y < windows[Win_input].w; p++, y++) {
+	for (x=0, p = input.string + offset; p && *p && x < windows[Win_input].w; p++, x++) {
 		if (iscntrl(*p)) {
 			/* adding 64 will turn ^C into C */
 			wattron(windows[Win_input].window, A_REVERSE);
