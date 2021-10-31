@@ -11,7 +11,7 @@
 #include "hirc.h"
 
 struct Window windows[Win_last] = {
-	[Win_main]	= {.handler = NULL},
+	[Win_main]	= {.handler = ui_draw_main},
 	[Win_input]	= {.handler = ui_draw_input},
 	[Win_nicklist]	= {.handler = ui_draw_nicklist},
 	[Win_buflist]	= {.handler = ui_draw_buflist},
@@ -192,6 +192,7 @@ ui_read(void) {
 void
 ui_redraw(void) {
 	int x = 0, rx = 0;
+	int i;
 
 	if (windows[Win_buflist].location == LEFT) {
 		windows[Win_buflist].x = windows[Win_buflist].y = 0;
@@ -230,11 +231,6 @@ ui_redraw(void) {
 	windows[Win_input].h = 1;
 	windows[Win_input].w = COLS - x - rx;
 
-	ui_placewindow(&windows[Win_nicklist]);
-	ui_placewindow(&windows[Win_buflist]);
-	ui_placewindow(&windows[Win_main]);
-	ui_placewindow(&windows[Win_input]);
-
 	if (x)
 		mvvline(0, x - 1, '|', LINES);
 	if (rx)
@@ -243,9 +239,10 @@ ui_redraw(void) {
 	mvhline(LINES - 2, x, '-', COLS - x - rx);
 	refresh();
 
-	windows[Win_nicklist].redraw = 1;
-	windows[Win_buflist].redraw = 1;
-	windows[Win_input].redraw = 1;
+	for (i = 0; i < Win_last; i++) {
+		ui_placewindow(&windows[i]);
+		windows[i].redraw = 1;
+	}
 }
 
 void
@@ -411,6 +408,7 @@ ui_wprintc(struct Window *window, int lines, char *format, ...) {
 
 	if (lines < 0)
 		ui_strlenc(window, str, &elc);
+	elc -= 1;
 
 	for (ret = cc = lc = 0, s = str; s && *s; s++) {
 		switch (*s) {
@@ -549,15 +547,29 @@ ui_strlenc(struct Window *window, char *s, int *lines) {
 	}
 
 	if (lines)
-		*lines = lc;
+		*lines = lc + 1;
 	return ret;
 }
 
 void
 ui_draw_main(void) {
-	int y;
+	struct History *p;
+	int y, lines;
 
-	y = windows[Win_main].h - 1;
+	/* need to do manual clearing to avoid the flicker */
+	wclear(windows[Win_main].window);
+	y = windows[Win_main].h;
+	for (p = selected.history->history; p && y > 0; p = p->next) {
+		ui_strlenc(&windows[Win_main], p->raw, &lines);
+		y = y - lines;
+		if (y < lines) {
+			y *= -1;
+			wmove(windows[Win_main].window, 0, 0);
+			ui_wprintc(&windows[Win_main], y, "%s\n", p->raw);
+		}
+		wmove(windows[Win_main].window, y, 0);
+		ui_wprintc(&windows[Win_main], 0, "%s\n", p->raw);
+	}
 }
 
 void

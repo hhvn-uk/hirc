@@ -96,6 +96,7 @@ void		ui_redraw(void);
 void		ui_draw_input(void);
 void		ui_draw_nicklist(void);
 void		ui_draw_buflist(void);
+void		ui_draw_main(void);
 int		ui_buflist_count(int *ret_servers, int *ret_channels);
 void		ui_buflist_select(int num);
 int		ui_get_pair(short fg, short bg);

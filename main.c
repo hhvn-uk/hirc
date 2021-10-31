@@ -235,6 +235,9 @@ main(int argc, char **argv) {
 				windows[Win_buflist].redraw = 1;
 		}
 
+		if (oldselected.history != selected.history)
+			windows[Win_main].redraw = 1;
+
 		oldselected.channel = selected.channel;
 		oldselected.server = selected.server;
 		oldselected.history = selected.history;

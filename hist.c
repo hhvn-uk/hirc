@@ -97,12 +97,9 @@ hist_add(struct Server *server, struct HistInfo *histinfo, struct Nick *from,
 	new->next->prev = new;
 	histinfo->history = new;
 
-
-	// XXX 
-	if (options & HIST_SHOW) {
-		ui_wprintc(&windows[Win_main], 0, "!%lld :%s %s\n", (long long)new->timestamp, nick_strprefix(new->from), new->raw);
+	/* TODO: this triggers way too often, need to have some sort of delay */
+	if (selected.history == histinfo)
 		windows[Win_main].redraw = 1;
-	}
 
 	if (options & HIST_LOG) {
 		if (server)
