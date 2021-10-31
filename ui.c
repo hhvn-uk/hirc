@@ -387,13 +387,14 @@ ui_draw_buflist(void) {
 }
 
 int
-ui_wprintc(WINDOW *window, char *format, ...) {
+ui_wprintc(struct Window *window, int lines, char *format, ...) {
 	char str[1024], *s;
 	va_list ap;
 	int ret;
 	attr_t curattr;
 	int temp; /* used only for wattr_get, 
 		     because ncurses is dumb */
+	int cc, lc, elc;
 	char colourbuf[2][3];
 	int colours[2];
 	int colour = 0;
@@ -403,18 +404,21 @@ ui_wprintc(WINDOW *window, char *format, ...) {
 	int italic = 0;
 
 	va_start(ap, format);
-	if ((ret = vsnprintf(str, sizeof(str), format, ap)) < 0) {
-		va_end(ap);
+	ret = vsnprintf(str, sizeof(str), format, ap);
+	va_end(ap);
+	if (ret < 0)
 		return ret;
-	}
 
-	for (s = str; s && *s; s++) {
+	if (lines < 0)
+		ui_strlenc(window, str, &elc);
+
+	for (ret = cc = lc = 0, s = str; s && *s; s++) {
 		switch (*s) {
 		case 2: /* ^B */
 			if (bold)
-				wattroff(window, A_BOLD);
+				wattroff(window->window, A_BOLD);
 			else
-				wattron(window, A_BOLD);
+				wattron(window->window, A_BOLD);
 			bold = bold ? 0 : 1;
 			break;
 		case 3: /* ^C */
@@ -449,15 +453,15 @@ ui_wprintc(WINDOW *window, char *format, ...) {
 			colours[0] = colourbuf[0][0] ? atoi(colourbuf[0]) : 99;
 			colours[1] = colourbuf[1][0] ? atoi(colourbuf[1]) : 99;
 
-			wattr_get(window, &curattr, &temp, NULL);
-			wattr_set(window, curattr, ui_get_pair(colours[0], colours[1]), NULL);
+			wattr_get(window->window, &curattr, &temp, NULL);
+			wattr_set(window->window, curattr, ui_get_pair(colours[0], colours[1]), NULL);
 			colour = 1;
 			break;
 		case 9: /* ^I */
 			if (italic)
-				wattroff(window, A_ITALIC);
+				wattroff(window->window, A_ITALIC);
 			else
-				wattron(window, A_ITALIC);
+				wattron(window->window, A_ITALIC);
 			italic = italic ? 0 : 1;
 			break;
 		case 15: /* ^O */
@@ -468,37 +472,92 @@ ui_wprintc(WINDOW *window, char *format, ...) {
 			italic = 0;
 			/* Setting A_NORMAL turns everything off, 
 			 * without using 5 different attroffs */
-			wattrset(window, A_NORMAL);
+			wattrset(window->window, A_NORMAL);
 			break;
 		case 18: /* ^R */
 			if (reverse)
-				wattroff(window, A_REVERSE);
+				wattroff(window->window, A_REVERSE);
 			else
-				wattron(window, A_REVERSE);
+				wattron(window->window, A_REVERSE);
 			reverse = reverse ? 0 : 1;
 			break;
 		case 21: /* ^U */
 			if (underline)
-				wattroff(window, A_UNDERLINE);
+				wattroff(window->window, A_UNDERLINE);
 			else
-				wattron(window, A_UNDERLINE);
+				wattron(window->window, A_UNDERLINE);
 			underline = underline ? 0 : 1;
 			break;
 		default:
-			waddch(window, *s);
+			cc++;
+			if (lines > 0 && lc >= lines)
+				goto end;
+			if (!lines || lines > 0 || (lines < 0 && lc >= elc + lines)) {
+				waddch(window->window, *s);
+				ret++;
+			}
+			if (cc == window->w) {
+				lc++;
+				cc = 0;
+			}
 			break;
 		}
 	}
 
+end:
 	colour = 0;
 	bold = 0;
 	underline =0;
 	reverse = 0;
 	italic = 0;
-	wattrset(window, A_NORMAL);
+	wattrset(window->window, A_NORMAL);
 
-	va_end(ap);
 	return ret;
+}
+
+int
+ui_strlenc(struct Window *window, char *s, int *lines) {
+	int ret, cc, lc;
+
+	for (ret = cc = lc = 0; s && *s; s++) {
+		switch (*s) {
+		case 2:  /* ^B */
+		case 9:  /* ^I */
+		case 15: /* ^O */
+		case 18: /* ^R */
+		case 21: /* ^U */
+			break;
+		case 3:  /* ^C */
+			if (*s && isdigit(*(s+1)))
+				s += 1;
+			if (*s && isdigit(*(s+1)))
+				s += 1;
+			if (*s && *(s+1) == ',' && isdigit(*(s+2)))
+				s += 2;
+			if (*s && *(s-1) == ',' && isdigit(*(s+1)))
+				s += 1;
+			break;
+		default:
+			cc++;
+			ret++;
+			if (cc == window->w) {
+				lc++;
+				cc = 0;
+			}
+			break;
+		}
+	}
+
+	if (lines)
+		*lines = lc;
+	return ret;
+}
+
+void
+ui_draw_main(void) {
+	int y;
+
+	y = windows[Win_main].h - 1;
 }
 
 void
