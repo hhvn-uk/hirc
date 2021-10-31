@@ -251,10 +251,7 @@ ui_draw_input(void) {
 	int offset;
 	int x;
 
-	wmove(windows[Win_input].window, 0, 0);
-	for (x = 0; x < windows[Win_input].w; x++)
-		waddch(windows[Win_input].window, ' ');
-	wmove(windows[Win_input].window, 0, 0);
+	ui_wclear(&windows[Win_input]);
 
 	/* Round input.counter down to the nearest windows[Win_input].w.
 	 * This gives "pages" that are each as long as the width of the input window */
@@ -273,8 +270,10 @@ ui_draw_input(void) {
 void
 ui_draw_nicklist(void) {
 	struct Nick *p;
+	int y;
 
-	wclear(windows[Win_nicklist].window);
+	ui_wclear(&windows[Win_nicklist]);
+
 	if (!selected.channel || !windows[Win_nicklist].location)
 		return;
 
@@ -342,9 +341,10 @@ ui_draw_buflist(void) {
 	struct Server *sp;
 	struct Channel *chp;
 	int i = 1, len, tmp;
-	int sc, cc;
+	int sc, cc, y;
 
-	wclear(windows[Win_buflist].window);
+	ui_wclear(&windows[Win_buflist]);
+
 	if (!windows[Win_buflist].location)
 		return;
 
@@ -552,12 +552,32 @@ ui_strlenc(struct Window *window, char *s, int *lines) {
 }
 
 void
+ui_filltoeol(struct Window *window, char c) {
+	int y, x;
+
+	getyx(window->window, y, x);
+	for (; x < window->w; x++)
+		waddch(window->window, c);
+}
+
+void
+ui_wclear(struct Window *window) {
+	int y;
+
+	for (y = 0; y <= window->h; y++) {
+		wmove(window->window, y, 0);
+		ui_filltoeol(window, ' ');
+	}
+	wmove(window->window, 0, 0);
+}
+
+void
 ui_draw_main(void) {
 	struct History *p;
 	int y, lines;
 
-	/* need to do manual clearing to avoid the flicker */
-	wclear(windows[Win_main].window);
+	ui_wclear(&windows[Win_main]);
+
 	y = windows[Win_main].h;
 	for (p = selected.history->history; p && y > 0; p = p->next) {
 		ui_strlenc(&windows[Win_main], p->raw, &lines);

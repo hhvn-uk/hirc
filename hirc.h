@@ -103,6 +103,8 @@ int		ui_get_pair(short fg, short bg);
 int		ui_wprintc(struct Window *window, int lines, char *format, ...);
 int		ui_strlenc(struct Window *window, char *s, int *lines);
 void		ui_select(struct Server *server, struct Channel *channel);
+void		ui_filltoeol(struct Window *window, char c);
+void		ui_wclear(struct Window *window);
 void		ui_error_(char *file, int line, char *format, ...);
 #define		ui_error(format, ...) ui_error_(__FILE__, __LINE__, format, __VA_ARGS__);
 void		ui_perror_(char *file, int line, char *str);
