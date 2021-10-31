@@ -179,7 +179,7 @@ main(int argc, char **argv) {
 	struct Selected oldselected;
 	struct Server *sp;
 	FILE *file;
-	int i, refreshed;
+	int i, refreshed, inputrefreshed;
 	struct pollfd fds[] = {
 		{ .fd = fileno(stdin), .events = POLLIN },
 	};
