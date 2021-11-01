@@ -50,13 +50,13 @@ void		nick_sort(struct Nick **head, struct Server *server);
 /* hist.c */
 void		hist_free(struct History *history);
 void		hist_free_list(struct HistInfo *histinfo);
-struct History *hist_create(struct Server *server, struct Nick *from, char *msg,
+struct History *hist_create(struct HistInfo *histinfo, struct Nick *from, char *msg,
 		char **params, enum Activity activity, time_t timestamp, enum HistOpt options);
-struct History *hist_add(struct Server *server, struct HistInfo *histinfo, 
+struct History *hist_add(struct HistInfo *histinfo, 
 		struct Nick *from, char *msg, char **params, enum Activity activity, 
 		time_t timestamp, enum HistOpt options);
-struct History *hist_format(struct Server *server, struct HistInfo *history, 
-		enum Activity activity, enum HistOpt options, char *format, ...);
+struct History *hist_format(struct HistInfo *history, enum Activity activity, 
+		enum HistOpt options, char *format, ...);
 int		hist_len(struct History **history);
 int		hist_log(char *msg, struct Nick *from, time_t timestamp, struct Server *server);
 

@@ -16,7 +16,7 @@ command_eval(char *str) {
 			// TODO: message splitting
 			snprintf(msg, sizeof(msg), "PRIVMSG %s :%s", selected.channel->name, str);
 			ircprintf(selected.server, "%s\r\n", msg);
-			hist_format(selected.server, selected.channel->history, Activity_self, HIST_SHOW|HIST_LOG|HIST_SELF, msg);
+			hist_format(selected.channel->history, Activity_self, HIST_SHOW|HIST_LOG|HIST_SELF, msg);
 		} else
 			ui_error("channel not selected, message ignored", NULL);
 

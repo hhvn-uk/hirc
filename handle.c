@@ -48,8 +48,8 @@ handle_JOIN(char *msg, char **params, struct Server *server, time_t timestamp) {
 	if (nick_get(&chan->nicks, nick->nick) == NULL)
 		nick_add(&chan->nicks, *params, ' ', server);
 
-	hist_add(server, server->history, nick, msg, params, Activity_status, timestamp, HIST_LOG);
-	hist_add(server, chan->history, nick, msg, params, Activity_status, timestamp, HIST_SHOW);
+	hist_add(server->history, nick, msg, params, Activity_status, timestamp, HIST_LOG);
+	hist_add(chan->history, nick, msg, params, Activity_status, timestamp, HIST_SHOW);
 
 	if (nick_isself(nick))
 		ui_select(server, chan);
@@ -84,8 +84,8 @@ handle_PART(char *msg, char **params, struct Server *server, time_t timestamp) {
 			windows[Win_nicklist].redraw = 1;
 	}
 
-	hist_add(server, server->history, nick, msg, params, Activity_status, timestamp, HIST_LOG);
-	hist_add(server, chan->history, nick, msg, params, Activity_status, timestamp, HIST_SHOW);
+	hist_add(server->history, nick, msg, params, Activity_status, timestamp, HIST_LOG);
+	hist_add(chan->history, nick, msg, params, Activity_status, timestamp, HIST_SHOW);
 	nick_free(nick);
 }
 
@@ -103,11 +103,11 @@ handle_QUIT(char *msg, char **params, struct Server *server, time_t timestamp) {
 		(void)0;
 	}
 	
-	hist_add(server, server->history, nick, msg, params, Activity_status, timestamp, HIST_LOG);
+	hist_add(server->history, nick, msg, params, Activity_status, timestamp, HIST_LOG);
 	for (chan = server->channels; chan; chan = chan->next) {
 		if (nick_get(&chan->nicks, nick->nick) != NULL) {
 			nick_remove(&chan->nicks, nick->nick);
-			hist_add(server, chan->history, nick, msg, params, Activity_status, timestamp, HIST_SHOW);
+			hist_add(chan->history, nick, msg, params, Activity_status, timestamp, HIST_SHOW);
 			if (chan == selected.channel)
 				windows[Win_nicklist].redraw = 1;
 		}
@@ -134,27 +134,27 @@ handle_PRIVMSG(char *msg, char **params, struct Server *server, time_t timestamp
 	nick = nick_create(*params, ' ', server);
 	if (strchr(nick->nick, '.')) {
 		/* it's a server */
-		hist_add(server, server->history, NULL, msg, params, Activity_status, timestamp, HIST_DFL);
+		hist_add(server->history, NULL, msg, params, Activity_status, timestamp, HIST_DFL);
 	} else if (strcmp(target, server->self->nick) == 0) {
 		/* it's messaging me */
 		if ((priv = chan_get(&server->privs, nick->nick, -1)) == NULL)
 			priv = chan_add(server, &server->privs, nick->nick);
 		chan_setold(priv, 0);
 
-		hist_add(server, priv->history, nick, msg, params, act_direct, timestamp, HIST_DFL);
+		hist_add(priv->history, nick, msg, params, act_direct, timestamp, HIST_DFL);
 	} else if (nick_isself(nick) && !chrcmp(*target, "#&!+")) {
 		/* i'm messaging someone */
 		if ((priv = chan_get(&server->privs, target, -1)) == NULL)
 			priv = chan_add(server, &server->privs, target);
 		chan_setold(priv, 0);
 
-		hist_add(server, priv->history, nick, msg, params, act_regular, timestamp, HIST_DFL);
+		hist_add(priv->history, nick, msg, params, act_regular, timestamp, HIST_DFL);
 	} else {
 		/* message to a channel */
 		if ((chan = chan_get(&server->channels, target, -1)) == NULL)
 			chan = chan_add(server, &server->channels, target);
 
-		hist_add(server, chan->history, nick, msg, params, act_regular, timestamp, HIST_DFL);
+		hist_add(chan->history, nick, msg, params, act_regular, timestamp, HIST_DFL);
 	}
 
 	nick_free(nick);
@@ -164,7 +164,7 @@ void
 handle_ISUPPORT(char *msg, char **params, struct Server *server, time_t timestamp) {
 	char *key, *value;
 
-	hist_add(server, server->history, NULL, msg, params, Activity_status, timestamp, HIST_DFL);
+	hist_add(server->history, NULL, msg, params, Activity_status, timestamp, HIST_DFL);
 	if (**params == ':')
 		params++;
 
@@ -239,7 +239,7 @@ void
 handle_NICKNAMEINUSE(char *msg, char **params, struct Server *server, time_t timestamp) {
 	char nick[64]; /* should be limited to 9 chars, but newer servers *shrug*/
 
-	hist_add(server, server->history, NULL, msg, params, Activity_status, timestamp, HIST_DFL);
+	hist_add(server->history, NULL, msg, params, Activity_status, timestamp, HIST_DFL);
 	snprintf(nick, sizeof(nick), "%s_", server->self->nick);
 	nick_free(server->self);
 	server->self = nick_create(nick, ' ', server);
@@ -258,7 +258,7 @@ handle_NICK(char *msg, char **params, struct Server *server, time_t timestamp) {
 		return;
 
 	nick = nick_create(*params, ' ', server);
-	hist_add(server, server->history, nick, msg, params, Activity_status, timestamp, HIST_DFL);
+	hist_add(server->history, nick, msg, params, Activity_status, timestamp, HIST_DFL);
 	newnick = *(params+2);
 
 	if (strcmp(nick->nick, newnick) == 0)
@@ -298,7 +298,7 @@ handle(int rfd, struct Server *server) {
 	if (!read_line(rfd, buf, sizeof(buf))) {
 		if (buf[0] == EOF || buf[0] == 3 || buf[0] == 4) {
 			serv_disconnect(server, 1);
-			hist_format(server, server->history, Activity_error, HIST_SHOW,
+			hist_format(server->history, Activity_error, HIST_SHOW,
 					"SELF_CONNECTLOST %s %s %s :EOF received",
 					server->name, server->host, server->port);
 		}
@@ -335,5 +335,5 @@ handle(int rfd, struct Server *server) {
 	}
 
 	/* add it to server->history if there is no handler */
-	hist_add(server, server->history, NULL, msg, params, Activity_status, timestamp, HIST_DFL);
+	hist_add(server->history, NULL, msg, params, Activity_status, timestamp, HIST_DFL);
 }

@@ -33,7 +33,7 @@ hist_free_list(struct HistInfo *histinfo) {
 }
 
 struct History *
-hist_create(struct Server *server, struct Nick *from, char *msg, 
+hist_create(struct HistInfo *histinfo, struct Nick *from, char *msg, 
 		char **params, enum Activity activity, 
 		time_t timestamp, enum HistOpt options) {
 	struct History *new;
@@ -45,12 +45,12 @@ hist_create(struct Server *server, struct Nick *from, char *msg,
 	new->raw = estrdup(msg);
 	new->params = params;
 	new->options = options;
-	new->origin = server;
+	new->origin = histinfo;
 
 	if (from) {
-		new->from = nick_dup(from, server);
+		new->from = nick_dup(from, histinfo->server);
 	} else if (**params == ':') {
-		new->from = nick_create(*params, ' ', server);
+		new->from = nick_create(*params, ' ', histinfo->server);
 	} else {
 		new->from = NULL;
 	}
@@ -59,23 +59,23 @@ hist_create(struct Server *server, struct Nick *from, char *msg,
 }
 
 struct History *
-hist_add(struct Server *server, struct HistInfo *histinfo, struct Nick *from, 
+hist_add(struct HistInfo *histinfo, struct Nick *from, 
 		char *msg, char **params, enum Activity activity, 
 		time_t timestamp, enum HistOpt options) {
 	struct History *new, *p;
 	int i;
 
 	if (options & HIST_MAIN) {
-		if (histinfo->history != main_buf->history)
-			hist_add(server, main_buf, from, msg, params, activity, timestamp, HIST_SHOW);
+		if (histinfo != main_buf)
+			hist_add(main_buf, from, msg, params, activity, timestamp, HIST_SHOW);
 		else
 			ui_error("HIST_MAIN specified, but history is &main_buf", NULL);
 	}
 
-	if (options & HIST_SELF && server)
-		from = server->self;
+	if (options & HIST_SELF && histinfo->server)
+		from = histinfo->server->self;
 
-	new = hist_create(server, from, msg, params, activity, timestamp, options);
+	new = hist_create(histinfo, from, msg, params, activity, timestamp, options);
 
 	if (histinfo && options & HIST_SHOW && activity > histinfo->activity)
 		histinfo->activity = activity;
@@ -102,8 +102,8 @@ hist_add(struct Server *server, struct HistInfo *histinfo, struct Nick *from,
 		windows[Win_main].redraw = 1;
 
 	if (options & HIST_LOG) {
-		if (server)
-			hist_log(new->raw, new->from, new->timestamp, server);
+		if (histinfo->server)
+			hist_log(new->raw, new->from, new->timestamp, histinfo->server);
 		else
 			ui_error("HIST_LOG specified, but server is NULL", NULL);
 	}
@@ -112,7 +112,7 @@ hist_add(struct Server *server, struct HistInfo *histinfo, struct Nick *from,
 }
 
 struct History *
-hist_format(struct Server *server, struct HistInfo *histinfo, enum Activity activity, enum HistOpt options, char *format, ...) {
+hist_format(struct HistInfo *histinfo, enum Activity activity, enum HistOpt options, char *format, ...) {
 	char msg[1024], **params;
 	va_list ap;
 
@@ -122,7 +122,7 @@ hist_format(struct Server *server, struct HistInfo *histinfo, enum Activity acti
 
 	params = param_create(msg);
 
-	return hist_add(server, histinfo, NULL, msg, params, Activity_status, 0, options);
+	return hist_add(histinfo, NULL, msg, params, Activity_status, 0, options);
 }
 
 int

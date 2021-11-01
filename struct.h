@@ -43,7 +43,7 @@ struct History {
 	enum HistOpt options;
 	char *raw;
 	char **params;
-	struct Server *origin;
+	struct HistInfo *origin;
 	struct Nick *from;
 	struct History *next;
 };

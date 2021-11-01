@@ -105,7 +105,7 @@ serv_create(char *name, char *host, char *port, char *nick,
 	tls_config_free(conf);
 #else
 	if (tls)
-		hist_format(server, server->history, Activity_error, HIST_SHOW,
+		hist_format(server->history, Activity_error, HIST_SHOW,
 				"SELF_TLSNOTCOMPILED %s", server->name);
 #endif /* TLS */
 
@@ -193,7 +193,7 @@ serv_connect(struct Server *server) {
 	int fd, ret, serrno;
 
 	server->status = ConnStatus_connecting;
-	hist_format(server, server->history, Activity_status, HIST_SHOW|HIST_MAIN,
+	hist_format(server->history, Activity_status, HIST_SHOW|HIST_MAIN,
 			"SELF_CONNECTING %s %s", server->host, server->port);
 
 	memset(&hints, 0, sizeof(hints));
@@ -201,13 +201,13 @@ serv_connect(struct Server *server) {
 	hints.ai_socktype = SOCK_STREAM;
 
 	if ((ret = getaddrinfo(server->host, server->port, &hints, &ai)) != 0 || ai == NULL) {
-		hist_format(server, server->history, Activity_error, HIST_SHOW,
+		hist_format(server->history, Activity_error, HIST_SHOW,
 				"SELF_LOOKUPFAIL %s %s %s :%s",
 				server->name, server->host, server->port, gai_strerror(ret));
 		goto fail;
 	}
 	if ((fd = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol)) == -1 || connect(fd, ai->ai_addr, ai->ai_addrlen) == -1) {
-		hist_format(server, server->history, Activity_error, HIST_SHOW,
+		hist_format(server->history, Activity_error, HIST_SHOW,
 				"SELF_CONNECTFAIL %s %s %s :%s",
 				server->name, server->host, server->port, strerror(errno));
 		goto fail;
@@ -216,7 +216,7 @@ serv_connect(struct Server *server) {
 	server->connectfail = 0;
 	server->status = ConnStatus_connected;
 	server->rfd = server->wfd = fd;
-	hist_format(server, server->history, Activity_status, HIST_SHOW|HIST_MAIN,
+	hist_format(server->history, Activity_status, HIST_SHOW|HIST_MAIN,
 			"SELF_CONNECTED %s %s %s", server->name, server->host, server->port);
 	freeaddrinfo(ai);
 
