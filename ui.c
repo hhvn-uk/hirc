@@ -385,13 +385,14 @@ ui_draw_buflist(void) {
 
 int
 ui_wprintc(struct Window *window, int lines, char *format, ...) {
+	char utfbuf[5];
 	char str[1024], *s;
 	va_list ap;
 	int ret;
 	attr_t curattr;
 	int temp; /* used only for wattr_get, 
 		     because ncurses is dumb */
-	int cc, lc, elc;
+	int cc, lc, elc, utfc;
 	char colourbuf[2][3];
 	int colours[2];
 	int colour = 0;
@@ -465,7 +466,7 @@ ui_wprintc(struct Window *window, int lines, char *format, ...) {
 		case 15: /* ^O */
 			colour = 0;
 			bold = 0;
-			underline =0;
+			underline = 0;
 			reverse = 0;
 			italic = 0;
 			/* Setting A_NORMAL turns everything off, 
@@ -487,12 +488,31 @@ ui_wprintc(struct Window *window, int lines, char *format, ...) {
 			underline = underline ? 0 : 1;
 			break;
 		default:
-			cc++;
 			if (lines > 0 && lc >= lines)
 				goto end;
 			if (!lines || lines > 0 || (lines < 0 && lc >= elc + lines)) {
-				waddch(window->window, *s);
-				ret++;
+				if ((*s & 0xC0) == 0xC0) {
+					/* Copy a 11xxxxxx byte and
+					 * stop when a byte doesn't
+					 * match 10xxxxxx, to leave
+					 * a full char for writing. */
+					memset(utfbuf, '\0', sizeof(utfbuf));
+					utfbuf[0] = *s;
+					for (utfc = 1, s++; (*s & 0xC0) != 0xC0 && (*s & 0x80) == 0x80 && utfc < sizeof(utfbuf); utfc++, s++)
+						utfbuf[utfc] = *s;
+					waddstr(window->window, utfbuf);
+					s--;
+					ret++;
+					cc++;
+				} else if (!(*s & 0x80)) {
+					/* ANDing with 0x80
+					 * makes certain we
+					 * ignore malformed
+					 * utf-8 characters */
+					waddch(window->window, *s);
+					ret++;
+					cc++;
+				}
 			}
 			if (cc == window->w) {
 				lc++;
@@ -536,7 +556,12 @@ ui_strlenc(struct Window *window, char *s, int *lines) {
 				s += 1;
 			break;
 		default:
-			cc++;
+			/* naive utf-8 handling:
+			 * the 2-nth byte always
+			 * follows 10xxxxxxx, so
+			 * don't count it. */
+			if ((*s & 0xC0) != 0x80)
+				cc++;
 			ret++;
 			if (cc == window->w) {
 				lc++;
