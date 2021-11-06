@@ -157,10 +157,8 @@ ui_read(void) {
 		return;
 	case KEY_BACKSPACE:
 		if (input.counter) {
-			memmove(&input.string[input.counter - 1], 
-					&input.string[input.counter], 
-					strlen(&input.string[input.counter]) + 1);
-			input.counter--;
+			if (ui_input_delete(1, input.counter) > 0)
+				input.counter--;
 		}
 		break;
 	case KEY_LEFT:
@@ -177,16 +175,66 @@ ui_read(void) {
 		input.counter = 0;
 		break;
 	default:
-		if (isprint(key) || iscntrl(key)) {
-			memmove(&input.string[input.counter + 1],
-					&input.string[input.counter],
-					strlen(&input.string[input.counter]));
-			input.string[input.counter++] = key;
+		if ((key & 0xFF80) == 0x80 || isprint(key) || iscntrl(key)) {
+			if (ui_input_insert(key, input.counter) > 0)
+				input.counter++;
 		}
 		break;
 	}
 
 	needredraw = 1;
+}
+
+int
+ui_input_insert(char c, int counter) {
+	char *p;
+	int i, bc;
+
+	for (bc=i=0, p = input.string; i != counter && bc < sizeof(input.string) && *p; p++, bc++) {
+		if ((*p & 0xC0) != 0x80)
+			i++;
+	}
+	while ((*p & 0xC0) == 0x80)
+		p++;
+
+	if (i != counter)
+		return -1;
+
+	if ((strlen(input.string)) > sizeof(input.string))
+		return -1;
+
+	memmove(p + 1, p, strlen(p) + 1);
+	memcpy(p, &c, 1);
+	return ((c & 0xC0) != 0x80);
+}
+
+
+int
+ui_input_delete(int num, int counter) {
+	char *dest, *p;
+	int i, bc;
+
+	if (num < 0)
+		return -1;
+
+	for (bc=i=0, dest = input.string; i != counter - 1 && bc < sizeof(input.string) && *dest; dest++, bc++) {
+		if ((*dest & 0xC0) != 0x80)
+			i++;
+	}
+
+	while ((*dest & 0xC0) == 0x80)
+		dest++;
+
+	p = dest;
+	do {
+		p++;
+	} while ((*p & 0xC0) == 0x80);
+
+	/* if (i != counter + num) */
+	/*      return -1; */
+
+	memmove(dest, p, strlen(p) + 1);
+	return num;
 }
 
 void
@@ -247,7 +295,9 @@ ui_redraw(void) {
 
 void
 ui_draw_input(void) {
+	char utfbuf[5];
 	char *p;
+	int utfc;
 	int offset;
 	int x;
 
@@ -257,12 +307,22 @@ ui_draw_input(void) {
 	 * This gives "pages" that are each as long as the width of the input window */
 	offset = ((int) input.counter / windows[Win_input].w) * windows[Win_input].w;
 	for (x=0, p = input.string + offset; p && *p && x < windows[Win_input].w; p++, x++) {
-		if (iscntrl(*p)) {
+		if ((*p & 0xC0) == 0xC0) {
+			/* see ui_wprintc */
+			memset(utfbuf, '\0', sizeof(utfbuf));
+			utfbuf[0] = *p;
+			for (utfc = 1, p++; (*p & 0xC0) != 0xC0 && (*p & 0x80) == 0x80 && utfc < sizeof(utfbuf); utfc++, p++)
+				utfbuf[utfc] = *p;
+			waddstr(windows[Win_input].window, utfbuf);
+			p--;
+		} else if (iscntrl(*p)) {
 			/* adding 64 will turn ^C into C */
 			wattron(windows[Win_input].window, A_REVERSE);
 			waddch(windows[Win_input].window, *p + 64);
 			wattroff(windows[Win_input].window, A_REVERSE);
-		} else waddch(windows[Win_input].window, *p);
+		} else if (!(*p & 0x80)) {
+			waddch(windows[Win_input].window, *p);
+		}
 	}
 	wmove(windows[Win_input].window, 0, input.counter - offset);
 }
