@@ -92,6 +92,7 @@ void		handle_NICK(char *msg, char **params, struct Server *server, time_t timest
 
 /* ui.c */
 void		ui_init(void);
+#define		ui_deinit() endwin()
 void		ui_read(void);
 int		ui_input_insert(char c, int counter);
 int		ui_input_delete(int num, int counter);
@@ -122,6 +123,10 @@ void		ui_tls_error_(char *file, int line, struct tls *ctx, char *str);
 
 /* commands.c */
 void		command_eval(char *str);
+int		command_getopt(char **str, struct CommandOpts *opts);
+void		command_quit(char *str);
+void		command_connect(char *str);
+void		command_select(char *str);
 
 /* main.c */
 extern struct Server *servers;

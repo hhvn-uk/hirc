@@ -149,4 +149,7 @@ static short buflistlocation = LEFT;
 /* width of buffer list in columns */
 static int buflistwidth = 25;
 
+/* default quit message */
+static char *quitmessage = "pain is temporary";
+
 #endif /* H_CONFIG */

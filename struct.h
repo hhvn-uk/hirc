@@ -112,9 +112,22 @@ struct Server {
 	struct Server *next;
 };
 
+/* messages received from server */
 struct Handler {
 	char *cmd; /* or numeric */
 	void (*func)(char *msg, char **params, struct Server *server, time_t timestamp);
+};
+
+/* commands received from user */
+struct Command {
+	char *name;
+	void (*func)(char *str);
+};
+
+struct CommandOpts {
+	char *opt;
+	int arg;
+	int ret;
 };
 
 struct Netconfig {

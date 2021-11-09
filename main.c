@@ -205,7 +205,7 @@ main(int argc, char **argv) {
 	main_buf->history = NULL;
 
 	ui_init();
-	ui_select(serv_add(&servers, "hlircnet", "irc.hhvn.uk", "6667", "hhvn", "Fanatic", "gopher://hhvn.uk", 1, 0), NULL);
+	ui_select(serv_add(&servers, "hlircnet", "localhost", "6667", "hhvn", "Fanatic", "gopher://hhvn.uk", 1, 0), NULL);
 	/* serv_add(&servers, "dataswamp", "127.0.0.1", "6697", "hhvn", "Fanatic", "gopher://hhvn.uk", 1, 0); */
 	for (sp = servers; sp; sp = sp->next)
 		serv_connect(sp);

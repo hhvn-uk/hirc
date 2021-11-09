@@ -1,14 +1,239 @@
 #include <ncurses.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+#include <pwd.h>
+#include <sys/types.h>
 #include "hirc.h"
+
+static char *command_optarg;
+enum {
+	opt_error = -2,
+	opt_done = -1,
+	CMD_NARG,
+	CMD_ARG,
+};
+
+static struct Command commands[] = {
+	{"quit", command_quit},
+	{"connect", command_connect},
+	{"select", command_select},
+	{NULL, NULL},
+};
+
+void
+command_quit(char *str) {
+	cleanup(str ? str : quitmessage);
+	exit(EXIT_SUCCESS);
+}
+
+void
+command_connect(char *str) {
+	struct Server *server;
+	char *network	= NULL;
+	char *host	= NULL;
+	char *port	= NULL;
+	char *nick	= NULL;
+	char *username	= NULL;
+	char *realname	= NULL;
+	int tls = 0, tls_verify = 0;
+	int ret;
+	struct passwd *user;
+	enum {
+		opt_network,
+		opt_nick,
+		opt_username,
+		opt_realname,
+#ifdef TLS
+		opt_tls,
+		opt_tls_verify,
+#endif /* TLS */
+	};
+	static struct CommandOpts opts[] = {
+		{"network", CMD_ARG, opt_network},
+		{"nick", CMD_ARG, opt_nick},
+
+		{"username", CMD_ARG, opt_username},
+		{"user", CMD_ARG, opt_username},
+
+		{"realname", CMD_ARG, opt_realname},
+		{"real", CMD_ARG, opt_realname},
+		{"comment", CMD_ARG, opt_realname},
+
+#ifdef TLS
+		{"tls", CMD_NARG, opt_tls},
+		{"ssl", CMD_NARG, opt_tls},
+		{"verify", CMD_NARG, opt_tls_verify},
+#endif /* TLS */
+		{NULL, 0, 0},
+	};
+
+	while ((ret = command_getopt(&str, opts)) != opt_done) {
+		switch (ret) {
+		case opt_error:
+			return;
+		case opt_network:
+			network = command_optarg;
+			break;
+		case opt_nick:
+			nick = command_optarg;
+			break;
+		case opt_username:
+			username = command_optarg;
+			break;
+		case opt_realname:
+			realname = command_optarg;
+			break;
+#ifdef TLS
+		case opt_tls:
+			tls = 1;
+			break;
+		case opt_tls_verify:
+			tls_verify = 1;
+			break;
+#endif /* TLS */
+		}
+	}
+
+	host = strtok(str,  " ");
+	port = strtok(NULL, " ");
+
+	if (!host) {
+		ui_error("must specify host", NULL);
+		return;
+	}
+
+	if (!nick) {
+		user = getpwuid(geteuid());
+		nick = user ? user->pw_name : "null";
+	}
+
+	port      = port    ? port     : "6667";
+	username = username ? username : nick;
+	realname = realname ? realname : nick;
+	network  = network  ? network  : host;
+
+	server = serv_add(&servers, network, host, port, nick, username, realname, tls, tls_verify);
+	serv_connect(server);
+	ui_select(server, NULL);
+}
+
+void
+command_select(char *str) {
+	struct Server *sp;
+	struct Channel *chp;
+	char *server = NULL;
+	char *channel = NULL;
+	int ret, buf = 0;
+	enum {
+		opt_server,
+		opt_channel,
+		opt_test,
+	};
+	static struct CommandOpts opts[] = {
+		{"server", CMD_ARG, opt_server},
+		{"network", CMD_ARG, opt_server},
+		{"channel", CMD_ARG, opt_channel},
+		{NULL, 0, 0},
+	};
+
+	while ((ret = command_getopt(&str, opts)) != opt_done) {
+		switch (ret) {
+		case opt_error:
+			return;
+		case opt_server:
+			server = command_optarg;
+			break;
+		case opt_channel:
+			channel = command_optarg;
+			break;
+		}
+	}
+
+	if (server || channel) {
+		/* TODO: find closest match instead of perfect matches */
+		if (!server) {
+			ui_error("must specify server and channel, or just server", NULL);
+			return;
+		}
+
+		for (sp = servers; sp; sp = sp->next)
+			if (strcmp(sp->name, server) == 0)
+				break;
+
+		if (!sp) {
+			ui_error("could not find server '%s'", server);
+			return;
+		}
+
+		if (channel) {
+			for (chp = sp->channels; chp; chp = chp->next)
+				if (strcmp(chp->name, channel) == 0)
+					break;
+
+			if (!chp) {
+				ui_error("could not find channel '%s'", channel);
+				return;
+			}
+		} else chp = NULL;
+
+		ui_select(sp, chp);
+
+		if (str)
+			ui_error("ignoring trailing arguments: '%s'", str);
+	} else {
+		buf = atoi(str);
+		if (!buf)
+			ui_error("invalid buffer index: '%s'", str);
+		ui_buflist_select(buf);
+	}
+}
+
+int
+command_getopt(char **str, struct CommandOpts *opts) {
+	char *opt;
+
+	if (!str || !*str || **str != '-')
+		return opt_done;
+
+	opt = struntil((*str)+1, ' ');
+
+	for (; opts->opt; opts++) {
+		if (strcmp(opts->opt, opt) == 0) {
+			*str = strchr(*str, ' ');
+			if (*str)
+				(*str)++;
+
+			if (opts->arg) {
+				command_optarg = *str;
+				if (*str)
+					*str = strchr(*str, ' ');
+				if (*str && **str) {
+					**str = '\0';
+					(*str)++;
+				}
+			} else {
+				*((*str)-1) = '\0';
+			}
+
+			return opts->ret;
+		}
+	}
+
+	ui_error("no such option '%s'", opt);
+	return opt_error;
+}
 
 void
 command_eval(char *str) {
+	struct Command *cmdp;
 	char msg[512];
+	char *cmd;
 	char *s;
 
 	if (*str != '/' || strncmp(str, "/ /", sizeof("/ /")) == 0) {
+		/* Provide a way to escape commands
+		 *      "/ /cmd" --> "/cmd"      */
 		if (strncmp(str, "/ /", sizeof("/ /")) == 0)
 			str += 3;
 
@@ -21,19 +246,25 @@ command_eval(char *str) {
 			ui_error("channel not selected, message ignored", NULL);
 
 		return;
-	}
-
-	if (strcmp(str, "/quit") == 0) {
-		endwin();
-		exit(0);
-	}
-
-	if (strncmp(str, "/select", strlen("/select")) == 0) {
-		if ((s = strchr(str, ' ')) != NULL) {
-			s++;
-			ui_buflist_select(atoi(s));
-			return;
+	} else {
+		str++;
+		cmd = str;
+		str = strchr(str, ' ');
+		if (str && *str) {
+			*str = '\0';
+			str++;
+			if (*str == '\0')
+				str = NULL;
 		}
+
+		for (cmdp = commands; cmdp->name && cmdp->func; cmdp++) {
+			if (strcmp(cmdp->name, cmd) == 0) {
+				cmdp->func(str);
+				return;
+			}
+		}
+
+		ui_error("no such command: '%s'", cmd);
 	}
 
 	str++;

@@ -386,7 +386,7 @@ ui_buflist_select(int num) {
 			ui_select(sp, NULL);
 			return;
 		}
-		i++; /* increment before moving 
+		i++; /* increment before moving
 			to channel section, not
 			int for (;; ..) */
 
