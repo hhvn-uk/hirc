@@ -37,6 +37,19 @@ estrdup(const char *str) {
 }
 
 void
+cleanup(char *quitmsg) {
+	struct Server *sp;
+
+	for (sp = servers; sp; sp = sp->next) {
+		if (sp->prev)
+			serv_free(sp->prev);
+		serv_disconnect(sp, 0, quitmsg);
+	}
+
+	ui_deinit();
+}
+
+void
 param_free(char **params) {
 	char **p;
 

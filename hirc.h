@@ -12,6 +12,7 @@
 /* main.c */
 void *		emalloc(size_t size);
 char *		estrdup(const char *str);
+void		cleanup(char *quitmsg);
 void		param_free(char **params);
 int		param_len(char **params);
 char **		param_create(char *msg);
@@ -73,7 +74,7 @@ int		serv_len(struct Server **head);
 int		serv_poll(struct Server **head, int timeout);
 int		serv_remove(struct Server **head, char *name);
 int		serv_selected(struct Server *server);
-void		serv_disconnect(struct Server *server, int reconnect);
+void		serv_disconnect(struct Server *server, int reconnect, char *msg);
 char *		support_get(struct Server *server, char *key);
 void		support_set(struct Server *server, char *key, char *value);
 

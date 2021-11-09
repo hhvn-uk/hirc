@@ -269,7 +269,8 @@ serv_poll(struct Server **head, int timeout) {
 }
 
 void
-serv_disconnect(struct Server *server, int reconnect) {
+serv_disconnect(struct Server *server, int reconnect, char *msg) {
+	ircprintf(server, "QUIT %s\r\n", msg);
 	shutdown(server->rfd, SHUT_RDWR);
 	shutdown(server->wfd, SHUT_RDWR);
 	close(server->rfd);
