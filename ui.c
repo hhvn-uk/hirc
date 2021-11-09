@@ -381,19 +381,24 @@ ui_buflist_select(int num) {
 		return;
 	}
 
-	for (i = 2, sp = servers; sp; sp = sp->next, i++) {
+	for (i = 2, sp = servers; sp; sp = sp->next) {
 		if (i == num) {
 			ui_select(sp, NULL);
 			return;
 		}
+		i++; /* increment before moving 
+			to channel section, not
+			int for (;; ..) */
 
-		for (i++, chp = sp->channels; chp; chp = chp->next, i++) {
+		for (chp = sp->channels; chp; chp = chp->next, i++) {
 			if (i == num) {
 				ui_select(sp, chp);
 				return;
 			}
 		}
 	}
+
+	ui_error("couldn't select buffer with index %d", num);
 }
 
 void
