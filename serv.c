@@ -102,7 +102,8 @@ serv_create(char *name, char *host, char *port, char *nick,
 		server->tls = 0;
 	}
 
-	tls_config_free(conf);
+	if (tls)
+		tls_config_free(conf);
 #else
 	if (tls)
 		hist_format(server->history, Activity_error, HIST_SHOW,
