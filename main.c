@@ -284,7 +284,7 @@ main(int argc, char **argv) {
 
 		refreshed = inputrefreshed = 0;
 		for (i=0; i < Win_last; i++) {
-			if (windows[i].redraw) {
+			if (windows[i].redraw && windows[i].location) {
 				if (windows[i].handler)
 					windows[i].handler();
 				wnoutrefresh(windows[i].window);
