@@ -10,6 +10,29 @@
 #endif /* TLS */
 #include "hirc.h"
 
+int uineedredraw = 0;
+
+#define HIRC_COLOURS 100
+static unsigned short colourmap[HIRC_COLOURS] = {
+	/* original 16 mirc colours
+	 * some clients use the first 16 ansi colours for this,
+	 * but here I use the 256 colours to ensure terminal-agnosticism */
+	[0] = 255, 16, 19, 46, 124, 88,  127, 184, 
+	[8] = 208, 46, 45, 51, 21,  201, 240, 255,
+
+	/* extended */
+	[16] = 52,  94,  100, 58,  22,  29,  23,  24,  17,  54,  53,  89,
+	[28] = 88,  130, 142, 64,  28,  35,  30,  25,  18,  91,  90,  125,
+	[40] = 124, 166, 184, 106, 34,  49,  37,  33,  19,  129, 127, 161,
+	[52] = 196, 208, 226, 154, 46,  86,  51,  75,  21,  171, 201, 198,
+	[64] = 203, 215, 227, 191, 83,  122, 87,  111, 63,  177, 207, 205,
+	[76] = 217, 223, 229, 193, 157, 158, 159, 153, 147, 183, 219, 212,
+	[88] = 16,  233, 235, 237, 239, 241, 244, 247, 250, 254, 231,
+
+	/* transparency */
+	[99] = -1
+};
+
 struct Window windows[Win_last] = {
 	[Win_main]	= {.handler = ui_draw_main},
 	[Win_input]	= {.handler = ui_draw_input},
@@ -72,14 +95,8 @@ ui_init(void) {
 	memset(input.string, '\0', sizeof(input.string));
 	input.counter = 0;
 
-	if (nicklistlocation != 0 && nicklistlocation == buflistlocation) {
-		ui_error("nicklist and buflist can't be set to same location in config.h", NULL);
-		windows[Win_buflist].location = LEFT;
-		windows[Win_nicklist].location = RIGHT;
-	} else {
-		windows[Win_buflist].location = buflistlocation;
-		windows[Win_nicklist].location = nicklistlocation;
-	}
+	windows[Win_nicklist].location = config_getl("nicklist.location");
+	windows[Win_buflist].location = config_getl("buflist.location");
 
 	windows[Win_main].window = newwin(0, 0, 0, 0);
 	windows[Win_input].window = newwin(0, 0, 0, 0);
@@ -152,8 +169,8 @@ ui_read(void) {
 			needredraw = 0;
 		}
 		return;
-	case KEY_RESIZE: 
-		ui_redraw(); 
+	case KEY_RESIZE:
+		ui_redraw();
 		return;
 	case KEY_BACKSPACE:
 		if (input.counter) {
@@ -239,9 +256,14 @@ ui_input_delete(int num, int counter) {
 
 void
 ui_redraw(void) {
+	long nicklistwidth, buflistwidth;
 	int x = 0, rx = 0;
 	int i;
 
+	nicklistwidth = config_getl("nicklist.width");
+	buflistwidth = config_getl("buflist.width");
+
+	/* TODO: what if nicklistwidth or buflistwidth is too big? */
 	if (windows[Win_buflist].location == LEFT) {
 		windows[Win_buflist].x = windows[Win_buflist].y = 0;
 		windows[Win_buflist].h = LINES;

@@ -63,8 +63,8 @@ serv_create(char *name, char *host, char *port, char *nick,
 	server->host = estrdup(host);
 	server->port = estrdup(port);
 	server->supports = NULL;
-	support_set(server, "CHANTYPES", default_chantypes);
-	support_set(server, "PREFIX", default_prefixes);
+	support_set(server, "CHANTYPES", config_gets("def.chantypes"));
+	support_set(server, "PREFIX", config_gets("def.prefixes"));
 	server->self = nick_create(nick, ' ', NULL);
 	server->self->self = 1;
 	server->history = emalloc(sizeof(struct HistInfo));
@@ -229,8 +229,8 @@ serv_connect(struct Server *server) {
 	return;
 
 fail:
-	serv_disconnect(server, 1);
-	if (server->connectfail * reconnectinterval < maxreconnectinterval)
+	serv_disconnect(server, 1, "Eead Rrror");
+	if (server->connectfail * config_getl("reconnect.interval") < config_getl("reconnect.maxinterval"))
 		server->connectfail += 1;
 	freeaddrinfo(ai);
 }

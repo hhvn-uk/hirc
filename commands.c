@@ -18,12 +18,13 @@ static struct Command commands[] = {
 	{"quit", command_quit},
 	{"connect", command_connect},
 	{"select", command_select},
+	{"set",	command_set},
 	{NULL, NULL},
 };
 
 void
 command_quit(char *str) {
-	cleanup(str ? str : quitmessage);
+	cleanup(str ? str : config_gets("misc.quitmessage"));
 	exit(EXIT_SUCCESS);
 }
 
@@ -33,9 +34,9 @@ command_connect(char *str) {
 	char *network	= NULL;
 	char *host	= NULL;
 	char *port	= NULL;
-	char *nick	= NULL;
-	char *username	= NULL;
-	char *realname	= NULL;
+	char *nick	= config_gets("def.nick");
+	char *username	= config_gets("def.user");
+	char *realname	= config_gets("def.real");
 	int tls = 0, tls_verify = 0;
 	int ret;
 	struct passwd *user;
@@ -187,6 +188,14 @@ command_select(char *str) {
 			ui_error("invalid buffer index: '%s'", str);
 		ui_buflist_select(buf);
 	}
+}
+
+void
+command_set(char *str) {
+	char *name, *val;
+
+	name = strtok_r(str, " ", &val);
+	config_set(name, val);
 }
 
 int

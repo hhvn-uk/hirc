@@ -128,7 +128,14 @@ hist_format(struct HistInfo *histinfo, enum Activity activity, enum HistOpt opti
 int
 hist_log(char *msg, struct Nick *from, time_t timestamp, struct Server *server) {
 	char filename[2048];
+	char *logdir;
 	int ret, serrno;
+
+	if (!config_getl("log.toggle"))
+		return -2;
+
+	if ((logdir = config_gets("log.dir")) == NULL)
+		return -3;
 
 	if (*msg == ':' && strchr(msg, ' '))
 		msg = strchr(msg, ' ') + 1;
@@ -157,7 +164,7 @@ hist_log(char *msg, struct Nick *from, time_t timestamp, struct Server *server) 
 		ui_error("Failed to write to log of server '%s': %s", server->name, strerror(errno));
 		return -1;
 	}
-	
+
 	return 1;
 }
 

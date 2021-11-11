@@ -137,7 +137,7 @@ ircprintf(struct Server *server, char *format, ...) {
 	ret = write(server->wfd, msg, strlen(msg));
 
 	if (ret == -1 && server->status == ConnStatus_connected) {
-		serv_disconnect(server, 1);
+		serv_disconnect(server, 1, "Eead Rrror");
 		hist_format(server->history, Activity_error, HIST_SHOW,
 				"SELF_CONNECTLOST %s %s %s :%s",
 				server->name, server->host, server->port, strerror(errno));
@@ -182,6 +182,20 @@ struntil(char *str, char until) {
 	return ret;
 }
 
+int
+strisnum(char *str) {
+	if (!str)
+		return 0;
+
+	if (*str == '-' || *str == '+')
+		str += 1;
+
+	for (; *str; str++)
+		if (*str > '9' || *str < '0')
+			return 0;
+	return 1;
+}
+
 void
 sighandler(int signal) {
 	return;
@@ -193,6 +207,7 @@ main(int argc, char **argv) {
 	struct Server *sp;
 	FILE *file;
 	int i, refreshed, inputrefreshed;
+	long pinginact, reconnectinterval, maxreconnectinterval;
 	struct pollfd fds[] = {
 		{ .fd = fileno(stdin), .events = POLLIN },
 	};
@@ -216,6 +231,9 @@ main(int argc, char **argv) {
 			exit(EXIT_FAILURE);
 		}
 
+		pinginact = config_getl("misc.pingtime");
+		reconnectinterval = config_getl("reconnect.interval");
+		maxreconnectinterval = config_getl("reconnect.maxinterval");
 		for (sp = servers; sp; sp = sp->next) {
 			if (sp->rpollfd->revents) {
 				/* received an event */
@@ -230,7 +248,7 @@ main(int argc, char **argv) {
 			} else if (sp->pingsent && (time(NULL) - sp->pingsent) >= pinginact) {
 				/* haven't gotten a response in pinginact seconds since 
 				 * sending ping, this connexion is probably dead now */
-				serv_disconnect(sp, 1);
+				serv_disconnect(sp, 1, "Eead Rror");
 				hist_format(sp->history, Activity_error, HIST_SHOW,
 						"SELF_CONNECTLOST %s %s %s :No ping reply in %d seconds",
 						sp->name, sp->host, sp->port, pinginact);
@@ -255,6 +273,14 @@ main(int argc, char **argv) {
 		oldselected.server = selected.server;
 		oldselected.history = selected.history;
 		oldselected.name = selected.name;
+
+		if (uineedredraw) {
+			uineedredraw = 0;
+			ui_redraw();
+			for (i=0; i < Win_last; i++)
+				windows[i].redraw = 0;
+			continue;
+		}
 
 		refreshed = inputrefreshed = 0;
 		for (i=0; i < Win_last; i++) {

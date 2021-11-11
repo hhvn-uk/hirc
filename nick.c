@@ -10,13 +10,20 @@
 #define MAXA(array) MAX(array[0], array[1])
 #define MINA(array) MIN(array[0], array[1])
 
-unsigned short
+short
 nick_getcolour(char *nick) {
 	unsigned short ret, sum;
 	int i;
+	long range[2];
 
-	if (othercolour[0] == othercolour[1])
-		return othercolour[0];
+	config_getr("nickcolour.range", &range[0], &range[1]);
+
+	if (range[0] < 0 || range[0] > 99 ||
+			range[1] < 0 || range[1] > 99)
+		return -1;
+
+	if (range[0] == range[1])
+		return range[0];
 
 	for (sum=i=0; nick && *nick; nick++, i++) {
 		/* don't count certain trailing characters. The following:
@@ -31,7 +38,7 @@ nick_getcolour(char *nick) {
 		sum ^= *nick;
 	}
 
-	return (sum % (MAXA(othercolour) - MINA(othercolour)) + MINA(othercolour) - 1);
+	return (sum % (MAXA(range) - MINA(range)) + MINA(range) - 1);
 }
 
 void

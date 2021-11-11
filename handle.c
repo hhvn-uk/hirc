@@ -297,7 +297,7 @@ handle(int rfd, struct Server *server) {
 
 	if (!read_line(rfd, buf, sizeof(buf))) {
 		if (buf[0] == EOF || buf[0] == 3 || buf[0] == 4) {
-			serv_disconnect(server, 1);
+			serv_disconnect(server, 1, "EOF");
 			hist_format(server->history, Activity_error, HIST_SHOW,
 					"SELF_CONNECTLOST %s %s %s :EOF received",
 					server->name, server->host, server->port);

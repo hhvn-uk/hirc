@@ -2,12 +2,13 @@
 #define H_HIRC
 
 #include "struct.h"
-#include "config.h"
 #define PARAM_MAX 64
 #define INPUT_MAX 8192
 #define COMMANDARG_MAX (INPUT_MAX / 5)
         /* Theoretical max: -a o -b o -c o *
 	 *                  12345          */
+#define MAX_HISTORY 8192
+	/* real maximum = MAX_HISTORY * (channels + servers + queries) */
 
 /* main.c */
 void *		emalloc(size_t size);
@@ -21,6 +22,7 @@ int		ircprintf(struct Server *server, char *format, ...);
 char *		homepath(char *path);
 char		chrcmp(char c, char *s);
 char *		struntil(char *str, char until);
+int		strisnum(char *str);
 
 /* chan.c */
 void		chan_free(struct Channel *channel);
@@ -127,6 +129,23 @@ int		command_getopt(char **str, struct CommandOpts *opts);
 void		command_quit(char *str);
 void		command_connect(char *str);
 void		command_select(char *str);
+void		command_set(char *str);
+
+/* config.h */
+void		config_get_print(char *name);
+long		config_getl(char *name);
+char *		config_gets(char *name);
+void		config_getr(char *name, long *a, long *b);
+void		config_set(char *name, char *str);
+void		config_setl(char *name, long num);
+void		config_sets(char *name, char *str);
+void		config_setr(char *name, long a, long b);
+int		config_colour_self(long num);
+int		config_colour_range(long a, long b);
+int		config_nicklist_location(long num);
+int		config_nicklist_width(long num);
+int		config_buflist_location(long num);
+int		config_buflist_width(long num);
 
 /* main.c */
 extern struct Server *servers;
@@ -135,5 +154,6 @@ extern struct HistInfo *main_buf;
 /* ui.c */
 extern struct Selected selected;
 extern struct Window windows[Win_last];
+extern int uineedredraw;
 
 #endif /* H_HIRC */

@@ -130,16 +130,26 @@ struct CommandOpts {
 	int ret;
 };
 
-struct Netconfig {
+enum Valtype {
+	Val_string,
+	Val_bool,
+	Val_signed,
+	Val_unsigned,
+	Val_nzunsigned,
+	Val_range,
+};
+
+struct Config {
 	char *name;
-	char *host;
-	char *port;
-	char *nick;
-	char *user;
-	char *real;
-	char *join[64];
-	int tls;
-	int tls_verify;
+	int isdef;
+	enum Valtype valtype;
+	char *description;
+	char *str;
+	long num;
+	long range[2];
+	int (*strhandle)(char *string);
+	int (*numhandle)(long num);
+	int (*rangehandle)(long a, long b);
 };
 
 enum WindowLocation {
