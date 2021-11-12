@@ -263,7 +263,7 @@ handle_NICK(char *msg, char **params, struct Server *server, time_t timestamp) {
 
 	if (strcmp(nick->nick, newnick) == 0)
 		return;
-	
+
 	if (nick_isself(nick)) {
 		nick_free(server->self);
 		server->self = nick_create(newnick, ' ', server);
@@ -272,7 +272,7 @@ handle_NICK(char *msg, char **params, struct Server *server, time_t timestamp) {
 
 	for (chan = server->channels; chan; chan = chan->next) {
 		if ((chnick = nick_get(&chan->nicks, nick->nick)) != NULL) {
-			snprintf(prefix, sizeof(prefix), ":%s!%s@%s", 
+			snprintf(prefix, sizeof(prefix), ":%s!%s@%s",
 					newnick, chnick->ident, chnick->host);
 			nick_add(&chan->nicks, prefix, chnick->priv, server);
 			nick_remove(&chan->nicks, nick->nick);

@@ -33,8 +33,8 @@ hist_free_list(struct HistInfo *histinfo) {
 }
 
 struct History *
-hist_create(struct HistInfo *histinfo, struct Nick *from, char *msg, 
-		char **params, enum Activity activity, 
+hist_create(struct HistInfo *histinfo, struct Nick *from, char *msg,
+		char **params, enum Activity activity,
 		time_t timestamp, enum HistOpt options) {
 	struct History *new;
 
@@ -59,8 +59,8 @@ hist_create(struct HistInfo *histinfo, struct Nick *from, char *msg,
 }
 
 struct History *
-hist_add(struct HistInfo *histinfo, struct Nick *from, 
-		char *msg, char **params, enum Activity activity, 
+hist_add(struct HistInfo *histinfo, struct Nick *from,
+		char *msg, char **params, enum Activity activity,
 		time_t timestamp, enum HistOpt options) {
 	struct History *new, *p;
 	int i;

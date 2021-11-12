@@ -61,7 +61,7 @@ param_free(char **params) {
 int
 param_len(char **params) {
 	int i;
-	
+
 	for (i=0; params && *params; i++, params++);
 	return i;
 }
@@ -242,13 +242,13 @@ main(int argc, char **argv) {
 				ircprintf(sp, "PING :ground control to Major Tom\r\n");
 				sp->pingsent = time(NULL);
 			} else if (sp->pingsent && (time(NULL) - sp->pingsent) >= pinginact) {
-				/* haven't gotten a response in pinginact seconds since 
+				/* haven't gotten a response in pinginact seconds since
 				 * sending ping, this connexion is probably dead now */
 				serv_disconnect(sp, 1, "Eead Rror");
 				hist_format(sp->history, Activity_error, HIST_SHOW,
 						"SELF_CONNECTLOST %s %s %s :No ping reply in %d seconds",
 						sp->name, sp->host, sp->port, pinginact);
-			} else if (sp->status == ConnStatus_notconnected && sp->reconnect && 
+			} else if (sp->status == ConnStatus_notconnected && sp->reconnect &&
 					(time(NULL) - sp->lastconnected) >= (sp->connectfail * reconnectinterval)) {
 				/* time since last connected is sufficient to initiate reconnect */
 				serv_connect(sp);

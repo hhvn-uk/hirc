@@ -41,7 +41,7 @@ serv_free(struct Server *server) {
 }
 
 struct Server *
-serv_create(char *name, char *host, char *port, char *nick, 
+serv_create(char *name, char *host, char *port, char *nick,
 		char *username, char *realname, int tls, int tls_verify) {
 	struct Server *server;
 	struct tls_config *conf;
@@ -114,7 +114,7 @@ serv_create(char *name, char *host, char *port, char *nick,
 }
 
 struct Server *
-serv_add(struct Server **head, char *name, char *host, char *port, 
+serv_add(struct Server **head, char *name, char *host, char *port,
 		char *nick, char *username, char *realname, int tls, int tls_verify) {
 	struct Server *new, *p;
 
@@ -145,7 +145,7 @@ serv_get(struct Server **head, char *name) {
 		if (strcmp(p->name, name) == 0)
 			return p;
 	}
-	
+
 	return NULL;
 }
 
@@ -160,7 +160,7 @@ serv_get_byrfd(struct Server **head, int rfd) {
 		if (p->rfd == rfd)
 			return p;
 	}
-	
+
 	return NULL;
 }
 
@@ -222,7 +222,7 @@ serv_connect(struct Server *server) {
 	freeaddrinfo(ai);
 
 	ircprintf(server, "NICK %s\r\n", server->self->nick);
-	ircprintf(server, "USER %s * * :%s\r\n", 
+	ircprintf(server, "USER %s * * :%s\r\n",
 			server->username ? server->username : server->self->nick,
 			server->realname ? server->realname : server->self->nick);
 
@@ -262,7 +262,7 @@ serv_poll(struct Server **head, int timeout) {
 		ret = 0;
 
 	for (i=0, sp = *head; sp; sp = sp->next, i++)
-		if (sp->status == ConnStatus_connecting 
+		if (sp->status == ConnStatus_connecting
 				|| sp->status == ConnStatus_connected)
 			sp->rpollfd->revents = fds[i].revents;
 

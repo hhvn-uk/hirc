@@ -123,7 +123,7 @@ chan_remove(struct Channel **head, char *name) {
 		chan_free(p);
 		return 1;
 	}
-	
+
 	p->prev->next = p->next;
 	if (p->next != NULL)
 		p->next->prev = p->prev;

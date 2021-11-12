@@ -55,10 +55,10 @@ void		hist_free(struct History *history);
 void		hist_free_list(struct HistInfo *histinfo);
 struct History *hist_create(struct HistInfo *histinfo, struct Nick *from, char *msg,
 		char **params, enum Activity activity, time_t timestamp, enum HistOpt options);
-struct History *hist_add(struct HistInfo *histinfo, 
-		struct Nick *from, char *msg, char **params, enum Activity activity, 
+struct History *hist_add(struct HistInfo *histinfo,
+		struct Nick *from, char *msg, char **params, enum Activity activity,
 		time_t timestamp, enum HistOpt options);
-struct History *hist_format(struct HistInfo *history, enum Activity activity, 
+struct History *hist_format(struct HistInfo *history, enum Activity activity,
 		enum HistOpt options, char *format, ...);
 int		hist_len(struct History **history);
 int		hist_log(char *msg, struct Nick *from, time_t timestamp, struct Server *server);
@@ -70,7 +70,7 @@ struct Server *	serv_create(char *name, char *host, char *port, char *nick,
 		char *username, char *realname, int tls, int tls_verify);
 struct Server * serv_get(struct Server **head, char *name);
 struct Server * serv_get_byrfd(struct Server **head, int rfd);
-struct Server * serv_add(struct Server **head, char *name, char *host, 
+struct Server * serv_add(struct Server **head, char *name, char *host,
 		char *port, char *nick, char *username, char *realname, int tls, int tls_verify);
 int		serv_len(struct Server **head);
 int		serv_poll(struct Server **head, int timeout);

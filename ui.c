@@ -17,7 +17,7 @@ static unsigned short colourmap[HIRC_COLOURS] = {
 	/* original 16 mirc colours
 	 * some clients use the first 16 ansi colours for this,
 	 * but here I use the 256 colours to ensure terminal-agnosticism */
-	[0] = 255, 16, 19, 46, 124, 88,  127, 184, 
+	[0] = 255, 16, 19, 46, 124, 88,  127, 184,
 	[8] = 208, 46, 45, 51, 21,  201, 240, 255,
 
 	/* extended */
@@ -56,7 +56,7 @@ ui_error_(char *file, int line, char *format, ...) {
 	va_end(ap);
 
 	hist_format(main_buf, Activity_error, HIST_SHOW,
-			"SELF_ERROR %s %d :%s", 
+			"SELF_ERROR %s %d :%s",
 			file, line, msg);
 }
 
@@ -478,7 +478,7 @@ ui_wprintc(struct Window *window, int lines, char *format, ...) {
 	va_list ap;
 	int ret;
 	attr_t curattr;
-	int temp; /* used only for wattr_get, 
+	int temp; /* used only for wattr_get,
 		     because ncurses is dumb */
 	int cc, lc, elc, utfc;
 	char colourbuf[2][3];
@@ -557,7 +557,7 @@ ui_wprintc(struct Window *window, int lines, char *format, ...) {
 			underline = 0;
 			reverse = 0;
 			italic = 0;
-			/* Setting A_NORMAL turns everything off, 
+			/* Setting A_NORMAL turns everything off,
 			 * without using 5 different attroffs */
 			wattrset(window->window, A_NORMAL);
 			break;
