@@ -33,6 +33,9 @@ static struct Command commands[] = {
 		"       /set <variable> string....",
 		"Set a configuration variable.",
 		"Passing only the name prints content.", NULL}},
+	{"server", command_server, {
+		"usage: /server <server> cmd....",
+		"Run (non-raw) command with server as target.", NULL}},
 	{"help", command_help, {
 		"usage: /help [command or variable]",
 		"Print help information.",
@@ -233,6 +236,38 @@ command_set(struct Server *server, char *str) {
 	}
 	name = strtok_r(str, " ", &val);
 	config_set(name, val);
+}
+
+void
+command_server(struct Server *server, char *str) {
+	struct Server *nserver;
+	char *tserver, *cmd, *arg;
+	int i;
+
+	tserver = strtok_r(str,  " ", &arg);
+	cmd     = strtok_r(NULL, " ", &arg);
+
+	if (!tserver || !cmd) {
+		ui_error("/server requires 2 arguments", NULL);
+		return;
+	}
+
+	if ((nserver = serv_get(&servers, tserver)) == NULL) {
+		ui_error("no such server: '%s'", tserver);
+		return;
+	}
+
+	if (*cmd == '/')
+		cmd++;
+
+	for (i=0; commands[i].name && commands[i].func; i++) {
+		if (strcmp(commands[i].name, cmd) == 0) {
+			commands[i].func(nserver, arg);
+			return;
+		}
+	}
+
+	ui_error("no such commands: '%s'", cmd);
 }
 
 void

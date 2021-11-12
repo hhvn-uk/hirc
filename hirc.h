@@ -131,6 +131,7 @@ void		command_quote(struct Server *server, char *str);
 void		command_connect(struct Server *server, char *str);
 void		command_select(struct Server *server, char *str);
 void		command_set(struct Server *server, char *str);
+void		command_server(struct Server *server, char *str);
 void		command_help(struct Server *server, char *str);
 
 /* config.c */
