@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <stdlib.h>
+#include <libgen.h>
 #include <limits.h>
 #include <string.h>
 #include <unistd.h>
@@ -202,12 +203,17 @@ sighandler(int signal) {
 }
 
 int
-main(int argc, char **argv) {
+main(int argc, char *argv[]) {
 	struct Selected oldselected;
 	struct Server *sp;
 	FILE *file;
 	int i, refreshed, inputrefreshed;
 	long pinginact, reconnectinterval, maxreconnectinterval;
+
+	if (argc > 2) {
+		fprintf(stderr, "usage: %s [configfile]", dirname(argv[0]));
+		return EXIT_FAILURE;
+	}
 
 	main_buf = emalloc(sizeof(struct HistInfo));
 	main_buf->activity = Activity_ignore;
@@ -217,6 +223,9 @@ main(int argc, char **argv) {
 	main_buf->history = NULL;
 
 	ui_init();
+
+	if (argc == 2)
+		config_read(argv[1]);
 
 	for (;;) {
 		if (serv_poll(&servers, 5) < 0) {

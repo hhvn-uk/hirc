@@ -1,6 +1,7 @@
 #include <ncurses.h>
 #include <string.h>
 #include <stdlib.h>
+#include <errno.h>
 #include "hirc.h"
 
 char *valname[] = {
@@ -287,6 +288,21 @@ config_set(char *name, char *val) {
 		config_get_print(name);
 
 	free(str);
+}
+
+void
+config_read(char *filename) {
+	char buf[8192];
+	FILE *file;
+
+	if ((file = fopen(filename, "rb")) == NULL) {
+		ui_error("cannot open file '%s': %s", filename, strerror(errno));
+		return;
+	}
+
+	while (read_line(fileno(file), buf, sizeof(buf)))
+		if (*buf == '/')
+			command_eval(buf);
 }
 
 int
