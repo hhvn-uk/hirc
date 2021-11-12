@@ -111,6 +111,7 @@ ui_init(void) {
 	keypad(windows[Win_input].window, TRUE);
 
 	ui_redraw();
+	ui_select(NULL, NULL);
 }
 
 int
