@@ -208,9 +208,6 @@ main(int argc, char **argv) {
 	FILE *file;
 	int i, refreshed, inputrefreshed;
 	long pinginact, reconnectinterval, maxreconnectinterval;
-	struct pollfd fds[] = {
-		{ .fd = fileno(stdin), .events = POLLIN },
-	};
 
 	main_buf = emalloc(sizeof(struct HistInfo));
 	main_buf->activity = Activity_ignore;
