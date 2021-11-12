@@ -4,6 +4,12 @@
 #include <stdlib.h>
 #include "hirc.h"
 
+struct Expect expect[] = {
+	{ "JOIN",	NULL },
+	{ "PART",	NULL },
+	{ NULL,		NULL },
+};
+
 struct Handler handlers[] = {
 	{ "PING", 	handle_PING		},
 	{ "JOIN",	handle_JOIN		},
@@ -51,10 +57,15 @@ handle_JOIN(char *msg, char **params, struct Server *server, time_t timestamp) {
 	hist_add(server->history, nick, msg, params, Activity_status, timestamp, HIST_LOG);
 	hist_add(chan->history, nick, msg, params, Activity_status, timestamp, HIST_SHOW);
 
-	if (nick_isself(nick))
-		ui_select(server, chan);
-	else if (selected.channel == chan)
+	if (nick_isself(nick)) {
+		if (strcmp_n(target, handle_expect_get("JOIN")) == 0)
+			ui_select(server, chan);
+		else
+			windows[Win_buflist].refresh = 1;
+		handle_expect("JOIN", NULL);
+	} else if (selected.channel == chan) {
 		windows[Win_nicklist].refresh = 1;
+	}
 
 	nick_free(nick);
 }
@@ -76,8 +87,11 @@ handle_PART(char *msg, char **params, struct Server *server, time_t timestamp) {
 	if (nick_isself(nick)) {
 		chan_setold(chan, 1);
 		nick_free_list(&chan->nicks);
-		if (chan == selected.channel)
+		if (chan == selected.channel && strcmp_n(target, handle_expect_get("PART"))) {
 			ui_select(selected.server, NULL);
+			handle_expect("PART", NULL);
+		}
+		windows[Win_buflist].refresh = 1;
 	} else {
 		nick_remove(&chan->nicks, nick->nick);
 		if (chan == selected.channel)
@@ -280,6 +294,27 @@ handle_NICK(char *msg, char **params, struct Server *server, time_t timestamp) {
 				windows[Win_nicklist].refresh = 1;
 		}
 	}
+}
+
+void
+handle_expect(char *cmd, char *about) {
+	int i;
+
+	for (i=0; expect[i].cmd; i++) {
+		if (strcmp(expect[i].cmd, cmd) == 0) {
+			free(expect[i].about);
+			expect[i].about = about ? strdup(about) : NULL;
+		}
+	}
+}
+
+char *
+handle_expect_get(char *cmd) {
+	int i;
+
+	for (i=0; expect[i].cmd; i++)
+		if (strcmp(expect[i].cmd, cmd) == 0)
+			return expect[i].about;
 }
 
 void

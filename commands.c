@@ -21,6 +21,12 @@ static struct Command commands[] = {
 	{"quote", command_quote, {
 		"usage: /quote <message>",
 		"Send raw message to server", NULL}},
+	{"join", command_join, {
+		"usage: /join <channel>",
+		"Join channel", NULL}},
+	{"part", command_part, {
+		"usage: /part <channel>",
+		"Part channel", NULL}},
 	{"connect", command_connect, {
 		"usage: /connect [-network <name>] [-nick <nick>] [-user <user>]",
 		"                [-real <comment>] [-tls] [-verify] <host> [port]",
@@ -47,6 +53,24 @@ void
 command_quit(struct Server *server, char *str) {
 	cleanup(str ? str : config_gets("misc.quitmessage"));
 	exit(EXIT_SUCCESS);
+}
+
+void
+command_join(struct Server *server, char *str) {
+	if (strchr(config_gets("def.chantypes"), *str))
+		ircprintf(server, "JOIN %s\r\n", str);
+	else
+		ircprintf(server, "JOIN #%s\r\n", str);
+	handle_expect("JOIN", str);
+}
+
+void
+command_part(struct Server *server, char *str) {
+	if (strchr(config_gets("def.chantypes"), *str))
+		ircprintf(server, "PART %s\r\n", str);
+	else
+		ircprintf(server, "PART #%s\r\n", str);
+	handle_expect("PART", str);
 }
 
 void

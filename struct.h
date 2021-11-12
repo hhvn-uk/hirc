@@ -118,6 +118,11 @@ struct Handler {
 	void (*func)(char *msg, char **params, struct Server *server, time_t timestamp);
 };
 
+struct Expect {
+	char *cmd;
+	char *about;
+};
+
 /* commands received from user */
 struct Command {
 	char *name;
