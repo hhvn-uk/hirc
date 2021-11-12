@@ -122,6 +122,7 @@ struct Handler {
 struct Command {
 	char *name;
 	void (*func)(char *str);
+	char *description[64];
 };
 
 struct CommandOpts {
@@ -143,7 +144,7 @@ struct Config {
 	char *name;
 	int isdef;
 	enum Valtype valtype;
-	char *description;
+	char *description[64];
 	char *str;
 	long num;
 	long range[2];

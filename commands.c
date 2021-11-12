@@ -15,10 +15,25 @@ enum {
 };
 
 static struct Command commands[] = {
-	{"quit", command_quit},
-	{"connect", command_connect},
-	{"select", command_select},
-	{"set",	command_set},
+	{"quit", command_quit, {
+		"usage: /quit",
+		"Cleanup and exit", NULL}},
+	{"connect", command_connect, {
+		"usage: /connect [-network <name>] [-nick <nick>] [-user <user>]",
+		"                [-real <comment>] [-tls] [-verify] <host> [port]",
+		"Connect to a network/server", NULL}},
+	{"select", command_select, {
+		"usage: /select [-network <name>] [-channel <name>] [buffer id]",
+		"Select a buffer", NULL}},
+	{"set",	command_set, {
+		"usage: /set <variable> [number/range] [end of range]",
+		"       /set <variable> string....",
+		"Set a configuration variable.",
+		"Passing only the name prints content.", NULL}},
+	{"help", command_help, {
+		"usage: /help [command or variable]",
+		"Print help information.",
+		"`/help commands` and `/help variables` will list respectively", NULL}},
 	{NULL, NULL},
 };
 
@@ -194,8 +209,68 @@ void
 command_set(char *str) {
 	char *name, *val;
 
+	if (!str) {
+		ui_error("/set requires argument", NULL);
+		return;
+	}
 	name = strtok_r(str, " ", &val);
 	config_set(name, val);
+}
+
+void
+command_help(char *str) {
+	int cmdonly = 0;
+	int i, j;
+
+	if (!str) {
+		command_help("/help");
+		return;
+	}
+
+	if (strcmp(str, "commands") == 0) {
+		hist_format(main_buf, Activity_status, HIST_SHOW, "SELF_UI :Commands:");
+		for (i=0; commands[i].name && commands[i].func; i++)
+			hist_format(main_buf, Activity_status, HIST_SHOW, "SELF_UI : %s", commands[i].name);
+		return;
+	}
+
+	if (strcmp(str, "variables") == 0) {
+		hist_format(main_buf, Activity_status, HIST_SHOW, "SELF_UI :Variables:");
+		for (i=0; config[i].name; i++)
+			hist_format(main_buf, Activity_status, HIST_SHOW, "SELF_UI : %s", config[i].name);
+		return;
+	}
+
+	if (*str == '/') {
+		cmdonly = 1;
+		str++;
+	}
+
+	for (i=0; commands[i].name && commands[i].func; i++) {
+		if (strcmp(commands[i].name, str) == 0) {
+			hist_format(main_buf, Activity_status, HIST_SHOW, "SELF_UI :%s", str);
+			hist_format(main_buf, Activity_status, HIST_SHOW, "SELF_UI :===");
+			for (j=0; commands[i].description[j]; j++)
+				hist_format(main_buf, Activity_status, HIST_SHOW, "SELF_UI :%s", commands[i].description[j]);
+			hist_format(main_buf, Activity_status, HIST_SHOW, "SELF_UI :");
+			return;
+		}
+	}
+
+	if (!cmdonly) {
+		for (i=0; config[i].name; i++) {
+			if (strcmp(config[i].name, str) == 0) {
+				hist_format(main_buf, Activity_status, HIST_SHOW, "SELF_UI :%s", str);
+				hist_format(main_buf, Activity_status, HIST_SHOW, "SELF_UI :===");
+				for (j=0; config[i].description[j]; j++)
+					hist_format(main_buf, Activity_status, HIST_SHOW, "SELF_UI :%s", config[i].description[j]);
+				hist_format(main_buf, Activity_status, HIST_SHOW, "SELF_UI :");
+				return;
+			}
+		}
+	}
+
+	ui_error("no help on '%s'", str);
 }
 
 int

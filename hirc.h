@@ -130,8 +130,9 @@ void		command_quit(char *str);
 void		command_connect(char *str);
 void		command_select(char *str);
 void		command_set(char *str);
+void		command_help(char *str);
 
-/* config.h */
+/* config.c */
 void		config_get_print(char *name);
 long		config_getl(char *name);
 char *		config_gets(char *name);
@@ -156,5 +157,8 @@ extern struct HistInfo *main_buf;
 extern struct Selected selected;
 extern struct Window windows[Win_last];
 extern int uineedredraw;
+
+/* config.c */
+extern struct Config config[];
 
 #endif /* H_HIRC */
