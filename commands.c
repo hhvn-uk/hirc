@@ -18,6 +18,9 @@ static struct Command commands[] = {
 	{"quit", command_quit, {
 		"usage: /quit",
 		"Cleanup and exit", NULL}},
+	{"quote", command_quote, {
+		"usage: /quote <message>",
+		"Send raw message to server", NULL}},
 	{"connect", command_connect, {
 		"usage: /connect [-network <name>] [-nick <nick>] [-user <user>]",
 		"                [-real <comment>] [-tls] [-verify] <host> [port]",
@@ -38,14 +41,29 @@ static struct Command commands[] = {
 };
 
 void
-command_quit(char *str) {
+command_quit(struct Server *server, char *str) {
 	cleanup(str ? str : config_gets("misc.quitmessage"));
 	exit(EXIT_SUCCESS);
 }
 
 void
-command_connect(char *str) {
-	struct Server *server;
+command_quote(struct Server *server, char *str) {
+	if (!str) {
+		ui_error("/quote requires argument", NULL);
+		return;
+	}
+
+	if (!server) {
+		ui_error("no server selected", NULL);
+		return;
+	}
+
+	ircprintf(server, "%s\r\n", str);
+}
+
+void
+command_connect(struct Server *server, char *str) {
+	struct Server *tserver;
 	char *network	= NULL;
 	char *host	= NULL;
 	char *port	= NULL;
@@ -129,17 +147,17 @@ command_connect(char *str) {
 	realname = realname ? realname : nick;
 	network  = network  ? network  : host;
 
-	server = serv_add(&servers, network, host, port, nick, username, realname, tls, tls_verify);
-	serv_connect(server);
-	ui_select(server, NULL);
+	tserver = serv_add(&servers, network, host, port, nick, username, realname, tls, tls_verify);
+	serv_connect(tserver);
+	ui_select(tserver, NULL);
 }
 
 void
-command_select(char *str) {
+command_select(struct Server *server, char *str) {
 	struct Server *sp;
 	struct Channel *chp;
-	char *server = NULL;
-	char *channel = NULL;
+	char *tserver = NULL;
+	char *tchannel = NULL;
 	int ret, buf = 0;
 	enum {
 		opt_server,
@@ -158,37 +176,37 @@ command_select(char *str) {
 		case opt_error:
 			return;
 		case opt_server:
-			server = command_optarg;
+			tserver = command_optarg;
 			break;
 		case opt_channel:
-			channel = command_optarg;
+			tchannel = command_optarg;
 			break;
 		}
 	}
 
-	if (server || channel) {
+	if (tserver || tchannel) {
 		/* TODO: find closest match instead of perfect matches */
-		if (!server) {
+		if (!tserver) {
 			ui_error("must specify server and channel, or just server", NULL);
 			return;
 		}
 
 		for (sp = servers; sp; sp = sp->next)
-			if (strcmp(sp->name, server) == 0)
+			if (strcmp(sp->name, tserver) == 0)
 				break;
 
 		if (!sp) {
-			ui_error("could not find server '%s'", server);
+			ui_error("could not find server '%s'", tserver);
 			return;
 		}
 
-		if (channel) {
+		if (tchannel) {
 			for (chp = sp->channels; chp; chp = chp->next)
-				if (strcmp(chp->name, channel) == 0)
+				if (strcmp(chp->name, tchannel) == 0)
 					break;
 
 			if (!chp) {
-				ui_error("could not find channel '%s'", channel);
+				ui_error("could not find channel '%s'", tchannel);
 				return;
 			}
 		} else chp = NULL;
@@ -206,7 +224,7 @@ command_select(char *str) {
 }
 
 void
-command_set(char *str) {
+command_set(struct Server *server, char *str) {
 	char *name, *val;
 
 	if (!str) {
@@ -218,12 +236,12 @@ command_set(char *str) {
 }
 
 void
-command_help(char *str) {
+command_help(struct Server *server, char *str) {
 	int cmdonly = 0;
 	int i, j;
 
 	if (!str) {
-		command_help("/help");
+		command_help(server, "/help");
 		return;
 	}
 
@@ -343,14 +361,11 @@ command_eval(char *str) {
 
 		for (cmdp = commands; cmdp->name && cmdp->func; cmdp++) {
 			if (strcmp(cmdp->name, cmd) == 0) {
-				cmdp->func(str);
+				cmdp->func(selected.server, str);
 				return;
 			}
 		}
 
 		ui_error("no such command: '%s'", cmd);
 	}
-
-	str++;
-	ircprintf(selected.server, "%s\r\n", str);
 }

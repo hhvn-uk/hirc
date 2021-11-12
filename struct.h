@@ -121,7 +121,7 @@ struct Handler {
 /* commands received from user */
 struct Command {
 	char *name;
-	void (*func)(char *str);
+	void (*func)(struct Server *server, char *str);
 	char *description[64];
 };
 
