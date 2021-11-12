@@ -124,8 +124,8 @@ ircprintf(struct Server *server, char *format, ...) {
 	va_list ap;
 	int ret, serrno;
 
-	if (server->status == ConnStatus_notconnected) {
-		ui_error("Not connected to server '%s'", server->name);
+	if (!server || server->status == ConnStatus_notconnected) {
+		ui_error("Not connected to server '%s'", server ? server->name : "");
 		return -1;
 	}
 
