@@ -261,13 +261,13 @@ main(int argc, char **argv) {
 
 		if (oldselected.channel != selected.channel || oldselected.server != selected.server) {
 			if (windows[Win_nicklist].location)
-				windows[Win_nicklist].redraw = 1;
+				windows[Win_nicklist].refresh = 1;
 			if (windows[Win_buflist].location)
-				windows[Win_buflist].redraw = 1;
+				windows[Win_buflist].refresh = 1;
 		}
 
 		if (oldselected.history != selected.history)
-			windows[Win_main].redraw = 1;
+			windows[Win_main].refresh = 1;
 
 		oldselected.channel = selected.channel;
 		oldselected.server = selected.server;
@@ -278,17 +278,17 @@ main(int argc, char **argv) {
 			uineedredraw = 0;
 			ui_redraw();
 			for (i=0; i < Win_last; i++)
-				windows[i].redraw = 0;
+				windows[i].refresh = 0;
 			continue;
 		}
 
 		refreshed = inputrefreshed = 0;
 		for (i=0; i < Win_last; i++) {
-			if (windows[i].redraw && windows[i].location) {
+			if (windows[i].refresh && windows[i].location) {
 				if (windows[i].handler)
 					windows[i].handler();
 				wnoutrefresh(windows[i].window);
-				windows[i].redraw = 0;
+				windows[i].refresh = 0;
 				refreshed = 1;
 				if (i == Win_input)
 					inputrefreshed = 1;

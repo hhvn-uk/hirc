@@ -162,7 +162,7 @@ enum WindowLocation {
 struct Window {
 	int x, y;
 	int h, w;
-	int redraw;
+	int refresh;
 	enum WindowLocation location;
 	void (*handler)(void);
 	WINDOW *window;

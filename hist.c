@@ -99,7 +99,7 @@ hist_add(struct HistInfo *histinfo, struct Nick *from,
 
 	/* TODO: this triggers way too often, need to have some sort of delay */
 	if (selected.history == histinfo)
-		windows[Win_main].redraw = 1;
+		windows[Win_main].refresh = 1;
 
 	if (options & HIST_LOG) {
 		if (histinfo->server)

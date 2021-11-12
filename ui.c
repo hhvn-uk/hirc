@@ -149,12 +149,12 @@ ui_placewindow(struct Window *window) {
 
 void
 ui_read(void) {
-	static int needredraw;
+	static int needrefresh;
 	int key;
 
 	switch (key = wgetch(windows[Win_input].window)) {
 	case ERR: /* no input received */
-		if (needredraw) {
+		if (needrefresh) {
 			/* Only redraw the input window if there
 			 * hasn't been any input received - this
 			 * is to avoid forcing a redraw for each
@@ -165,8 +165,8 @@ ui_read(void) {
 			 * Theoretically this could be done with
 			 * bracketed paste stuff, but a solution
 			 * that works with all terminals is nice */
-			windows[Win_input].redraw = 1;
-			needredraw = 0;
+			windows[Win_input].refresh = 1;
+			needrefresh = 0;
 		}
 		return;
 	case KEY_RESIZE:
@@ -199,7 +199,7 @@ ui_read(void) {
 		break;
 	}
 
-	needredraw = 1;
+	needrefresh = 1;
 }
 
 int
@@ -311,7 +311,7 @@ ui_redraw(void) {
 
 	for (i = 0; i < Win_last; i++) {
 		ui_placewindow(&windows[i]);
-		windows[i].redraw = 1;
+		windows[i].refresh = 1;
 	}
 }
 

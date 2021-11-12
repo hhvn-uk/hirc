@@ -54,7 +54,7 @@ handle_JOIN(char *msg, char **params, struct Server *server, time_t timestamp) {
 	if (nick_isself(nick))
 		ui_select(server, chan);
 	else if (selected.channel == chan)
-		windows[Win_nicklist].redraw = 1;
+		windows[Win_nicklist].refresh = 1;
 
 	nick_free(nick);
 }
@@ -81,7 +81,7 @@ handle_PART(char *msg, char **params, struct Server *server, time_t timestamp) {
 	} else {
 		nick_remove(&chan->nicks, nick->nick);
 		if (chan == selected.channel)
-			windows[Win_nicklist].redraw = 1;
+			windows[Win_nicklist].refresh = 1;
 	}
 
 	hist_add(server->history, nick, msg, params, Activity_status, timestamp, HIST_LOG);
@@ -102,14 +102,14 @@ handle_QUIT(char *msg, char **params, struct Server *server, time_t timestamp) {
 		/* TODO: umm, sound like a big deal anyone? */
 		(void)0;
 	}
-	
+
 	hist_add(server->history, nick, msg, params, Activity_status, timestamp, HIST_LOG);
 	for (chan = server->channels; chan; chan = chan->next) {
 		if (nick_get(&chan->nicks, nick->nick) != NULL) {
 			nick_remove(&chan->nicks, nick->nick);
 			hist_add(chan->history, nick, msg, params, Activity_status, timestamp, HIST_SHOW);
 			if (chan == selected.channel)
-				windows[Win_nicklist].redraw = 1;
+				windows[Win_nicklist].refresh = 1;
 		}
 	}
 
@@ -231,7 +231,7 @@ handle_NAMREPLY(char *msg, char **params, struct Server *server, time_t timestam
 	}
 
 	if (selected.channel == chan)
-		windows[Win_nicklist].redraw = 1;
+		windows[Win_nicklist].refresh = 1;
 	param_free(nicksref);
 }
 
@@ -277,7 +277,7 @@ handle_NICK(char *msg, char **params, struct Server *server, time_t timestamp) {
 			nick_add(&chan->nicks, prefix, chnick->priv, server);
 			nick_remove(&chan->nicks, nick->nick);
 			if (selected.channel == chan)
-				windows[Win_nicklist].redraw = 1;
+				windows[Win_nicklist].refresh = 1;
 		}
 	}
 }
