@@ -126,11 +126,12 @@ void		ui_tls_error_(char *file, int line, struct tls *ctx, char *str);
 /* commands.c */
 void		command_eval(char *str);
 int		command_getopt(char **str, struct CommandOpts *opts);
-void		command_quit(char *str);
-void		command_connect(char *str);
-void		command_select(char *str);
-void		command_set(char *str);
-void		command_help(char *str);
+void		command_quit(struct Server *server, char *str);
+void		command_quote(struct Server *server, char *str);
+void		command_connect(struct Server *server, char *str);
+void		command_select(struct Server *server, char *str);
+void		command_set(struct Server *server, char *str);
+void		command_help(struct Server *server, char *str);
 
 /* config.c */
 void		config_get_print(char *name);
