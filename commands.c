@@ -242,12 +242,12 @@ command_select(struct Server *server, char *str) {
 
 		if (str)
 			ui_error("ignoring trailing arguments: '%s'", str);
-	} else {
+	} else if (str) {
 		buf = atoi(str);
 		if (!buf)
 			ui_error("invalid buffer index: '%s'", str);
 		ui_buflist_select(buf);
-	}
+	} else ui_error("/select requires argument", NULL);
 }
 
 void
