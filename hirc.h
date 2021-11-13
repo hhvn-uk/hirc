@@ -90,8 +90,10 @@ void		handle_JOIN(char *msg, char **params, struct Server *server, time_t timest
 void		handle_PART(char *msg, char **params, struct Server *server, time_t timestamp);
 void		handle_QUIT(char *msg, char **params, struct Server *server, time_t timestamp);
 void		handle_PRIVMSG(char *msg, char **params, struct Server *server, time_t timestamp);
+void		handle_WELCOME(char *msg, char **params, struct Server *server, time_t timestamp);
 void		handle_ISUPPORT(char *msg, char **params, struct Server *server, time_t timestamp);
 void		handle_NAMREPLY(char *msg, char **params, struct Server *server, time_t timestamp);
+void		handle_ENDOFMOTD(char *msg, char **params, struct Server *server, time_t timestamp);
 void		handle_NICKNAMEINUSE(char *msg, char **params, struct Server *server, time_t timestamp);
 void		handle_NICK(char *msg, char **params, struct Server *server, time_t timestamp);
 

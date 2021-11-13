@@ -215,7 +215,6 @@ serv_connect(struct Server *server) {
 	}
 
 	server->connectfail = 0;
-	server->status = ConnStatus_connected;
 	server->rfd = server->wfd = fd;
 	hist_format(server->history, Activity_status, HIST_SHOW|HIST_MAIN,
 			"SELF_CONNECTED %s %s %s", server->name, server->host, server->port);

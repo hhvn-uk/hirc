@@ -18,9 +18,11 @@ struct Handler handlers[] = {
 	{ "NICK",	handle_NICK		},
 	{ "PRIVMSG",	handle_PRIVMSG  	},
 	{ "NOTICE",	handle_PRIVMSG	  	},
+	{ "001",	handle_WELCOME		},
 	{ "005",	handle_ISUPPORT		},
 	{ "353",	handle_NAMREPLY		},
 	{ "366",	NULL /* end of names */	},
+	{ "376",	handle_ENDOFMOTD	},
 	{ "433",	handle_NICKNAMEINUSE	},
 	{ NULL,		NULL 			},
 };
@@ -294,6 +296,19 @@ handle_NICK(char *msg, char **params, struct Server *server, time_t timestamp) {
 				windows[Win_nicklist].refresh = 1;
 		}
 	}
+}
+
+void
+handle_WELCOME(char *msg, char **params, struct Server *server, time_t timestamp) {
+	server->status = ConnStatus_connected;
+	hist_add(server->history, NULL, msg, params, Activity_status, timestamp, HIST_DFL);
+}
+
+void
+handle_ENDOFMOTD(char *msg, char **params, struct Server *server, time_t timestamp) {
+	/* If server doesn't support RPL_WELCOME, use RPL_ENDOFMOTD to set status */
+	server->status = ConnStatus_connected;
+	hist_add(server->history, NULL, msg, params, Activity_status, timestamp, HIST_DFL);
 }
 
 void
