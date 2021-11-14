@@ -47,6 +47,7 @@ serv_create(char *name, char *host, char *port, char *nick,
 		char *username, char *realname, int tls, int tls_verify) {
 	struct Server *server;
 	struct tls_config *conf;
+	int i;
 
 	if (!name || !host || !port || !nick)
 		return NULL;
@@ -78,6 +79,8 @@ serv_create(char *name, char *host, char *port, char *nick,
 	server->channels = NULL;
 	server->privs = NULL;
 	server->reconnect = 0;
+	for (i=0; i < Expect_last; i++)
+		server->expect[i] = NULL;
 	server->connectfail = 0;
 	server->lastconnected = server->lastrecv = server->pingsent = 0;
 

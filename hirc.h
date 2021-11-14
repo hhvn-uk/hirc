@@ -85,8 +85,8 @@ void		support_set(struct Server *server, char *key, char *value);
 
 /* handle.c */
 void		handle(int rfd, struct Server *server);
-void		handle_expect(char *cmd, char *about);
-char *		handle_expect_get(char *cmd);
+void		handle_expect(struct Server *server, enum Expect cmd, char *about);
+char *		handle_expect_get(struct Server *server, enum Expect cmd);
 void		handle_PING(char *msg, char **params, struct Server *server, time_t timestamp);
 void		handle_PONG(char *msg, char **params, struct Server *server, time_t timestamp);
 void		handle_JOIN(char *msg, char **params, struct Server *server, time_t timestamp);

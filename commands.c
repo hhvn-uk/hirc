@@ -68,7 +68,7 @@ command_join(struct Server *server, char *str) {
 		ircprintf(server, "JOIN %s\r\n", str);
 	else
 		ircprintf(server, "JOIN #%s\r\n", str);
-	handle_expect("JOIN", str);
+	handle_expect(server, Expect_join, str);
 }
 
 void
@@ -77,7 +77,7 @@ command_part(struct Server *server, char *str) {
 		ircprintf(server, "PART %s\r\n", str);
 	else
 		ircprintf(server, "PART #%s\r\n", str);
-	handle_expect("PART", str);
+	handle_expect(server, Expect_join, str);
 }
 
 void
@@ -88,7 +88,7 @@ command_ping(struct Server *server, char *str) {
 	}
 
 	ircprintf(server, "PING :%s\r\n", str);
-	handle_expect("PONG", str);
+	handle_expect(server, Expect_pong, str);
 }
 
 void

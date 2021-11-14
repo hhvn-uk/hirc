@@ -6,13 +6,6 @@
 #include <stdlib.h>
 #include "hirc.h"
 
-struct Expect expect[] = {
-	{ "JOIN",	NULL },
-	{ "PART",	NULL },
-	{ "PONG",	NULL },
-	{ NULL,		NULL },
-};
-
 struct Handler handlers[] = {
 	{ "PING", 	handle_PING		},
 	{ "PONG",	handle_PONG		},
@@ -50,9 +43,9 @@ handle_PONG(char *msg, char **params, struct Server *server, time_t timestamp) {
 	if (param_len(params) < 2)
 		return;
 
-	if (strcmp_n(*(params+1), handle_expect_get("PONG"))) {
+	if (strcmp_n(*(params+1), handle_expect_get(server, Expect_pong))) {
 		hist_add(server->history, NULL, msg, params, Activity_status, timestamp, HIST_DFL);
-		handle_expect("PONG", NULL);
+		handle_expect(server, Expect_pong, NULL);
 	}
 }
 
@@ -78,11 +71,11 @@ handle_JOIN(char *msg, char **params, struct Server *server, time_t timestamp) {
 	hist_add(chan->history, nick, msg, params, Activity_status, timestamp, HIST_SHOW);
 
 	if (nick_isself(nick)) {
-		if (strcmp_n(target, handle_expect_get("JOIN")) == 0)
+		if (strcmp_n(target, handle_expect_get(server, Expect_join)) == 0)
 			ui_select(server, chan);
 		else
 			windows[Win_buflist].refresh = 1;
-		handle_expect("JOIN", NULL);
+		handle_expect(server, Expect_join, NULL);
 	} else if (selected.channel == chan) {
 		windows[Win_nicklist].refresh = 1;
 	}
@@ -107,9 +100,9 @@ handle_PART(char *msg, char **params, struct Server *server, time_t timestamp) {
 	if (nick_isself(nick)) {
 		chan_setold(chan, 1);
 		nick_free_list(&chan->nicks);
-		if (chan == selected.channel && strcmp_n(target, handle_expect_get("PART"))) {
+		if (chan == selected.channel && strcmp_n(target, handle_expect_get(server, Expect_part))) {
 			ui_select(selected.server, NULL);
-			handle_expect("PART", NULL);
+			handle_expect(server, Expect_part, NULL);
 		}
 		windows[Win_buflist].refresh = 1;
 	} else {
@@ -329,25 +322,23 @@ handle_ENDOFMOTD(char *msg, char **params, struct Server *server, time_t timesta
 	hist_add(server->history, NULL, msg, params, Activity_status, timestamp, HIST_DFL);
 }
 
+/* Expect stuff should probably be moved to serv.c.
+ * Also, it might be better to have an enum for all commands and numerics somewhere */
 void
-handle_expect(char *cmd, char *about) {
-	int i;
+handle_expect(struct Server *server, enum Expect cmd, char *about) {
+	if (cmd >= Expect_last || cmd < 0)
+		return;
 
-	for (i=0; expect[i].cmd; i++) {
-		if (strcmp(expect[i].cmd, cmd) == 0) {
-			free(expect[i].about);
-			expect[i].about = about ? strdup(about) : NULL;
-		}
-	}
+	free(server->expect[cmd]);
+	server->expect[cmd] = about ? strdup(about) : NULL;
 }
 
 char *
-handle_expect_get(char *cmd) {
-	int i;
-
-	for (i=0; expect[i].cmd; i++)
-		if (strcmp(expect[i].cmd, cmd) == 0)
-			return expect[i].about;
+handle_expect_get(struct Server *server, enum Expect cmd) {
+	if (cmd >= Expect_last || cmd < 0)
+		return NULL;
+	else
+		return server->expect[cmd];
 }
 
 void

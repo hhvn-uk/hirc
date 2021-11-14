@@ -85,6 +85,13 @@ struct Support {
 	struct Support *next;
 };
 
+enum Expect {
+	Expect_join,
+	Expect_part,
+	Expect_pong,
+	Expect_last,
+};
+
 struct Server {
 	struct Server *prev;
 	int wfd;
@@ -103,6 +110,7 @@ struct Server {
 	struct Channel *channels;
 	struct Channel *privs;
 	int reconnect;
+	char *expect[Expect_last];
 	int connectfail; /* number of failed connections */
 	time_t lastconnected; /* last time a connection was lost */
 	time_t lastrecv; /* last time a message was received from server */
@@ -118,11 +126,6 @@ struct Server {
 struct Handler {
 	char *cmd; /* or numeric */
 	void (*func)(char *msg, char **params, struct Server *server, time_t timestamp);
-};
-
-struct Expect {
-	char *cmd;
-	char *about;
 };
 
 /* commands received from user */
