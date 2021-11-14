@@ -2,11 +2,13 @@
 
 PREFIX	= /usr/local
 BINDIR	= $(PREFIX)/bin
+MANDIR	= $(PREFIX)/share/man
 BIN	= hirc
 OBJ	= main.o handle.o hist.o nick.o \
 	  chan.o serv.o ui.o commands.o \
 	  config.o
 MAN	= hirc.1
+COMMIT	= $(shell git log HEAD...HEAD~1 --pretty=format:%h)
 
 # Comment to disable TLS
 LDTLS	= -ltls
@@ -22,6 +24,17 @@ $(BIN): $(OBJ)
 
 $(MAN): $(BIN) $(MAN).header $(MAN).footer
 	./$(BIN) -d | cat $(MAN).header - $(MAN).footer > $(MAN)
+
+install: all
+	mkdir -p $(BINDIR) $(MANDIR)/man1
+	install -m0755 $(BIN) $(BINDIR)/$(BIN)
+	sed 's/COMMIT/$(COMMIT)/' \
+		< $(MAN) \
+		> $(MANDIR)/man1/$(MAN)
+
+uninstall:
+	-rm -f $(BINDIR)/$(BIN)
+	-rm -f $(MANDIR)/man1/$(MAN)
 
 clean:
 	-rm -f $(OBJ) $(MAN) $(BIN)
