@@ -7,11 +7,13 @@
 struct Expect expect[] = {
 	{ "JOIN",	NULL },
 	{ "PART",	NULL },
+	{ "PONG",	NULL },
 	{ NULL,		NULL },
 };
 
 struct Handler handlers[] = {
 	{ "PING", 	handle_PING		},
+	{ "PONG",	handle_PONG		},
 	{ "JOIN",	handle_JOIN		},
 	{ "PART",	handle_PART		},
 	{ "QUIT",	handle_QUIT		},
@@ -36,6 +38,20 @@ handle_PING(char *msg, char **params, struct Server *server, time_t timestamp) {
 		return;
 
 	ircprintf(server, "PONG :%s\r\n", *(params+1));
+}
+
+void
+handle_PONG(char *msg, char **params, struct Server *server, time_t timestamp) {
+	if (**params == ':')
+		params++;
+
+	if (param_len(params) < 2)
+		return;
+
+	if (strcmp_n(*(params+1), handle_expect_get("PONG"))) {
+		hist_add(server->history, NULL, msg, params, Activity_status, timestamp, HIST_DFL);
+		handle_expect("PONG", NULL);
+	}
 }
 
 void

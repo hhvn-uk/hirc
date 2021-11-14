@@ -27,6 +27,11 @@ static struct Command commands[] = {
 	{"part", command_part, {
 		"usage: /part <channel>",
 		"Part channel", NULL}},
+	{"ping", command_ping, {
+		"usage: /ping message...",
+		"Send a PING to server.",
+		"hirc will do this itself in the background,",
+		"but will hide it unless this command is used.", NULL}},
 	{"connect", command_connect, {
 		"usage: /connect [-network <name>] [-nick <nick>] [-user <user>]",
 		"                [-real <comment>] [-tls] [-verify] <host> [port]",
@@ -71,6 +76,17 @@ command_part(struct Server *server, char *str) {
 	else
 		ircprintf(server, "PART #%s\r\n", str);
 	handle_expect("PART", str);
+}
+
+void
+command_ping(struct Server *server, char *str) {
+	if (!str) {
+		ui_error("/ping requires argument", NULL);
+		return;
+	}
+
+	ircprintf(server, "PING :%s\r\n", str);
+	handle_expect("PONG", str);
 }
 
 void
