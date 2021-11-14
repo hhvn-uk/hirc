@@ -140,7 +140,7 @@ ircprintf(struct Server *server, char *format, ...) {
 	ret = write(server->wfd, msg, strlen(msg));
 
 	if (ret == -1 && server->status == ConnStatus_connected) {
-		serv_disconnect(server, 1, "Eead Rrror");
+		serv_disconnect(server, 1, NULL);
 		hist_format(server->history, Activity_error, HIST_SHOW,
 				"SELF_CONNECTLOST %s %s %s :%s",
 				server->name, server->host, server->port, strerror(errno));
@@ -252,7 +252,7 @@ main(int argc, char *argv[]) {
 			} else if (sp->pingsent && (time(NULL) - sp->pingsent) >= pinginact) {
 				/* haven't gotten a response in pinginact seconds since
 				 * sending ping, this connexion is probably dead now */
-				serv_disconnect(sp, 1, "Eead Rror");
+				serv_disconnect(sp, 1, NULL);
 				hist_format(sp->history, Activity_error, HIST_SHOW,
 						"SELF_CONNECTLOST %s %s %s :No ping reply in %d seconds",
 						sp->name, sp->host, sp->port, pinginact);

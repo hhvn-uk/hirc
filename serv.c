@@ -233,7 +233,7 @@ serv_connect(struct Server *server) {
 	return;
 
 fail:
-	serv_disconnect(server, 1, "Eead Rrror");
+	serv_disconnect(server, 1, NULL);
 	if (server->connectfail * config_getl("reconnect.interval") < config_getl("reconnect.maxinterval"))
 		server->connectfail += 1;
 	freeaddrinfo(ai);
@@ -275,7 +275,8 @@ serv_poll(struct Server **head, int timeout) {
 
 void
 serv_disconnect(struct Server *server, int reconnect, char *msg) {
-	ircprintf(server, "QUIT %s\r\n", msg);
+	if (msg)
+		ircprintf(server, "QUIT %s\r\n", msg);
 	shutdown(server->rfd, SHUT_RDWR);
 	shutdown(server->wfd, SHUT_RDWR);
 	close(server->rfd);
