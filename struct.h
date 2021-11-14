@@ -1,3 +1,5 @@
+/* See LICENSE for copyright details */
+
 #ifndef H_STRUCT
 #define H_STRUCT
 

@@ -1,3 +1,5 @@
+/* See LICENSE for copyright details */
+
 #include <errno.h>
 #include <ctype.h>
 #include <stdarg.h>

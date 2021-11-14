@@ -1,3 +1,5 @@
+/* See LICENSE for copyright details */
+
 #ifndef H_HIRC
 #define H_HIRC
 

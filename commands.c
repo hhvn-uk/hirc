@@ -1,3 +1,5 @@
+/* See LICENSE for copyright details */
+
 #include <ncurses.h>
 #include <stdlib.h>
 #include <string.h>

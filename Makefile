@@ -1,3 +1,5 @@
+# See LICENSE for copyright details
+
 PREFIX	= /usr/local
 BINDIR	= $(PREFIX)/bin
 BIN	= hirc

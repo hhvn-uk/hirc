@@ -1,3 +1,5 @@
+/* See LICENSE for copyright details */
+
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
