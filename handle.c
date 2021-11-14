@@ -37,13 +37,18 @@ handle_PING(char *msg, char **params, struct Server *server, time_t timestamp) {
 
 void
 handle_PONG(char *msg, char **params, struct Server *server, time_t timestamp) {
+	int len;
+
 	if (**params == ':')
 		params++;
 
-	if (param_len(params) < 2)
+	if ((len = param_len(params)) < 2)
 		return;
 
-	if (strcmp_n(*(params+1), handle_expect_get(server, Expect_pong))) {
+	/* RFC1459 says that PONG should have a list of daemons,
+	 * but that's not how PONG seems to work in modern IRC. 
+	 * Therefore, consider the last parameter as the "message" */
+	if (strcmp_n(*(params + len - 1), handle_expect_get(server, Expect_pong)) == 0) {
 		hist_add(server->history, NULL, msg, params, Activity_status, timestamp, HIST_DFL);
 		handle_expect(server, Expect_pong, NULL);
 	}
