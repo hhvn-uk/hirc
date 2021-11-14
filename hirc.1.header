@@ -1,0 +1,30 @@
+.\" vim: set syntax=nroff :
+.Dd COMMIT
+.Dt hirc 1
+.Os
+.Sh NAME
+.Nm hirc
+.Nd hhvn's IRC client
+.Sh SYNOPSIS
+.Nm
+.Op Fl d
+.Op Ar configfile
+.Sh OPTIONS
+.Bl -tag -width "-d"
+.It Fl d
+dump documentation data and exit
+.El
+.Sh DESCRIPTION
+.Nm
+is the result of a love/hate relationship with irssi.
+It is an attempt to majorly simplify irssi whilst keeping 
+a lot of configurability and integrating some things only 
+possible with perl plugins. That said,
+.Nm
+does not share any code with irssi.
+.Sh CONFIGURATION
+.Nm
+reads each line of
+.Ar configfile
+executing any that are begin with '/' as commands.
+Any line beginning with a character other than '/' are ignored.

@@ -16,7 +16,7 @@ enum {
 	CMD_ARG,
 };
 
-static struct Command commands[] = {
+struct Command commands[] = {
 	{"quit", command_quit, {
 		"usage: /quit",
 		"Cleanup and exit", NULL}},

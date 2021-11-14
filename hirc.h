@@ -174,4 +174,7 @@ extern int uineedredraw;
 /* config.c */
 extern struct Config config[];
 
+/* commands.c */
+extern struct Command commands[];
+
 #endif /* H_HIRC */

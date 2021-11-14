@@ -209,12 +209,37 @@ main(int argc, char *argv[]) {
 	struct Selected oldselected;
 	struct Server *sp;
 	FILE *file;
-	int i, refreshed, inputrefreshed;
+	int i, j, refreshed, inputrefreshed;
 	long pinginact, reconnectinterval, maxreconnectinterval;
 
 	if (argc > 2) {
 		fprintf(stderr, "usage: %s [configfile]", dirname(argv[0]));
+		fprintf(stderr, "       %s -d", dirname(argv[0]));
 		return EXIT_FAILURE;
+	}
+
+	if (argc == 2 && strcmp(argv[1], "-d") == 0) {
+		printf(".Ss Variables\n");
+		printf(".Bl -tag\n");
+		for (i=0; config[i].name; i++) {
+			printf(".It %s\n", config[i].name);
+			printf(".Bd -literal -compact\n");
+			for (j=0; config[i].description[j]; j++)
+				printf("%s\n", config[i].description[j]);
+			printf(".Ed\n");
+		}
+		printf(".El\n");
+		printf(".Sh COMMANDS\n");
+		printf(".Bl -tag\n");
+		for (i=0; commands[i].name && commands[i].func; i++) {
+			printf(".It %s\n", commands[i].name);
+			printf(".Bd -literal -compact\n");
+			for (j=0; commands[i].description[j]; j++)
+				printf("%s\n", commands[i].description[j]);
+			printf(".Ed\n");
+		}
+		printf(".El\n");
+		return 0;
 	}
 
 	main_buf = emalloc(sizeof(struct HistInfo));

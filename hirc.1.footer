@@ -1,0 +1,5 @@
+.\" vim: set syntax=nroff :
+.Sh SEE ALSO
+.Xr irssi 1
+.Sh AUTHOR
+.An hhvn Aq Mt dev@hhvn.uk
