@@ -89,6 +89,7 @@ enum Expect {
 	Expect_join,
 	Expect_part,
 	Expect_pong,
+	Expect_names,
 	Expect_last,
 };
 

@@ -96,6 +96,7 @@ void		handle_PRIVMSG(char *msg, char **params, struct Server *server, time_t tim
 void		handle_WELCOME(char *msg, char **params, struct Server *server, time_t timestamp);
 void		handle_ISUPPORT(char *msg, char **params, struct Server *server, time_t timestamp);
 void		handle_NAMREPLY(char *msg, char **params, struct Server *server, time_t timestamp);
+void		handle_ENDOFNAMES(char *msg, char **params, struct Server *server, time_t timestamp);
 void		handle_ENDOFMOTD(char *msg, char **params, struct Server *server, time_t timestamp);
 void		handle_NICKNAMEINUSE(char *msg, char **params, struct Server *server, time_t timestamp);
 void		handle_NICK(char *msg, char **params, struct Server *server, time_t timestamp);
@@ -143,6 +144,7 @@ void		command_connect(struct Server *server, char *str);
 void		command_select(struct Server *server, char *str);
 void		command_set(struct Server *server, char *str);
 void		command_server(struct Server *server, char *str);
+void		command_names(struct Server *server, char *str);
 void		command_help(struct Server *server, char *str);
 
 /* config.c */

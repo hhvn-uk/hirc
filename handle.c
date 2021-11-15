@@ -18,7 +18,7 @@ struct Handler handlers[] = {
 	{ "001",	handle_WELCOME		},
 	{ "005",	handle_ISUPPORT		},
 	{ "353",	handle_NAMREPLY		},
-	{ "366",	NULL /* end of names */	},
+	{ "366",	handle_ENDOFNAMES	},
 	{ "376",	handle_ENDOFMOTD	},
 	{ "433",	handle_NICKNAMEINUSE	},
 	{ NULL,		NULL 			},
@@ -224,6 +224,7 @@ void
 handle_NAMREPLY(char *msg, char **params, struct Server *server, time_t timestamp) {
 	struct Channel *chan;
 	struct Nick *oldnick;
+	char **bparams = params;
 	char *nick, priv, *target;
 	char **nicks, **nicksref;
 	char *supportedprivs;
@@ -235,12 +236,17 @@ handle_NAMREPLY(char *msg, char **params, struct Server *server, time_t timestam
 		return;
 
 	params += 3;
-
 	target = *params;
+
 	if ((chan = chan_get(&server->channels, target, -1)) == NULL)
 		chan = chan_add(server, &server->channels, target);
-	params++;
 
+	if (strcmp_n(target, handle_expect_get(server, Expect_names)) == 0)
+		hist_add(chan->history, NULL, msg, bparams, Activity_status, timestamp, HIST_DFL);
+	else
+		hist_add(chan->history, NULL, msg, bparams, Activity_status, timestamp, HIST_LOG);
+
+	params++;
 	supportedprivs = strchr(support_get(server, "PREFIX"), ')');
 	if (supportedprivs == NULL || supportedprivs[0] == '\0')
 		supportedprivs = "";
@@ -265,6 +271,22 @@ handle_NAMREPLY(char *msg, char **params, struct Server *server, time_t timestam
 	if (selected.channel == chan)
 		windows[Win_nicklist].refresh = 1;
 	param_free(nicksref);
+}
+
+void
+handle_ENDOFNAMES(char *msg, char **params, struct Server *server, time_t timestamp) {
+	char *target;
+
+	hist_add(server->history, NULL, msg, params, Activity_status, timestamp, HIST_LOG);
+	if (params && *params && **params == ':')
+		params++;
+
+	if (param_len(params) < 3)
+		return;
+
+	target = *(params+2);
+	if (strcmp_n(target, handle_expect_get(server, Expect_names)) == 0)
+		handle_expect(server, Expect_names, NULL);
 }
 
 void
@@ -344,6 +366,11 @@ handle_expect_get(struct Server *server, enum Expect cmd) {
 		return NULL;
 	else
 		return server->expect[cmd];
+}
+
+void
+handle_logonly(char *msg, char **params, struct Server *server, time_t timestamp) {
+	hist_add(server->history, NULL, msg, params, Activity_status, timestamp, HIST_LOG);
 }
 
 void

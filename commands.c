@@ -49,6 +49,9 @@ struct Command commands[] = {
 	{"server", command_server, {
 		"usage: /server <server> cmd....",
 		"Run (non-raw) command with server as target.", NULL}},
+	{"names", command_names, {
+		"usage: /names <channel>",
+		"List nicks in channel (pretty useless with nicklist.", NULL}},
 	{"help", command_help, {
 		"usage: /help [command or variable]",
 		"Print help information.",
@@ -310,6 +313,26 @@ command_server(struct Server *server, char *str) {
 	}
 
 	ui_error("no such commands: '%s'", cmd);
+}
+
+void
+command_names(struct Server *server, char *str) {
+	char *channel, *save = NULL;
+
+	channel = strtok_r(str, " ", &save);
+	if (!channel)
+		channel = selected.channel ? selected.channel->name : NULL;
+
+	if (!channel) {
+		ui_error("no channel selected or specified", NULL);
+		return;
+	}
+
+	if (save && *save)
+		ui_error("ignoring extra argument", NULL);
+
+	ircprintf(server, "NAMES %s\r\n", channel);
+	handle_expect(server, Expect_names, channel);
 }
 
 void
