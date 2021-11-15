@@ -695,6 +695,8 @@ ui_draw_main(void) {
 
 	y = windows[Win_main].h;
 	for (p = selected.history->history; p && y > 0; p = p->next) {
+		if (!(p->options & HIST_SHOW))
+			continue;
 		ui_strlenc(&windows[Win_main], p->raw, &lines);
 		y = y - lines;
 		if (y < lines) {
