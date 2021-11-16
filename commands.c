@@ -67,6 +67,11 @@ command_quit(struct Server *server, char *str) {
 
 void
 command_join(struct Server *server, char *str) {
+	if (!str) {
+		ui_error("/join requires argument", NULL);
+		return;
+	}
+
 	if (strchr(config_gets("def.chantypes"), *str))
 		ircprintf(server, "JOIN %s\r\n", str);
 	else
@@ -76,11 +81,19 @@ command_join(struct Server *server, char *str) {
 
 void
 command_part(struct Server *server, char *str) {
-	if (strchr(config_gets("def.chantypes"), *str))
-		ircprintf(server, "PART %s\r\n", str);
+	char *channel;
+
+	channel = str ? str : selected.channel ? selected.channel->name : NULL;
+	if (!channel) {
+		ui_error("/part requires argument", NULL);
+		return;
+	}
+
+	if (strchr(config_gets("def.chantypes"), *channel))
+		ircprintf(server, "PART %s\r\n", channel);
 	else
-		ircprintf(server, "PART #%s\r\n", str);
-	handle_expect(server, Expect_join, str);
+		ircprintf(server, "PART #%s\r\n", channel);
+	handle_expect(server, Expect_join, channel);
 }
 
 void
