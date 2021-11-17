@@ -114,6 +114,11 @@ struct Config config[] = {
 		.numhandle = config_buflist_width,
 		.description = {
 		"Number of columns buflist will take up.", NULL}},
+	{"misc.topiccolour", 1, Val_colourpair,
+		.pair = {99, 88},
+		.pairhandle = NULL,
+		.description = {
+		"Foreground and background colour of topic bar in main window", NULL}},
 	{"misc.pingtime", 1, Val_nzunsigned,
 		.num = 200,
 		.numhandle = NULL,

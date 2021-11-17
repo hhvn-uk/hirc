@@ -690,6 +690,7 @@ void
 ui_draw_main(void) {
 	struct History *p;
 	int y, lines;
+	long fg, bg;
 
 	ui_wclear(&windows[Win_main]);
 
@@ -706,6 +707,12 @@ ui_draw_main(void) {
 		}
 		wmove(windows[Win_main].window, y, 0);
 		ui_wprintc(&windows[Win_main], 0, "%s\n", p->raw);
+	}
+
+	if (selected.channel && selected.channel->topic) {
+		config_getr("misc.topiccolour", &fg, &bg);
+		wmove(windows[Win_main].window, 0, 0);
+		ui_wprintc(&windows[Win_main], 1, "%c%02d,%02d%s\n", 3 /* ^C */, fg, bg, selected.channel->topic);
 	}
 }
 
