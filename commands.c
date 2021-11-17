@@ -76,7 +76,7 @@ command_join(struct Server *server, char *str) {
 		return;
 	}
 
-	if (strchr(config_gets("def.chantypes"), *str))
+	if (strchr(support_get(server, "CHANTYPES"), *str))
 		ircprintf(server, "JOIN %s\r\n", str);
 	else
 		ircprintf(server, "JOIN #%s\r\n", str);
@@ -93,7 +93,7 @@ command_part(struct Server *server, char *str) {
 		return;
 	}
 
-	if (strchr(config_gets("def.chantypes"), *channel))
+	if (strchr(support_get(server, "CHANTYPES"), *channel))
 		ircprintf(server, "PART %s\r\n", channel);
 	else
 		ircprintf(server, "PART #%s\r\n", channel);
