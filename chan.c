@@ -37,6 +37,7 @@ chan_create(struct Server *server, char *name) {
 	channel->next = channel->prev = NULL;
 	channel->nicks = NULL;
 	channel->old = 0;
+	channel->mode = channel->topic = NULL;
 	channel->server = server;
 	channel->history = emalloc(sizeof(struct HistInfo));
 	channel->history->activity = Activity_ignore;

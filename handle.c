@@ -17,6 +17,8 @@ struct Handler handlers[] = {
 	{ "NOTICE",	handle_PRIVMSG	  	},
 	{ "001",	handle_WELCOME		},
 	{ "005",	handle_ISUPPORT		},
+	{ "332",	handle_RPLTOPIC		},
+	{ "333",	handle_TOPICWHOTIME	},
 	{ "353",	handle_NAMREPLY		},
 	{ "366",	handle_ENDOFNAMES	},
 	{ "376",	handle_ENDOFMOTD	},
@@ -333,6 +335,53 @@ handle_NICK(char *msg, char **params, struct Server *server, time_t timestamp) {
 			if (selected.channel == chan)
 				windows[Win_nicklist].refresh = 1;
 		}
+	}
+}
+
+void
+handle_RPLTOPIC(char *msg, char **params, struct Server *server, time_t timestamp) {
+	struct Channel *chan;
+	char *target, *topic;
+
+	if (param_len(params) < 5 || **params != ':')
+		return;
+
+	target = *(params+3);
+	topic = *(params+4);
+
+	if ((chan = chan_get(&server->channels, target, -1)) == NULL)
+		return;
+
+	free(chan->topic);
+	chan->topic = topic ? strdup(topic) : NULL;
+
+	if (strcmp_n(target, handle_expect_get(server, Expect_topic)) == 0) {
+		hist_add(chan->history, NULL, msg, params, Activity_status, timestamp, HIST_DFL);
+		handle_expect(server, Expect_topic, NULL);
+		handle_expect(server, Expect_topicwhotime, target);
+	} else {
+		hist_add(chan->history, NULL, msg, params, Activity_status, timestamp, HIST_LOG);
+	}
+}
+
+void
+handle_TOPICWHOTIME(char *msg, char **params, struct Server *server, time_t timestamp) {
+	struct Channel *chan;
+	char *target;
+
+	if (param_len(params) < 6 || **params != ':')
+		return;
+
+	target = *(params+3);
+
+	if ((chan = chan_get(&server->channels, target, -1)) == NULL)
+		return;
+
+	if (strcmp_n(target, handle_expect_get(server, Expect_topicwhotime)) == 0) {
+		hist_add(chan->history, NULL, msg, params, Activity_status, timestamp, HIST_DFL);
+		handle_expect(server, Expect_topicwhotime, NULL);
+	} else {
+		hist_add(chan->history, NULL, msg, params, Activity_status, timestamp, HIST_LOG);
 	}
 }
 

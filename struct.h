@@ -90,6 +90,8 @@ enum Expect {
 	Expect_part,
 	Expect_pong,
 	Expect_names,
+	Expect_topic,
+	Expect_topicwhotime,
 	Expect_last,
 };
 

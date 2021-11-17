@@ -95,6 +95,9 @@ void		handle_QUIT(char *msg, char **params, struct Server *server, time_t timest
 void		handle_PRIVMSG(char *msg, char **params, struct Server *server, time_t timestamp);
 void		handle_WELCOME(char *msg, char **params, struct Server *server, time_t timestamp);
 void		handle_ISUPPORT(char *msg, char **params, struct Server *server, time_t timestamp);
+void		handle_RPLTOPIC(char *msg, char **params, struct Server *server, time_t timestamp);
+void		handle_TOPICWHOTIME(char *msg, char **params, struct Server *server, time_t timestamp);
+void		handle_NAMREPLY(char *msg, char **params, struct Server *server, time_t timestamp);
 void		handle_NAMREPLY(char *msg, char **params, struct Server *server, time_t timestamp);
 void		handle_ENDOFNAMES(char *msg, char **params, struct Server *server, time_t timestamp);
 void		handle_ENDOFMOTD(char *msg, char **params, struct Server *server, time_t timestamp);
@@ -145,6 +148,7 @@ void		command_select(struct Server *server, char *str);
 void		command_set(struct Server *server, char *str);
 void		command_server(struct Server *server, char *str);
 void		command_names(struct Server *server, char *str);
+void		command_topic(struct Server *server, char *str);
 void		command_help(struct Server *server, char *str);
 
 /* config.c */

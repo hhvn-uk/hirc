@@ -52,6 +52,10 @@ struct Command commands[] = {
 	{"names", command_names, {
 		"usage: /names <channel>",
 		"List nicks in channel (pretty useless with nicklist.", NULL}},
+	{"topic", command_topic, {
+		"usage: /topic [-clear] <channel> [topic]",
+		"Sets, clears, or checks topic in channel.",
+		"Provide only channel name to check.", NULL}},
 	{"help", command_help, {
 		"usage: /help [command or variable]",
 		"Print help information.",
@@ -346,6 +350,49 @@ command_names(struct Server *server, char *str) {
 
 	ircprintf(server, "NAMES %s\r\n", channel);
 	handle_expect(server, Expect_names, channel);
+}
+
+void
+command_topic(struct Server *server, char *str) {
+	char *channel, *topic, *save = NULL;
+	int clear = 0, ret;
+	enum { opt_clear, };
+	struct CommandOpts opts[] = {
+		{"clear", CMD_NARG, opt_clear},
+		{NULL, 0, 0},
+	};
+
+	while ((ret = command_getopt(&str, opts)) != opt_done) {
+		switch (ret) {
+		case opt_error:
+			return;
+		case opt_clear:
+			clear = 1;
+			break;
+		}
+	}
+
+	channel = strtok_r(str,  " ", &save);
+	topic   = strtok_r(NULL, " ", &save);
+
+	if (!channel && selected.channel) {
+		channel = selected.channel->name;
+	} else if (!channel) {
+		ui_error("no channel selected", NULL);
+		return;
+	}
+
+	if (clear) {
+		if (topic)
+			ui_error("ignoring argument as -clear passed", NULL);
+		ircprintf(server, "TOPIC %s :\r\n", channel);
+		return;
+	}
+
+	if (!topic) {
+		ircprintf(server, "TOPIC %s\r\n", channel);
+		handle_expect(server, Expect_topic, channel);
+	} else ircprintf(server, "TOPIC %s :%s\r\n", channel, topic);
 }
 
 void
