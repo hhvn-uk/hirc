@@ -115,7 +115,7 @@ struct Config config[] = {
 		.description = {
 		"Number of columns buflist will take up.", NULL}},
 	{"misc.topiccolour", 1, Val_colourpair,
-		.pair = {99, 88},
+		.pair = {99, 89},
 		.pairhandle = NULL,
 		.description = {
 		"Foreground and background colour of topic bar in main window", NULL}},
