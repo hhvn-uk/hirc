@@ -259,7 +259,7 @@ nick_sort(struct Nick **head, struct Server *server) {
 		[' '] = S_space, /* default p->priv */
 		['-'] = S_dash,
 		['{'] = S_lbrace, ['['] = S_lbrace,
-		['}'] = S_rbrace, ['}'] = S_rbrace,
+		['}'] = S_rbrace, [']'] = S_rbrace,
 		['|'] = S_pipe,  ['\\'] = S_pipe,
 		['`'] = S_grave,
 		['^'] = S_caret,
