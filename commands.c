@@ -354,7 +354,7 @@ command_names(struct Server *server, char *str) {
 
 void
 command_topic(struct Server *server, char *str) {
-	char *channel, *topic, *save = NULL;
+	char *channel, *topic = NULL;
 	int clear = 0, ret;
 	enum { opt_clear, };
 	struct CommandOpts opts[] = {
@@ -372,8 +372,7 @@ command_topic(struct Server *server, char *str) {
 		}
 	}
 
-	channel = strtok_r(str,  " ", &save);
-	topic   = strtok_r(NULL, " ", &save);
+	channel = strtok_r(str,  " ", &topic);
 
 	if (!channel && selected.channel) {
 		channel = selected.channel->name;
