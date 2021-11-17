@@ -161,8 +161,6 @@ void		config_setl(char *name, long num);
 void		config_sets(char *name, char *str);
 void		config_setr(char *name, long a, long b);
 void		config_read(char *filename);
-int		config_colour_self(long num);
-int		config_colour_range(long a, long b);
 int		config_nicklist_location(long num);
 int		config_nicklist_width(long num);
 int		config_buflist_location(long num);

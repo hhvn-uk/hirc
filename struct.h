@@ -147,10 +147,12 @@ struct CommandOpts {
 enum Valtype {
 	Val_string,
 	Val_bool,
+	Val_colour,
 	Val_signed,
 	Val_unsigned,
 	Val_nzunsigned,
-	Val_range,
+	Val_pair,
+	Val_colourpair,
 };
 
 struct Config {
@@ -160,10 +162,10 @@ struct Config {
 	char *description[64];
 	char *str;
 	long num;
-	long range[2];
+	long pair[2];
 	int (*strhandle)(char *string);
 	int (*numhandle)(long num);
-	int (*rangehandle)(long a, long b);
+	int (*pairhandle)(long a, long b);
 };
 
 enum WindowLocation {

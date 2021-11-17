@@ -9,10 +9,12 @@
 char *valname[] = {
 	[Val_string] = "a string",
 	[Val_bool] = "boolean",
+	[Val_colour] = "a number from 0 to 99",
 	[Val_signed] = "a numeric value",
 	[Val_unsigned] = "positive",
 	[Val_nzunsigned] = "greater than zero",
-	[Val_range] = "a range",
+	[Val_pair] = "a pair",
+	[Val_colourpair] = "pair with numbers from 0 to 99",
 };
 
 struct Config config[] = {
@@ -72,15 +74,15 @@ struct Config config[] = {
 		.description = {
 		"Maximum reconnect interval in seconds.",
 		"See reconnect.interval", NULL}},
-	{"nickcolour.self", 1, Val_nzunsigned,
+	{"nickcolour.self", 1, Val_colour,
 		.num = 90,
-		.numhandle = config_colour_self,
+		.numhandle = NULL,
 		.description = {
 		"Colour to use for onself.",
 		"Must be 0, 99 or anywhere between. 99 is no colours.", NULL}},
-	{"nickcolour.range", 1, Val_range,
-		.range = {28, 63},
-		.rangehandle = config_colour_range,
+	{"nickcolour.range", 1, Val_colourpair,
+		.pair = {28, 63},
+		.pairhandle = NULL,
 		.description = {
 		"Range of (mirc extended) colours used to colour nicks",
 		"Must be 0, 99 or anywhere between. 99 is no colour",
@@ -158,9 +160,9 @@ config_get_print(char *name) {
 			if (config[i].valtype == Val_string)
 				hist_format(main_buf, Activity_status, HIST_SHOW, "SELF_UI :%s: %s",
 						name, config[i].str);
-			else if (config[i].valtype == Val_range)
+			else if (config[i].valtype == Val_pair || config[i].valtype == Val_colourpair)
 				hist_format(main_buf, Activity_status, HIST_SHOW, "SELF_UI :%s: {%ld, %ld}",
-						name, config[i].range[0], config[i].range[1]);
+						name, config[i].pair[0], config[i].pair[1]);
 			else
 				hist_format(main_buf, Activity_status, HIST_SHOW, "SELF_UI :%s: %ld",
 						name, config[i].num);
@@ -190,9 +192,9 @@ config_getr(char *name, long *a, long *b) {
 
 	for (i=0; config[i].name; i++) {
 		if (strcmp(config[i].name, name) == 0 &&
-				config[i].valtype == Val_range) {
-			if (a) *a = config[i].range[0];
-			if (b) *b = config[i].range[1];
+				config[i].valtype == Val_pair) {
+			if (a) *a = config[i].pair[0];
+			if (b) *b = config[i].pair[1];
 			return;
 		}
 	}
@@ -205,6 +207,7 @@ config_setl(char *name, long num) {
 	for (i=0; config[i].name; i++) {
 		if (strcmp(config[i].name, name) == 0) {
 			if ((config[i].valtype == Val_bool && (num == 1 || num == 0)) ||
+					(config[i].valtype == Val_colour && num <= 99 && num >= 0) ||
 					(config[i].valtype == Val_signed) ||
 					(config[i].valtype == Val_unsigned && num >= 0) ||
 					(config[i].valtype == Val_nzunsigned && num > 0)) {
@@ -254,16 +257,18 @@ config_setr(char *name, long a, long b) {
 
 	for (i=0; config[i].name; i++) {
 		if (strcmp(config[i].name, name) == 0 ) {
-			if (config[i].valtype != Val_range) {
+			if ((config[i].valtype != Val_pair && config[i].valtype != Val_colourpair)||
+					(config[i].valtype == Val_colourpair &&
+					(a > 99 || a < 0 || b > 99 || b < 0))) {
 				ui_error("%s must be %s", name, valname[config[i].valtype]);
 				return;
 			}
-			if (config[i].rangehandle)
-				if (!config[i].rangehandle(a, b))
+			if (config[i].pairhandle)
+				if (!config[i].pairhandle(a, b))
 					return;
 			config[i].isdef = 0;
-			config[i].range[0] = a;
-			config[i].range[1] = b;
+			config[i].pair[0] = a;
+			config[i].pair[1] = b;
 			return;
 		}
 	}
@@ -305,24 +310,6 @@ config_read(char *filename) {
 	while (read_line(fileno(file), buf, sizeof(buf)))
 		if (*buf == '/')
 			command_eval(buf);
-}
-
-int
-config_colour_self(long num) {
-	if (num >= 0 && num <= 99)
-		return 1;
-
-	ui_error("nickcolour.self must be between 0 and 99 (including both)", NULL);
-	return 0;
-}
-
-int
-config_colour_range(long a, long b) {
-	if (a >= 0 && a <= 0 &&
-			b >= 0 && b <= 0)
-		return 1;
-
-	ui_error("nickcolour.range must have numbers between 0 and 99 (including both)", NULL);
 }
 
 int
