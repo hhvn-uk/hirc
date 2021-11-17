@@ -142,6 +142,7 @@ config_getl(char *name) {
 	for (i=0; config[i].name; i++) {
 		if (strcmp(config[i].name, name) == 0 && (
 				config[i].valtype == Val_bool ||
+				config[i].valtype == Val_colour ||
 				config[i].valtype == Val_signed ||
 				config[i].valtype == Val_unsigned ||
 				config[i].valtype == Val_nzunsigned))
@@ -191,8 +192,9 @@ config_getr(char *name, long *a, long *b) {
 	int i;
 
 	for (i=0; config[i].name; i++) {
-		if (strcmp(config[i].name, name) == 0 &&
-				config[i].valtype == Val_pair) {
+		if (strcmp(config[i].name, name) == 0 && (
+				config[i].valtype == Val_pair ||
+				config[i].valtype == Val_colourpair)) {
 			if (a) *a = config[i].pair[0];
 			if (b) *b = config[i].pair[1];
 			return;
