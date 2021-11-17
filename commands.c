@@ -53,7 +53,7 @@ struct Command commands[] = {
 		"usage: /names <channel>",
 		"List nicks in channel (pretty useless with nicklist.", NULL}},
 	{"topic", command_topic, {
-		"usage: /topic [-clear] <channel> [topic]",
+		"usage: /topic [-clear] [channel] [topic]",
 		"Sets, clears, or checks topic in channel.",
 		"Provide only channel name to check.", NULL}},
 	{"help", command_help, {
@@ -373,6 +373,10 @@ command_topic(struct Server *server, char *str) {
 	}
 
 	channel = strtok_r(str,  " ", &topic);
+	if (!strchr(support_get(server, "CHANTYPES"), *channel)) {
+		topic = channel;
+		channel = NULL;
+	}
 
 	if (!channel && selected.channel) {
 		channel = selected.channel->name;
