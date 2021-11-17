@@ -92,17 +92,16 @@ void		handle_PONG(char *msg, char **params, struct Server *server, time_t timest
 void		handle_JOIN(char *msg, char **params, struct Server *server, time_t timestamp);
 void		handle_PART(char *msg, char **params, struct Server *server, time_t timestamp);
 void		handle_QUIT(char *msg, char **params, struct Server *server, time_t timestamp);
-void		handle_PRIVMSG(char *msg, char **params, struct Server *server, time_t timestamp);
-void		handle_WELCOME(char *msg, char **params, struct Server *server, time_t timestamp);
-void		handle_ISUPPORT(char *msg, char **params, struct Server *server, time_t timestamp);
-void		handle_RPLTOPIC(char *msg, char **params, struct Server *server, time_t timestamp);
-void		handle_TOPICWHOTIME(char *msg, char **params, struct Server *server, time_t timestamp);
-void		handle_NAMREPLY(char *msg, char **params, struct Server *server, time_t timestamp);
-void		handle_NAMREPLY(char *msg, char **params, struct Server *server, time_t timestamp);
-void		handle_ENDOFNAMES(char *msg, char **params, struct Server *server, time_t timestamp);
-void		handle_ENDOFMOTD(char *msg, char **params, struct Server *server, time_t timestamp);
-void		handle_NICKNAMEINUSE(char *msg, char **params, struct Server *server, time_t timestamp);
 void		handle_NICK(char *msg, char **params, struct Server *server, time_t timestamp);
+void		handle_PRIVMSG(char *msg, char **params, struct Server *server, time_t timestamp);
+void		handle_RPL_WELCOME(char *msg, char **params, struct Server *server, time_t timestamp);
+void		handle_RPL_ISUPPORT(char *msg, char **params, struct Server *server, time_t timestamp);
+void		handle_RPL_TOPIC(char *msg, char **params, struct Server *server, time_t timestamp);
+void		handle_RPL_TOPICWHOTIME(char *msg, char **params, struct Server *server, time_t timestamp);
+void		handle_RPL_NAMREPLY(char *msg, char **params, struct Server *server, time_t timestamp);
+void		handle_RPL_ENDOFNAMES(char *msg, char **params, struct Server *server, time_t timestamp);
+void		handle_RPL_ENDOFMOTD(char *msg, char **params, struct Server *server, time_t timestamp);
+void		handle_ERR_NICKNAMEINUSE(char *msg, char **params, struct Server *server, time_t timestamp);
 
 /* ui.c */
 void		ui_init(void);

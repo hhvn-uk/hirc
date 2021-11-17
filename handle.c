@@ -7,23 +7,23 @@
 #include "hirc.h"
 
 struct Handler handlers[] = {
-	{ "PING", 	handle_PING		},
-	{ "PONG",	handle_PONG		},
-	{ "JOIN",	handle_JOIN		},
-	{ "PART",	handle_PART		},
-	{ "QUIT",	handle_QUIT		},
-	{ "NICK",	handle_NICK		},
-	{ "PRIVMSG",	handle_PRIVMSG  	},
-	{ "NOTICE",	handle_PRIVMSG	  	},
-	{ "001",	handle_WELCOME		},
-	{ "005",	handle_ISUPPORT		},
-	{ "332",	handle_RPLTOPIC		},
-	{ "333",	handle_TOPICWHOTIME	},
-	{ "353",	handle_NAMREPLY		},
-	{ "366",	handle_ENDOFNAMES	},
-	{ "376",	handle_ENDOFMOTD	},
-	{ "433",	handle_NICKNAMEINUSE	},
-	{ NULL,		NULL 			},
+	{ "PING", 	handle_PING			},
+	{ "PONG",	handle_PONG			},
+	{ "JOIN",	handle_JOIN			},
+	{ "PART",	handle_PART			},
+	{ "QUIT",	handle_QUIT			},
+	{ "NICK",	handle_NICK			},
+	{ "PRIVMSG",	handle_PRIVMSG  		},
+	{ "NOTICE",	handle_PRIVMSG	  		},
+	{ "001",	handle_RPL_WELCOME		},
+	{ "005",	handle_RPL_ISUPPORT		},
+	{ "332",	handle_RPL_TOPIC		},
+	{ "333",	handle_RPL_TOPICWHOTIME		},
+	{ "353",	handle_RPL_NAMREPLY		},
+	{ "366",	handle_RPL_ENDOFNAMES		},
+	{ "376",	handle_RPL_ENDOFMOTD		},
+	{ "433",	handle_ERR_NICKNAMEINUSE	},
+	{ NULL,		NULL 				},
 };
 
 void
@@ -195,7 +195,7 @@ handle_PRIVMSG(char *msg, char **params, struct Server *server, time_t timestamp
 }
 
 void
-handle_ISUPPORT(char *msg, char **params, struct Server *server, time_t timestamp) {
+handle_RPL_ISUPPORT(char *msg, char **params, struct Server *server, time_t timestamp) {
 	char *key, *value;
 
 	hist_add(server->history, NULL, msg, params, Activity_status, timestamp, HIST_DFL);
@@ -223,7 +223,7 @@ handle_ISUPPORT(char *msg, char **params, struct Server *server, time_t timestam
 }
 
 void
-handle_NAMREPLY(char *msg, char **params, struct Server *server, time_t timestamp) {
+handle_RPL_NAMREPLY(char *msg, char **params, struct Server *server, time_t timestamp) {
 	struct Channel *chan;
 	struct Nick *oldnick;
 	char **bparams = params;
@@ -276,7 +276,7 @@ handle_NAMREPLY(char *msg, char **params, struct Server *server, time_t timestam
 }
 
 void
-handle_ENDOFNAMES(char *msg, char **params, struct Server *server, time_t timestamp) {
+handle_RPL_ENDOFNAMES(char *msg, char **params, struct Server *server, time_t timestamp) {
 	char *target;
 
 	hist_add(server->history, NULL, msg, params, Activity_status, timestamp, HIST_LOG);
@@ -292,7 +292,7 @@ handle_ENDOFNAMES(char *msg, char **params, struct Server *server, time_t timest
 }
 
 void
-handle_NICKNAMEINUSE(char *msg, char **params, struct Server *server, time_t timestamp) {
+handle_ERR_NICKNAMEINUSE(char *msg, char **params, struct Server *server, time_t timestamp) {
 	char nick[64]; /* should be limited to 9 chars, but newer servers *shrug*/
 
 	hist_add(server->history, NULL, msg, params, Activity_status, timestamp, HIST_DFL);
@@ -339,7 +339,7 @@ handle_NICK(char *msg, char **params, struct Server *server, time_t timestamp) {
 }
 
 void
-handle_RPLTOPIC(char *msg, char **params, struct Server *server, time_t timestamp) {
+handle_RPL_TOPIC(char *msg, char **params, struct Server *server, time_t timestamp) {
 	struct Channel *chan;
 	char *target, *topic;
 
@@ -365,7 +365,7 @@ handle_RPLTOPIC(char *msg, char **params, struct Server *server, time_t timestam
 }
 
 void
-handle_TOPICWHOTIME(char *msg, char **params, struct Server *server, time_t timestamp) {
+handle_RPL_TOPICWHOTIME(char *msg, char **params, struct Server *server, time_t timestamp) {
 	struct Channel *chan;
 	char *target;
 
@@ -386,13 +386,13 @@ handle_TOPICWHOTIME(char *msg, char **params, struct Server *server, time_t time
 }
 
 void
-handle_WELCOME(char *msg, char **params, struct Server *server, time_t timestamp) {
+handle_RPL_WELCOME(char *msg, char **params, struct Server *server, time_t timestamp) {
 	server->status = ConnStatus_connected;
 	hist_add(server->history, NULL, msg, params, Activity_status, timestamp, HIST_DFL);
 }
 
 void
-handle_ENDOFMOTD(char *msg, char **params, struct Server *server, time_t timestamp) {
+handle_RPL_ENDOFMOTD(char *msg, char **params, struct Server *server, time_t timestamp) {
 	/* If server doesn't support RPL_WELCOME, use RPL_ENDOFMOTD to set status */
 	server->status = ConnStatus_connected;
 	hist_add(server->history, NULL, msg, params, Activity_status, timestamp, HIST_DFL);
