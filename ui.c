@@ -547,11 +547,13 @@ ui_wprintc(struct Window *window, int lines, char *format, ...) {
 			colour = 1;
 			break;
 		case 9: /* ^I */
+#ifdef A_ITALIC
 			if (italic)
 				wattroff(window->window, A_ITALIC);
 			else
 				wattron(window->window, A_ITALIC);
 			italic = italic ? 0 : 1;
+#endif /* A_ITALIC */
 			break;
 		case 15: /* ^O */
 			colour = 0;
