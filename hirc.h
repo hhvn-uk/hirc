@@ -93,9 +93,11 @@ void		handle_JOIN(char *msg, char **params, struct Server *server, time_t timest
 void		handle_PART(char *msg, char **params, struct Server *server, time_t timestamp);
 void		handle_QUIT(char *msg, char **params, struct Server *server, time_t timestamp);
 void		handle_NICK(char *msg, char **params, struct Server *server, time_t timestamp);
+void		handle_TOPIC(char *msg, char **params, struct Server *server, time_t timestamp);
 void		handle_PRIVMSG(char *msg, char **params, struct Server *server, time_t timestamp);
 void		handle_RPL_WELCOME(char *msg, char **params, struct Server *server, time_t timestamp);
 void		handle_RPL_ISUPPORT(char *msg, char **params, struct Server *server, time_t timestamp);
+void		handle_RPL_NOTOPIC(char *msg, char **params, struct Server *server, time_t timestamp);
 void		handle_RPL_TOPIC(char *msg, char **params, struct Server *server, time_t timestamp);
 void		handle_RPL_TOPICWHOTIME(char *msg, char **params, struct Server *server, time_t timestamp);
 void		handle_RPL_NAMREPLY(char *msg, char **params, struct Server *server, time_t timestamp);

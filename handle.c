@@ -13,10 +13,12 @@ struct Handler handlers[] = {
 	{ "PART",	handle_PART			},
 	{ "QUIT",	handle_QUIT			},
 	{ "NICK",	handle_NICK			},
+	{ "TOPIC",	handle_TOPIC			},
 	{ "PRIVMSG",	handle_PRIVMSG  		},
 	{ "NOTICE",	handle_PRIVMSG	  		},
 	{ "001",	handle_RPL_WELCOME		},
 	{ "005",	handle_RPL_ISUPPORT		},
+	{ "331",	handle_RPL_NOTOPIC		},
 	{ "332",	handle_RPL_TOPIC		},
 	{ "333",	handle_RPL_TOPICWHOTIME		},
 	{ "353",	handle_RPL_NAMREPLY		},
@@ -335,6 +337,42 @@ handle_NICK(char *msg, char **params, struct Server *server, time_t timestamp) {
 			if (selected.channel == chan)
 				windows[Win_nicklist].refresh = 1;
 		}
+	}
+}
+
+void
+handle_TOPIC(char *msg, char **params, struct Server *server, time_t timestamp) {
+	struct Channel *chan;
+
+	if (param_len(params) < 4 || **params != ':')
+		return;
+
+
+	if ((chan = chan_get(&server->channels, *(params+2), -1)) != NULL) {
+		hist_add(chan->history, NULL, msg, params, Activity_status, timestamp, HIST_DFL);
+		free(chan->topic);
+		chan->topic = *(params+3) ? strdup(*(params+3)) : NULL;
+	}
+}
+
+void
+handle_RPL_NOTOPIC(char *msg, char **params, struct Server *server, time_t timestamp) {
+	struct Channel *chan;
+	char *target;
+
+	if (param_len(params) < 5 || **params != ':')
+		return;
+
+	target = *(params+3);
+
+	if ((chan = chan_get(&server->channels, target, -1)) == NULL)
+		return;
+
+	if (strcmp_n(target, handle_expect_get(server, Expect_topic)) == 0) {
+		hist_add(chan->history, NULL, msg, params, Activity_status, timestamp, HIST_DFL);
+		handle_expect(server, Expect_topic, NULL);
+	} else {
+		hist_add(chan->history, NULL, msg, params, Activity_status, timestamp, HIST_LOG);
 	}
 }
 
