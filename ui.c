@@ -87,7 +87,7 @@ ui_tls_error_(char *file, int line, struct tls *ctx, char *str) {
 
 void
 ui_init(void) {
-	setlocale(LC_ALL, "");
+	setlocale(LC_ALL, "en_US.UTF-8");
 	initscr();
 	start_color();
 	use_default_colors();
