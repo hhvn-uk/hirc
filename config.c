@@ -6,6 +6,13 @@
 #include <errno.h>
 #include "hirc.h"
 
+static int config_nicklist_location(long num);
+static int config_nicklist_width(long num);
+static int config_buflist_location(long num);
+static int config_buflist_width(long num);
+static int config_nickcolour_self(long num);
+static int config_nickcolour_range(long a, long b);
+
 char *valname[] = {
 	[Val_string] = "a string",
 	[Val_bool] = "boolean",
@@ -319,7 +326,7 @@ config_read(char *filename) {
 			command_eval(buf);
 }
 
-int
+static int
 config_nicklist_location(long num) {
 	int i;
 
@@ -344,7 +351,7 @@ config_nicklist_location(long num) {
 	return 0;
 }
 
-int
+static int
 config_nicklist_width(long num) {
 	if (num <= COLS - (windows[Win_buflist].location ? windows[Win_buflist].w : 0) - 2) {
 		uineedredraw = 1;
@@ -355,7 +362,7 @@ config_nicklist_width(long num) {
 	return 0;
 }
 
-int
+static int
 config_buflist_location(long num) {
 	int i;
 
@@ -379,7 +386,8 @@ config_buflist_location(long num) {
 
 	return 0;
 }
-int
+
+static int
 config_buflist_width(long num) {
 	if (num <= COLS - (windows[Win_nicklist].location ? windows[Win_nicklist].w : 0) - 2) {
 		uineedredraw = 1;
@@ -390,13 +398,13 @@ config_buflist_width(long num) {
 	return 0;
 }
 
-int
+static int
 config_nickcolour_self(long num) {
 	windows[Win_nicklist].refresh = 1;
 	return 1;
 }
 
-int
+static int
 config_nickcolour_range(long a, long b) {
 	windows[Win_nicklist].refresh = 1;
 	return 1;
