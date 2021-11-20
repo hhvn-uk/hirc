@@ -46,6 +46,10 @@ struct Command commands[] = {
 		"       /set <variable> string....",
 		"Set a configuration variable.",
 		"Passing only the name prints content.", NULL}},
+	{"format", command_format, {
+		"usage: /format <format> string...",
+		"Set a formatting variable.",
+		"This is equivalent to /set format.<format> string...", NULL}},
 	{"server", command_server, {
 		"usage: /server <server> cmd....",
 		"Run (non-raw) command with server as target.", NULL}},
@@ -298,6 +302,23 @@ command_set(struct Server *server, char *str) {
 	}
 	name = strtok_r(str, " ", &val);
 	config_set(name, val);
+}
+
+void
+command_format(struct Server *server, char *str) {
+	char *newstr;
+	int len;
+
+	if (!str) {
+		ui_error("/format requires argument", NULL);
+		return;
+	}
+
+	len = strlen(str) + strlen("format.") + 1;
+	newstr = malloc(len);
+	snprintf(newstr, len, "format.%s", str);
+	command_set(server, newstr);
+	free(newstr);
 }
 
 void
