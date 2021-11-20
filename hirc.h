@@ -138,6 +138,8 @@ int		config_nicklist_location(long num);
 int		config_nicklist_width(long num);
 int		config_buflist_location(long num);
 int		config_buflist_width(long num);
+int		config_nickcolour_self(long num);
+int		config_nickcolour_range(long a, long b);
 
 /* main.c */
 extern struct Server *servers;

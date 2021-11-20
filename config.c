@@ -76,13 +76,13 @@ struct Config config[] = {
 		"See reconnect.interval", NULL}},
 	{"nickcolour.self", 1, Val_colour,
 		.num = 90,
-		.numhandle = NULL,
+		.numhandle = config_nickcolour_self,
 		.description = {
 		"Colour to use for onself.",
 		"Must be 0, 99 or anywhere between. 99 is no colours.", NULL}},
 	{"nickcolour.range", 1, Val_colourpair,
 		.pair = {28, 63},
-		.pairhandle = NULL,
+		.pairhandle = config_nickcolour_range,
 		.description = {
 		"Range of (mirc extended) colours used to colour nicks",
 		"Must be 0, 99 or anywhere between. 99 is no colour",
@@ -388,4 +388,16 @@ config_buflist_width(long num) {
 
 	ui_error("buflist will be too big", NULL);
 	return 0;
+}
+
+int
+config_nickcolour_self(long num) {
+	windows[Win_nicklist].refresh = 1;
+	return 1;
+}
+
+int
+config_nickcolour_range(long a, long b) {
+	windows[Win_nicklist].refresh = 1;
+	return 1;
 }
