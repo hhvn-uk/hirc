@@ -6,6 +6,24 @@
 #include <stdlib.h>
 #include "hirc.h"
 
+static void handle_PING(char *msg, char **params, struct Server *server, time_t timestamp);
+static void handle_PONG(char *msg, char **params, struct Server *server, time_t timestamp);
+static void handle_JOIN(char *msg, char **params, struct Server *server, time_t timestamp);
+static void handle_PART(char *msg, char **params, struct Server *server, time_t timestamp);
+static void handle_QUIT(char *msg, char **params, struct Server *server, time_t timestamp);
+static void handle_NICK(char *msg, char **params, struct Server *server, time_t timestamp);
+static void handle_TOPIC(char *msg, char **params, struct Server *server, time_t timestamp);
+static void handle_PRIVMSG(char *msg, char **params, struct Server *server, time_t timestamp);
+static void handle_RPL_WELCOME(char *msg, char **params, struct Server *server, time_t timestamp);
+static void handle_RPL_ISUPPORT(char *msg, char **params, struct Server *server, time_t timestamp);
+static void handle_RPL_NOTOPIC(char *msg, char **params, struct Server *server, time_t timestamp);
+static void handle_RPL_TOPIC(char *msg, char **params, struct Server *server, time_t timestamp);
+static void handle_RPL_TOPICWHOTIME(char *msg, char **params, struct Server *server, time_t timestamp);
+static void handle_RPL_NAMREPLY(char *msg, char **params, struct Server *server, time_t timestamp);
+static void handle_RPL_ENDOFNAMES(char *msg, char **params, struct Server *server, time_t timestamp);
+static void handle_RPL_ENDOFMOTD(char *msg, char **params, struct Server *server, time_t timestamp);
+static void handle_ERR_NICKNAMEINUSE(char *msg, char **params, struct Server *server, time_t timestamp);
+
 struct Handler handlers[] = {
 	{ "PING", 	handle_PING			},
 	{ "PONG",	handle_PONG			},
@@ -28,7 +46,7 @@ struct Handler handlers[] = {
 	{ NULL,		NULL 				},
 };
 
-void
+static void
 handle_PING(char *msg, char **params, struct Server *server, time_t timestamp) {
 	if (**params == ':')
 		params++;
@@ -39,7 +57,7 @@ handle_PING(char *msg, char **params, struct Server *server, time_t timestamp) {
 	ircprintf(server, "PONG :%s\r\n", *(params+1));
 }
 
-void
+static void
 handle_PONG(char *msg, char **params, struct Server *server, time_t timestamp) {
 	int len;
 
@@ -58,7 +76,7 @@ handle_PONG(char *msg, char **params, struct Server *server, time_t timestamp) {
 	}
 }
 
-void
+static void
 handle_JOIN(char *msg, char **params, struct Server *server, time_t timestamp) {
 	struct Channel *chan;
 	struct Nick *nick;
@@ -92,7 +110,7 @@ handle_JOIN(char *msg, char **params, struct Server *server, time_t timestamp) {
 	nick_free(nick);
 }
 
-void
+static void
 handle_PART(char *msg, char **params, struct Server *server, time_t timestamp) {
 	struct Channel *chan;
 	struct Nick *nick;
@@ -125,7 +143,7 @@ handle_PART(char *msg, char **params, struct Server *server, time_t timestamp) {
 	nick_free(nick);
 }
 
-void
+static void
 handle_QUIT(char *msg, char **params, struct Server *server, time_t timestamp) {
 	struct Channel *chan;
 	struct Nick *nick;
@@ -152,7 +170,7 @@ handle_QUIT(char *msg, char **params, struct Server *server, time_t timestamp) {
 	nick_free(nick);
 }
 
-void
+static void
 handle_PRIVMSG(char *msg, char **params, struct Server *server, time_t timestamp) {
 	int act_direct = Activity_hilight, act_regular = Activity_message;
 	struct Channel *chan;
@@ -196,7 +214,7 @@ handle_PRIVMSG(char *msg, char **params, struct Server *server, time_t timestamp
 	nick_free(nick);
 }
 
-void
+static void
 handle_RPL_ISUPPORT(char *msg, char **params, struct Server *server, time_t timestamp) {
 	char *key, *value;
 
@@ -224,7 +242,7 @@ handle_RPL_ISUPPORT(char *msg, char **params, struct Server *server, time_t time
 	}
 }
 
-void
+static void
 handle_RPL_NAMREPLY(char *msg, char **params, struct Server *server, time_t timestamp) {
 	struct Channel *chan;
 	struct Nick *oldnick;
@@ -277,7 +295,7 @@ handle_RPL_NAMREPLY(char *msg, char **params, struct Server *server, time_t time
 	param_free(nicksref);
 }
 
-void
+static void
 handle_RPL_ENDOFNAMES(char *msg, char **params, struct Server *server, time_t timestamp) {
 	char *target;
 
@@ -293,7 +311,7 @@ handle_RPL_ENDOFNAMES(char *msg, char **params, struct Server *server, time_t ti
 		handle_expect(server, Expect_names, NULL);
 }
 
-void
+static void
 handle_ERR_NICKNAMEINUSE(char *msg, char **params, struct Server *server, time_t timestamp) {
 	char nick[64]; /* should be limited to 9 chars, but newer servers *shrug*/
 
@@ -305,7 +323,7 @@ handle_ERR_NICKNAMEINUSE(char *msg, char **params, struct Server *server, time_t
 	ircprintf(server, "NICK %s\r\n", nick);
 }
 
-void
+static void
 handle_NICK(char *msg, char **params, struct Server *server, time_t timestamp) {
 	struct Nick *nick, *chnick;
 	struct Channel *chan;
@@ -340,7 +358,7 @@ handle_NICK(char *msg, char **params, struct Server *server, time_t timestamp) {
 	}
 }
 
-void
+static void
 handle_TOPIC(char *msg, char **params, struct Server *server, time_t timestamp) {
 	struct Channel *chan;
 
@@ -355,7 +373,7 @@ handle_TOPIC(char *msg, char **params, struct Server *server, time_t timestamp) 
 	}
 }
 
-void
+static void
 handle_RPL_NOTOPIC(char *msg, char **params, struct Server *server, time_t timestamp) {
 	struct Channel *chan;
 	char *target;
@@ -376,7 +394,7 @@ handle_RPL_NOTOPIC(char *msg, char **params, struct Server *server, time_t times
 	}
 }
 
-void
+static void
 handle_RPL_TOPIC(char *msg, char **params, struct Server *server, time_t timestamp) {
 	struct Channel *chan;
 	char *target, *topic;
@@ -402,7 +420,7 @@ handle_RPL_TOPIC(char *msg, char **params, struct Server *server, time_t timesta
 	}
 }
 
-void
+static void
 handle_RPL_TOPICWHOTIME(char *msg, char **params, struct Server *server, time_t timestamp) {
 	struct Channel *chan;
 	char *target;
@@ -423,13 +441,13 @@ handle_RPL_TOPICWHOTIME(char *msg, char **params, struct Server *server, time_t 
 	}
 }
 
-void
+static void
 handle_RPL_WELCOME(char *msg, char **params, struct Server *server, time_t timestamp) {
 	server->status = ConnStatus_connected;
 	hist_add(server->history, NULL, msg, params, Activity_status, timestamp, HIST_DFL);
 }
 
-void
+static void
 handle_RPL_ENDOFMOTD(char *msg, char **params, struct Server *server, time_t timestamp) {
 	/* If server doesn't support RPL_WELCOME, use RPL_ENDOFMOTD to set status */
 	server->status = ConnStatus_connected;

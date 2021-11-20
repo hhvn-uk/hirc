@@ -8,6 +8,20 @@
 #include <sys/types.h>
 #include "hirc.h"
 
+static void command_quit(struct Server *server, char *str);
+static void command_join(struct Server *server, char *str);
+static void command_part(struct Server *server, char *str);
+static void command_ping(struct Server *server, char *str);
+static void command_quote(struct Server *server, char *str);
+static void command_connect(struct Server *server, char *str);
+static void command_select(struct Server *server, char *str);
+static void command_set(struct Server *server, char *str);
+static void command_format(struct Server *server, char *str);
+static void command_server(struct Server *server, char *str);
+static void command_names(struct Server *server, char *str);
+static void command_topic(struct Server *server, char *str);
+static void command_help(struct Server *server, char *str);
+
 static char *command_optarg;
 enum {
 	opt_error = -2,
@@ -67,13 +81,13 @@ struct Command commands[] = {
 	{NULL, NULL},
 };
 
-void
+static void
 command_quit(struct Server *server, char *str) {
 	cleanup(str ? str : config_gets("misc.quitmessage"));
 	exit(EXIT_SUCCESS);
 }
 
-void
+static void
 command_join(struct Server *server, char *str) {
 	if (!str) {
 		ui_error("/join requires argument", NULL);
@@ -87,7 +101,7 @@ command_join(struct Server *server, char *str) {
 	handle_expect(server, Expect_join, str);
 }
 
-void
+static void
 command_part(struct Server *server, char *str) {
 	char *channel;
 
@@ -104,7 +118,7 @@ command_part(struct Server *server, char *str) {
 	handle_expect(server, Expect_join, channel);
 }
 
-void
+static void
 command_ping(struct Server *server, char *str) {
 	if (!str) {
 		ui_error("/ping requires argument", NULL);
@@ -115,7 +129,7 @@ command_ping(struct Server *server, char *str) {
 	handle_expect(server, Expect_pong, str);
 }
 
-void
+static void
 command_quote(struct Server *server, char *str) {
 	if (!str) {
 		ui_error("/quote requires argument", NULL);
@@ -130,7 +144,7 @@ command_quote(struct Server *server, char *str) {
 	ircprintf(server, "%s\r\n", str);
 }
 
-void
+static void
 command_connect(struct Server *server, char *str) {
 	struct Server *tserver;
 	char *network	= NULL;
@@ -221,7 +235,7 @@ command_connect(struct Server *server, char *str) {
 	ui_select(tserver, NULL);
 }
 
-void
+static void
 command_select(struct Server *server, char *str) {
 	struct Server *sp;
 	struct Channel *chp;
@@ -292,7 +306,7 @@ command_select(struct Server *server, char *str) {
 	} else ui_error("/select requires argument", NULL);
 }
 
-void
+static void
 command_set(struct Server *server, char *str) {
 	char *name, *val;
 
@@ -304,7 +318,7 @@ command_set(struct Server *server, char *str) {
 	config_set(name, val);
 }
 
-void
+static void
 command_format(struct Server *server, char *str) {
 	char *newstr;
 	int len;
@@ -321,7 +335,7 @@ command_format(struct Server *server, char *str) {
 	free(newstr);
 }
 
-void
+static void
 command_server(struct Server *server, char *str) {
 	struct Server *nserver;
 	char *tserver, *cmd, *arg;
@@ -353,7 +367,7 @@ command_server(struct Server *server, char *str) {
 	ui_error("no such commands: '%s'", cmd);
 }
 
-void
+static void
 command_names(struct Server *server, char *str) {
 	char *channel, *save = NULL;
 
@@ -373,7 +387,7 @@ command_names(struct Server *server, char *str) {
 	handle_expect(server, Expect_names, channel);
 }
 
-void
+static void
 command_topic(struct Server *server, char *str) {
 	char *channel, *topic = NULL;
 	int clear = 0, ret;
@@ -419,7 +433,7 @@ command_topic(struct Server *server, char *str) {
 	} else ircprintf(server, "TOPIC %s :%s\r\n", channel, topic);
 }
 
-void
+static void
 command_help(struct Server *server, char *str) {
 	int cmdonly = 0;
 	int i, j;

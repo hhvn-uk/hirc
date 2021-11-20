@@ -87,23 +87,6 @@ void		support_set(struct Server *server, char *key, char *value);
 void		handle(int rfd, struct Server *server);
 void		handle_expect(struct Server *server, enum Expect cmd, char *about);
 char *		handle_expect_get(struct Server *server, enum Expect cmd);
-void		handle_PING(char *msg, char **params, struct Server *server, time_t timestamp);
-void		handle_PONG(char *msg, char **params, struct Server *server, time_t timestamp);
-void		handle_JOIN(char *msg, char **params, struct Server *server, time_t timestamp);
-void		handle_PART(char *msg, char **params, struct Server *server, time_t timestamp);
-void		handle_QUIT(char *msg, char **params, struct Server *server, time_t timestamp);
-void		handle_NICK(char *msg, char **params, struct Server *server, time_t timestamp);
-void		handle_TOPIC(char *msg, char **params, struct Server *server, time_t timestamp);
-void		handle_PRIVMSG(char *msg, char **params, struct Server *server, time_t timestamp);
-void		handle_RPL_WELCOME(char *msg, char **params, struct Server *server, time_t timestamp);
-void		handle_RPL_ISUPPORT(char *msg, char **params, struct Server *server, time_t timestamp);
-void		handle_RPL_NOTOPIC(char *msg, char **params, struct Server *server, time_t timestamp);
-void		handle_RPL_TOPIC(char *msg, char **params, struct Server *server, time_t timestamp);
-void		handle_RPL_TOPICWHOTIME(char *msg, char **params, struct Server *server, time_t timestamp);
-void		handle_RPL_NAMREPLY(char *msg, char **params, struct Server *server, time_t timestamp);
-void		handle_RPL_ENDOFNAMES(char *msg, char **params, struct Server *server, time_t timestamp);
-void		handle_RPL_ENDOFMOTD(char *msg, char **params, struct Server *server, time_t timestamp);
-void		handle_ERR_NICKNAMEINUSE(char *msg, char **params, struct Server *server, time_t timestamp);
 
 /* ui.c */
 void		ui_init(void);
@@ -139,19 +122,6 @@ void		ui_tls_error_(char *file, int line, struct tls *ctx, char *str);
 /* commands.c */
 void		command_eval(char *str);
 int		command_getopt(char **str, struct CommandOpts *opts);
-void		command_quit(struct Server *server, char *str);
-void		command_join(struct Server *server, char *str);
-void		command_part(struct Server *server, char *str);
-void		command_ping(struct Server *server, char *str);
-void		command_quote(struct Server *server, char *str);
-void		command_connect(struct Server *server, char *str);
-void		command_select(struct Server *server, char *str);
-void		command_set(struct Server *server, char *str);
-void		command_format(struct Server *server, char *str);
-void		command_server(struct Server *server, char *str);
-void		command_names(struct Server *server, char *str);
-void		command_topic(struct Server *server, char *str);
-void		command_help(struct Server *server, char *str);
 
 /* config.c */
 void		config_get_print(char *name);
