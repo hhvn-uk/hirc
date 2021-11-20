@@ -41,6 +41,7 @@ int		chan_selected(struct Channel *channel);
 
 /* nick.c */
 void		prefix_tokenize(char *prefix, char **nick, char **ident, char **host);
+short		nick_getcolour(struct Nick *nick);
 void		nick_free(struct Nick *nick);
 void		nick_free_list(struct Nick **head);
 struct Nick *	nick_create(char *prefix, char priv, struct Server *server);

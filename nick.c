@@ -13,10 +13,14 @@
 #define MINA(array) MIN(array[0], array[1])
 
 short
-nick_getcolour(char *nick) {
+nick_getcolour(struct Nick *nick) {
 	unsigned short ret, sum;
 	int i;
 	long range[2];
+	char *s = nick->nick;
+
+	if (nick->self)
+		return config_getl("nickcolour.self");
 
 	config_getr("nickcolour.range", &range[0], &range[1]);
 
@@ -27,17 +31,17 @@ nick_getcolour(char *nick) {
 	if (range[0] == range[1])
 		return range[0];
 
-	for (sum=i=0; nick && *nick; nick++, i++) {
+	for (sum=i=0; s && *s; s++, i++) {
 		/* don't count certain trailing characters. The following:
 		 * hhvn
 		 * hhvn_
 		 * hhvn2
 		 * should all produce the same colour. */
-		if ((*nick == '_' || isdigit(*nick)) && *(nick + 1) == '\0')
+		if ((*s == '_' || isdigit(*s)) && *(s + 1) == '\0')
 			break;
 
-		sum += *nick * (i + 1);
-		sum ^= *nick;
+		sum += *s * (i + 1);
+		sum ^= *s;
 	}
 
 	return (sum % (MAXA(range) - MINA(range)) + MINA(range) - 1);
