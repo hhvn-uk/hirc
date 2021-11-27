@@ -149,6 +149,11 @@ struct Config config[] = {
 		.strhandle = NULL,
 		.description = {
 		"Format of topic at top of main window", NULL}},
+	{"format.privmsg", 1, Val_string,
+		.str = "${nick} ${2}",
+		.strhandle = NULL,
+		.description = {
+		"Format of messages", NULL}},
 	{NULL},
 };
 

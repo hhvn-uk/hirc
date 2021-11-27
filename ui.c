@@ -41,12 +41,21 @@ struct Window windows[Win_last] = {
 	[Win_nicklist]	= {.handler = ui_draw_nicklist},
 	[Win_buflist]	= {.handler = ui_draw_buflist},
 };
-struct Selected selected;
+
+struct {
+	char *cmd;
+	char *format;
+} formatmap[] = {
+	{"PRIVMSG", 	"format.privmsg"},
+	{NULL,		NULL},
+};
 
 struct {
 	char string[INPUT_MAX];
 	unsigned counter;
 } input;
+
+struct Selected selected;
 
 void
 ui_error_(char *file, int line, char *format, ...) {
@@ -688,6 +697,54 @@ ui_wclear(struct Window *window) {
 	wmove(window->window, 0, 0);
 }
 
+int
+ui_hist_print(struct Window *window, int lines, struct History *hist) {
+	char *cmd;
+	int i;
+
+	if (!hist)
+		return -1;
+
+	if (!hist->params || !*(hist->params+1))
+		goto raw;
+
+	if (**(hist->params) == ':')
+		cmd = *(hist->params+1);
+	else
+		cmd = *(hist->params);
+
+	for (i=0; formatmap[i].cmd; i++)
+		if (formatmap[i].format && strcmp_n(formatmap[i].cmd, cmd) == 0)
+			return ui_wprintc(window, lines, "%s\n", ui_format(config_gets(formatmap[i].format), hist));
+
+raw:
+	return ui_wprintc(window, lines, "%s\n", hist->raw);
+}
+
+int
+ui_hist_len(struct Window *window, struct History *hist, int *lines) {
+	char *cmd;
+	int i;
+
+	if (!hist)
+		return -1;
+
+	if (!hist->params || !*(hist->params+2))
+		goto raw;
+
+	if (**(hist->params) == ':')
+		cmd = *(hist->params+2);
+	else
+		cmd = *(hist->params);
+
+	for (i=0; formatmap[i].cmd; i++)
+		if (formatmap[i].format && strcmp_n(formatmap[i].cmd, cmd) == 0)
+			return ui_strlenc(window, ui_format(config_gets(formatmap[i].format), hist), lines);
+
+raw:
+	return ui_strlenc(window, hist->raw, lines);
+}
+
 void
 ui_draw_main(void) {
 	struct History *p;
@@ -699,15 +756,17 @@ ui_draw_main(void) {
 	for (p = selected.history->history; p && y > 0; p = p->next) {
 		if (!(p->options & HIST_SHOW))
 			continue;
-		ui_strlenc(&windows[Win_main], p->raw, &lines);
+		if (ui_hist_len(&windows[Win_main], p, &lines) == -1)
+			continue;
 		y = y - lines;
 		if (y < lines) {
 			y *= -1;
 			wmove(windows[Win_main].window, 0, 0);
-			ui_wprintc(&windows[Win_main], y, "%s\n", p->raw);
+			ui_hist_print(&windows[Win_main], y, p);
+			break;
 		}
 		wmove(windows[Win_main].window, y, 0);
-		ui_wprintc(&windows[Win_main], 0, "%s\n", p->raw);
+		ui_hist_print(&windows[Win_main], 0, p);
 	}
 
 	if (selected.channel && selected.channel->topic) {
