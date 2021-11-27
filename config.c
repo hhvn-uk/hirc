@@ -144,6 +144,11 @@ struct Config config[] = {
 		.strhandle = NULL,
 		.description = {
 		"Message to send on /part", NULL}},
+	{"format.ui.topic", 1, Val_string,
+		.str = "%{c:99,89}${topic}",
+		.strhandle = NULL,
+		.description = {
+		"Format of topic at top of main window", NULL}},
 	{NULL},
 };
 

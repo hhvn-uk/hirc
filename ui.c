@@ -692,7 +692,6 @@ void
 ui_draw_main(void) {
 	struct History *p;
 	int y, lines;
-	long fg, bg;
 
 	ui_wclear(&windows[Win_main]);
 
@@ -712,9 +711,8 @@ ui_draw_main(void) {
 	}
 
 	if (selected.channel && selected.channel->topic) {
-		config_getr("misc.topiccolour", &fg, &bg);
 		wmove(windows[Win_main].window, 0, 0);
-		ui_wprintc(&windows[Win_main], 1, "%c%02d,%02d%s\n", 3 /* ^C */, fg, bg, selected.channel->topic);
+		ui_wprintc(&windows[Win_main], 0, "%s\n", ui_format(config_gets("format.ui.topic"), NULL));
 	}
 }
 
@@ -724,4 +722,163 @@ ui_select(struct Server *server, struct Channel *channel) {
 	selected.server  = server;
 	selected.history = channel ? channel->history : server ? server->history : main_buf;
 	selected.name    = channel ? channel->name    : server ? server->name    : "hirc";
+}
+
+char *
+ui_format(char *format, struct History *hist) {
+	static char ret[8192];
+	int rc, escape, pn, i;
+	char **params;
+	char *tmp, *p;
+	char colourbuf[2][3];
+	enum {
+		sub_cmd,
+		sub_nick,
+		sub_ident,
+		sub_host,
+		sub_channel,
+		sub_topic,
+		sub_server,
+	};
+	struct {
+		char *name;
+		char *val;
+	} subs[] = {
+		[sub_cmd]	= {"cmd"},
+		[sub_nick]	= {"nick"},
+		[sub_ident]	= {"ident"},
+		[sub_host]	= {"host"},
+		[sub_channel]	= {"channel"},
+		[sub_topic]	= {"topic"},
+		[sub_server]	= {"server"},
+		{NULL, NULL},
+	};
+
+	subs[sub_channel].val = selected.channel ? selected.channel->name  : NULL;
+	subs[sub_topic].val   = selected.channel ? selected.channel->topic : NULL;
+	subs[sub_server].val  = selected.server  ? selected.server->name   : NULL;
+
+	if (hist) {
+		subs[sub_nick].val  = hist->from ? hist->from->nick  : NULL;
+		subs[sub_ident].val = hist->from ? hist->from->ident : NULL;
+		subs[sub_host].val  = hist->from ? hist->from->host  : NULL;
+
+		if (hist->origin) {
+			if (hist->origin->channel) {
+				subs[sub_channel].val = hist->origin->channel->name;
+				subs[sub_topic].val   = hist->origin->channel->topic;
+			}
+			if (hist->origin->server) {
+				subs[sub_server].val  = hist->origin->server->name;
+			}
+		}
+
+		if (**(params = hist->params) == ':')
+			params++;
+
+		subs[sub_cmd].val = *params;
+		params++;
+	}
+
+	for (rc = 0; format && *format && rc < sizeof(ret); ) {
+		if (!escape && *format == '$' && *(format+1) == '{' && strchr(format, '}')) {
+			escape = 0;
+			tmp = struntil(format+2, '}');
+
+			for (p = tmp; *p && isdigit(*p); p++);
+			/* If all are digits, *p == '\0' */
+			if (!*p && hist) {
+				pn = strtol(tmp, NULL, 10) - 1;
+				if (pn >= 0 && param_len(params) >= pn) {
+					rc += snprintf(&ret[rc], sizeof(ret) - rc, "%s", *(params+pn));
+					format = strchr(format, '}') + 1;
+					continue;
+				}
+			}
+
+			for (i=0; subs[i].name; i++) {
+				if (subs[i].val && strcmp_n(subs[i].name, tmp) == 0) {
+					rc += snprintf(&ret[rc], sizeof(ret) - rc, "%s", subs[i].val);
+					format = strchr(format, '}') + 1;
+					continue;
+				}
+			}
+		}
+
+		if (!escape && *format == '%' && *(format+1) == '{' && strchr(format, '}')) {
+			escape = 0;
+			tmp = struntil(format+2, '}');
+
+			switch (*tmp) {
+			case 'b':
+			case 'B':
+				ret[rc++] = 2; /* ^B */
+				format = strchr(format, '}') + 1;
+				continue;
+			case 'c':
+			case 'C':
+				tmp++;
+				if (*tmp == ':' && isdigit(*(tmp+1))) {
+					tmp++;
+					memset(colourbuf, 0, sizeof(colourbuf));
+					colourbuf[0][0] = *tmp;
+					tmp++;
+					if (isdigit(*tmp)) {
+						colourbuf[0][1] = *tmp;
+						tmp += 1;
+					}
+					if (*tmp == ',' && isdigit(*(tmp+1))) {
+						colourbuf[1][0] = *(tmp+1);
+						tmp += 2;
+					}
+					if (colourbuf[1][0] && isdigit(*tmp)) {
+						colourbuf[1][1] = *(tmp);
+						tmp += 1;
+					}
+					if (*tmp == '\0') {
+						rc += snprintf(&ret[rc], sizeof(ret) - rc, "%c%02d,%02d", 3 /* ^C */,
+								atoi(colourbuf[0]), colourbuf[1][0] ? atoi(colourbuf[1]) : 99);
+						format = strchr(format, '}') + 1;
+						continue;
+					}
+				}
+				break;
+			case 'i':
+			case 'I':
+				ret[rc++] = 9; /* ^I */
+				format = strchr(format, '}') + 1;
+				continue;
+			case 'o':
+			case 'O':
+				ret[rc++] = 15; /* ^O */
+				format = strchr(format, '}') + 1;
+				continue;
+			case 'r':
+			case 'R':
+				ret[rc++] = 18; /* ^R */
+				format = strchr(format, '}') + 1;
+				continue;
+			case 'u':
+			case 'U':
+				ret[rc++] = 21; /* ^U */
+				format = strchr(format, '}') + 1;
+				continue;
+			}
+		}
+
+		if (escape) {
+			ret[rc++] = '\\';
+			escape = 0;
+		}
+
+		if (*format == '\\') {
+			escape = 1;
+		} else {
+			ret[rc++] = *format;
+			format++;
+		}
+	}
+
+	ret[rc] = '\0';
+	return ret;
 }

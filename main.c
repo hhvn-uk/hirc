@@ -211,6 +211,7 @@ main(int argc, char *argv[]) {
 	FILE *file;
 	int i, j, refreshed, inputrefreshed;
 	long pinginact, reconnectinterval, maxreconnectinterval;
+	char *tmp;
 
 	if (argc > 2) {
 		fprintf(stderr, "usage: %s [configfile]", dirname(argv[0]));
