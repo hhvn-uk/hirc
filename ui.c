@@ -780,7 +780,7 @@ ui_format(char *format, struct History *hist) {
 		params++;
 	}
 
-	for (rc = 0; format && *format && rc < sizeof(ret); ) {
+	for (escape = 0, rc = 0; format && *format && rc < sizeof(ret); ) {
 		if (!escape && *format == '$' && *(format+1) == '{' && strchr(format, '}')) {
 			escape = 0;
 			tmp = struntil(format+2, '}');
