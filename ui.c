@@ -728,7 +728,7 @@ ui_hist_print(struct Window *window, int lines, struct History *hist) {
 			return ui_wprintc(window, lines, "%s\n", ui_format(config_gets(formatmap[i].format), hist));
 
 raw:
-	return ui_wprintc(window, lines, "%s\n", hist->raw);
+	return ui_wprintc(window, lines, "%s\n", ui_format(config_gets("format.other"), hist));
 }
 
 int
@@ -752,7 +752,7 @@ ui_hist_len(struct Window *window, struct History *hist, int *lines) {
 			return ui_strlenc(window, ui_format(config_gets(formatmap[i].format), hist), lines);
 
 raw:
-	return ui_strlenc(window, hist->raw, lines);
+	return ui_strlenc(window, ui_format(config_gets("format.other"), hist), lines);
 }
 
 void

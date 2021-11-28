@@ -199,6 +199,11 @@ struct Config config[] = {
 		.strhandle = config_format,
 		.description = {
 		"Format of messages", NULL}},
+	{"format.other", 1, Val_string,
+		.str = "${raw}",
+		.strhandle = config_format,
+		.description = {
+		"Format of other messages without formats", NULL}},
 	{NULL},
 };
 
