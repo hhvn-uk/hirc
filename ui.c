@@ -866,8 +866,9 @@ ui_format(char *format, struct History *hist) {
 			}
 
 			for (i=0; subs[i].name; i++) {
-				if (subs[i].val && strcmp_n(subs[i].name, tmp) == 0) {
-					rc += snprintf(&ret[rc], sizeof(ret) - rc, "%s", subs[i].val);
+				if (strcmp_n(subs[i].name, tmp) == 0) {
+					if (subs[i].val)
+						rc += snprintf(&ret[rc], sizeof(ret) - rc, "%s", subs[i].val);
 					format = strchr(format, '}') + 1;
 					continue;
 				}
