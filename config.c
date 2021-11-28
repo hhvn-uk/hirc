@@ -215,6 +215,21 @@ struct Config config[] = {
 		.strhandle = config_format,
 		.description = {
 		"Format of messages", NULL}},
+	{"format.join", 1, Val_string,
+		.str = "%{b}%{c:44}+%{o}%{=}${nick} (${ident}@${host})",
+		.strhandle = config_format,
+		.description = {
+		"Format of JOIN messages", NULL}},
+	{"format.quit", 1, Val_string,
+		.str = "%{b}%{c:40}<%{o}%{=}${nick} (${ident}@${host}): ${1}",
+		.strhandle = config_format,
+		.description = {
+		"Format of QUIT messages", NULL}},
+	{"format.part", 1, Val_string,
+		.str = "%{b}%{c:40}-%{o}%{=}${nick} (${ident}@${host}): ${2}",
+		.strhandle = config_format,
+		.description = {
+		"Format of PART messages", NULL}},
 	{"format.other", 1, Val_string,
 		.str = "${raw}",
 		.strhandle = config_format,

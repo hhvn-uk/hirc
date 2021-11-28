@@ -57,6 +57,9 @@ struct {
 	{"SELF_TLSNOTCOMPILED",	"format.ui.tlsnotcompiled"},
 #endif /* TLS */
 	{"PRIVMSG", 		"format.privmsg"},
+	{"JOIN",		"format.join"},
+	{"PART",		"format.part"},
+	{"QUIT",		"format.quit"},
 	{NULL,		NULL},
 };
 
