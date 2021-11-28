@@ -12,6 +12,7 @@ static int config_buflist_location(long num);
 static int config_buflist_width(long num);
 static int config_nickcolour_self(long num);
 static int config_nickcolour_range(long a, long b);
+static int config_format(char *str);
 
 char *valname[] = {
 	[Val_string] = "a string",
@@ -146,12 +147,12 @@ struct Config config[] = {
 		"Message to send on /part", NULL}},
 	{"format.ui.topic", 1, Val_string,
 		.str = "%{c:99,89}${topic}",
-		.strhandle = NULL,
+		.strhandle = config_format,
 		.description = {
 		"Format of topic at top of main window", NULL}},
 	{"format.privmsg", 1, Val_string,
 		.str = "${nick} ${2}",
-		.strhandle = NULL,
+		.strhandle = config_format,
 		.description = {
 		"Format of messages", NULL}},
 	{NULL},
@@ -417,5 +418,11 @@ config_nickcolour_self(long num) {
 static int
 config_nickcolour_range(long a, long b) {
 	windows[Win_nicklist].refresh = 1;
+	return 1;
+}
+
+static int
+config_format(char *str) {
+	ui_redraw();
 	return 1;
 }
