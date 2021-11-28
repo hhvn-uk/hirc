@@ -756,7 +756,7 @@ ui_draw_main(void) {
 	for (p = selected.history->history; p && y > 0; p = p->next) {
 		if (!(p->options & HIST_SHOW))
 			continue;
-		if (ui_hist_len(&windows[Win_main], p, &lines) == -1)
+		if (ui_hist_len(&windows[Win_main], p, &lines) <= 0)
 			continue;
 		y = y - lines;
 		if (y < lines) {
