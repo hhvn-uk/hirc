@@ -145,6 +145,8 @@ command_ping(struct Server *server, char *str) {
 
 static void
 command_quote(struct Server *server, char *str) {
+	char msg[512];
+
 	if (!str) {
 		ui_error("/quote requires argument", NULL);
 		return;
@@ -155,7 +157,12 @@ command_quote(struct Server *server, char *str) {
 		return;
 	}
 
-	ircprintf(server, "%s\r\n", str);
+	if (server->status == ConnStatus_connected) {
+		ircprintf(server, "%s\r\n", str);
+	} else {
+		snprintf(msg, sizeof(msg), "%s\r\n", str);
+		schedule_push(server, "376" /* RPL_ENDOFMOTD */, msg);
+	}
 }
 
 static void
