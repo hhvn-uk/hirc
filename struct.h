@@ -95,6 +95,13 @@ enum Expect {
 	Expect_last,
 };
 
+struct Schedule {
+	struct Schedule *prev;
+	char *tmsg;
+	char *msg;
+	struct Schedule *next;
+};
+
 struct Server {
 	struct Server *prev;
 	int wfd;
@@ -112,6 +119,7 @@ struct Server {
 	struct HistInfo *history;
 	struct Channel *channels;
 	struct Channel *privs;
+	struct Schedule *schedule;
 	int reconnect;
 	char *expect[Expect_last];
 	int connectfail; /* number of failed connections */

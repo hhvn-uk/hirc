@@ -83,6 +83,8 @@ int		serv_selected(struct Server *server);
 void		serv_disconnect(struct Server *server, int reconnect, char *msg);
 char *		support_get(struct Server *server, char *key);
 void		support_set(struct Server *server, char *key, char *value);
+void		schedule_push(struct Server *server, char *tmsg, char *msg);
+char *		schedule_pull(struct Server *server, char *tmsg);
 
 /* handle.c */
 void		handle(int rfd, struct Server *server);

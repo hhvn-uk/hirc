@@ -89,15 +89,26 @@ command_quit(struct Server *server, char *str) {
 
 static void
 command_join(struct Server *server, char *str) {
+	char *chantypes, msg[512];
 	if (!str) {
 		ui_error("/join requires argument", NULL);
 		return;
 	}
 
-	if (strchr(support_get(server, "CHANTYPES"), *str))
-		ircprintf(server, "JOIN %s\r\n", str);
+	chantypes = support_get(server, "CHANTYPES");
+	if (strchr(chantypes, *str))
+		snprintf(msg, sizeof(msg), "JOIN %s\r\n", str);
 	else
-		ircprintf(server, "JOIN #%s\r\n", str);
+		snprintf(msg, sizeof(msg), "JOIN %c%s\r\n", chantypes ? *chantypes : '#', str);
+
+	if (server->status == ConnStatus_connected)
+		ircprintf(server, "%s", msg);
+	else
+		schedule_push(server, "376" /* RPL_ENDOFMOTD */, msg);
+
+	/* Perhaps we should update expect from schedule?
+	 * That'd make more sense if different stuff gets
+	 * scheduled for events that happen at different times */
 	handle_expect(server, Expect_join, str);
 }
 

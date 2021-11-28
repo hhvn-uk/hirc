@@ -336,3 +336,64 @@ support_set(struct Server *server, char *key, char *value) {
 	p->next->key = key ? strdup(key) : NULL;
 	p->next->value = value ? strdup(value) : NULL;
 }
+
+void
+schedule_push(struct Server *server, char *tmsg, char *msg) {
+	struct Schedule *p;
+
+	if (!server)
+		return;
+
+	if (!server->schedule) {
+		server->schedule = malloc(sizeof(struct Schedule));
+		server->schedule->prev = server->schedule->next = NULL;
+		server->schedule->tmsg = strdup(tmsg);
+		server->schedule->msg  = strdup(msg);
+		return;
+	}
+
+	for (p = server->schedule; p && p->next; p = p->next);
+
+	p->next = malloc(sizeof(struct Schedule));
+	p->next->prev = p;
+	p->next->next = NULL;
+	p->next->tmsg = strdup(tmsg);
+	p->next->msg  = strdup(msg);
+}
+
+char *
+schedule_pull(struct Server *server, char *tmsg) {
+	static char *ret = NULL;
+	struct Schedule *p;
+
+	if (!server || !tmsg)
+		return NULL;
+
+	for (p = server->schedule; p; p = p->next) {
+		if (strcmp(p->tmsg, tmsg) == 0) {
+			free(p->tmsg);
+
+			/* Don't free p->msg, instead save it to
+			 * a static pointer that we free the next
+			 * time schedule_pull is invoked. Since
+			 * schedule_pull will probably be used in
+			 * while loops until it equals NULL, this
+			 * will likely be set free quite quickly */
+			free(ret);
+			ret = p->msg;
+
+			if (p->prev) p->prev->next = p->next;
+			if (p->next) p->next->prev = p->prev;
+
+			if (!p->prev && !p->next)
+				server->schedule = NULL;
+
+			free(p);
+			return ret;
+		}
+	}
+
+	free(ret);
+	ret = NULL;
+	return NULL;
+}

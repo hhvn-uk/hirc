@@ -483,6 +483,7 @@ handle(int rfd, struct Server *server) {
 	time_t timestamp;
 	char **params;
 	char *cmd;
+	char *schmsg;
 	char *msg;
 	char buf[511];
 	/* using a buffer size of 511:
@@ -520,6 +521,10 @@ handle(int rfd, struct Server *server) {
 		cmd = *(params + 1);
 	else
 		cmd = *(params);
+
+	/* Fire off any scheduled events for the current cmd */
+	while ((schmsg = schedule_pull(server, cmd)) != NULL)
+		ircprintf(server, "%s", schmsg);
 
 	for (i=0; cmd && handlers[i].cmd; i++) {
 		if (strcmp(handlers[i].cmd, cmd) == 0) {
