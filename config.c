@@ -14,6 +14,7 @@ static int config_buflist_location(long num);
 static int config_buflist_width(long num);
 static int config_nickcolour_self(long num);
 static int config_nickcolour_range(long a, long b);
+static int config_divider(long num);
 static int config_format(char *str);
 
 char *valname[] = {
@@ -147,13 +148,28 @@ struct Config config[] = {
 		.strhandle = NULL,
 		.description = {
 		"Message to send on /part", NULL}},
+	{"divider.toggle", 1, Val_bool,
+		.num = 1,
+		.numhandle = config_divider,
+		.description = {
+		"Turn divider on/off", NULL}},
+	{"divider.margin", 1, Val_nzunsigned,
+		.num = 15,
+		.numhandle = config_divider,
+		.description = {
+		"Number of columns on the left of the divider", NULL}},
+	{"divider.string", 1, Val_string,
+		.str = " ",
+		.strhandle = config_format,
+		.description = {
+		"String to be used as divider", NULL}},
 	{"format.ui.topic", 1, Val_string,
 		.str = "%{c:99,89}${topic}",
 		.strhandle = config_format,
 		.description = {
 		"Format of topic at top of main window", NULL}},
 	{"format.ui.error", 1, Val_string,
-		.str = "%{b}%{c:28}${3} %{b}(at ${1}:${2})",
+		.str = "%{c:28}%{b}${3} %{b}(at ${1}:${2})",
 		.strhandle = config_format,
 		.description = {
 		"Format of SELF_ERROR messages", NULL}},
@@ -195,7 +211,7 @@ struct Config config[] = {
 		"Format of SELF_TLSNOTCOMPILED messages", NULL}},
 #endif /* TLS */
 	{"format.privmsg", 1, Val_string,
-		.str = "${nick} ${2}",
+		.str = "${nick}%{=}${2}",
 		.strhandle = config_format,
 		.description = {
 		"Format of messages", NULL}},
@@ -475,5 +491,11 @@ config_nickcolour_range(long a, long b) {
 static int
 config_format(char *str) {
 	ui_redraw();
+	return 1;
+}
+
+static int
+config_divider(long num) {
+	windows[Win_main].refresh = 1;
 	return 1;
 }

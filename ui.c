@@ -797,9 +797,12 @@ char *
 ui_format(char *format, struct History *hist) {
 	static char ret[8192];
 	int rc, escape, pn, i;
+	int rhs = 0;
+	int divider = 0;
 	char **params;
 	char *tmp, *p;
 	char colourbuf[2][3];
+	char printformat[64];
 	enum {
 		sub_raw,
 		sub_cmd,
@@ -837,6 +840,7 @@ ui_format(char *format, struct History *hist) {
 
 		if (hist->origin) {
 			if (hist->origin->channel) {
+				divider = config_getl("divider.toggle");
 				subs[sub_channel].val = hist->origin->channel->name;
 				subs[sub_topic].val   = hist->origin->channel->topic;
 			}
@@ -948,6 +952,27 @@ ui_format(char *format, struct History *hist) {
 					continue;
 				}
 				break;
+			case '=':
+				if (*(tmp+1) == '\0' && divider) {
+					rhs = 1;
+					ret[rc] = '\0';
+					/* strlen(ret) - ui_strlenc(NULL, ret, NULL) should get
+					 * the length of hidden characters. Add this onto the
+					 * margin to pad out properly. */
+					snprintf(printformat, sizeof(printformat), "%%%lds%%s",
+							config_getl("divider.margin") + (strlen(ret) - ui_strlenc(NULL, ret, NULL)));
+					/* Save ret for use in snprintf */
+					tmp = strdup(ret);
+					rc = snprintf(ret, sizeof(ret), printformat, tmp, config_gets("divider.string"));
+					free(tmp);
+					format = strchr(format, '}') + 1;
+					continue;
+				} else if (*(tmp+1) == '\0') {
+					ret[rc++] = ' ';
+					format = strchr(format, '}') + 1;
+					continue;
+				}
+				break;
 			}
 		}
 
@@ -965,5 +990,12 @@ ui_format(char *format, struct History *hist) {
 	}
 
 	ret[rc] = '\0';
+	if (divider && !rhs) {
+		snprintf(printformat, sizeof(printformat), "%%%lds%%s%%s", config_getl("divider.margin"));
+		tmp = strdup(ret);
+		rc = snprintf(ret, sizeof(ret), printformat, "", config_gets("divider.string"), tmp);
+		free(tmp);
+	}
+
 	return ret;
 }
