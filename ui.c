@@ -915,24 +915,36 @@ ui_format(char *format, struct History *hist) {
 				break;
 			case 'i':
 			case 'I':
-				ret[rc++] = 9; /* ^I */
-				format = strchr(format, '}') + 1;
-				continue;
+				if (*(tmp+1) == '\0') {
+					ret[rc++] = 9; /* ^I */
+					format = strchr(format, '}') + 1;
+					continue;
+				}
+				break;
 			case 'o':
 			case 'O':
-				ret[rc++] = 15; /* ^O */
-				format = strchr(format, '}') + 1;
-				continue;
+				if (*(tmp+1) == '\0') {
+					ret[rc++] = 15; /* ^O */
+					format = strchr(format, '}') + 1;
+					continue;
+				}
+				break;
 			case 'r':
 			case 'R':
-				ret[rc++] = 18; /* ^R */
-				format = strchr(format, '}') + 1;
-				continue;
+				if (*(tmp+1) == '\0') {
+					ret[rc++] = 18; /* ^R */
+					format = strchr(format, '}') + 1;
+					continue;
+				}
+				break;
 			case 'u':
 			case 'U':
-				ret[rc++] = 21; /* ^U */
-				format = strchr(format, '}') + 1;
-				continue;
+				if (*(tmp+1) == '\0') {
+					ret[rc++] = 21; /* ^U */
+					format = strchr(format, '}') + 1;
+					continue;
+				}
+				break;
 			}
 		}
 
