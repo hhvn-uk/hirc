@@ -311,6 +311,9 @@ void
 support_set(struct Server *server, char *key, char *value) {
 	struct Support *p;
 
+	if (!server)
+		return;
+
 	if (!server->supports) {
 		server->supports = malloc(sizeof(struct Support));
 		server->supports->prev = server->supports->next = NULL;
