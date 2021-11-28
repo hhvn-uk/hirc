@@ -103,7 +103,7 @@ command_join(struct Server *server, char *str) {
 
 static void
 command_part(struct Server *server, char *str) {
-	char *channel;
+	char *channel, *chantypes, msg[512];
 
 	channel = str ? str : selected.channel ? selected.channel->name : NULL;
 	if (!channel) {
@@ -111,11 +111,14 @@ command_part(struct Server *server, char *str) {
 		return;
 	}
 
-	if (strchr(support_get(server, "CHANTYPES"), *channel))
-		ircprintf(server, "PART %s\r\n", channel);
+	chantypes = support_get(server, "CHANTYPES");
+	if (strchr(chantypes, *str))
+		snprintf(msg, sizeof(msg), "PART %s\r\n", str);
 	else
-		ircprintf(server, "PART #%s\r\n", channel);
-	handle_expect(server, Expect_join, channel);
+		snprintf(msg, sizeof(msg), "PART %c%s\r\n", chantypes ? *chantypes : '#', str);
+
+	ircprintf(server, "%s", msg);
+	handle_expect(server, Expect_part, channel);
 }
 
 static void
