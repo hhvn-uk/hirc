@@ -50,6 +50,8 @@ Set/reset underline.
 
 Certain variables may also be used in formats:
 .Bl -tag -compact -width "${channel}"
+.It ${raw}
+Raw message.
 .It ${cmd}
 The command of a message.
 .It ${nick}

@@ -801,6 +801,7 @@ ui_format(char *format, struct History *hist) {
 	char *tmp, *p;
 	char colourbuf[2][3];
 	enum {
+		sub_raw,
 		sub_cmd,
 		sub_nick,
 		sub_ident,
@@ -813,13 +814,14 @@ ui_format(char *format, struct History *hist) {
 		char *name;
 		char *val;
 	} subs[] = {
-		[sub_cmd]	= {"cmd"},
-		[sub_nick]	= {"nick"},
-		[sub_ident]	= {"ident"},
-		[sub_host]	= {"host"},
-		[sub_channel]	= {"channel"},
-		[sub_topic]	= {"topic"},
-		[sub_server]	= {"server"},
+		[sub_raw]	= {"raw", NULL},
+		[sub_cmd]	= {"cmd", NULL},
+		[sub_nick]	= {"nick", NULL},
+		[sub_ident]	= {"ident", NULL},
+		[sub_host]	= {"host", NULL},
+		[sub_channel]	= {"channel", NULL},
+		[sub_topic]	= {"topic", NULL},
+		[sub_server]	= {"server", NULL},
 		{NULL, NULL},
 	};
 
@@ -828,6 +830,7 @@ ui_format(char *format, struct History *hist) {
 	subs[sub_server].val  = selected.server  ? selected.server->name   : NULL;
 
 	if (hist) {
+		subs[sub_raw].val   = hist->raw;
 		subs[sub_nick].val  = hist->from ? hist->from->nick  : NULL;
 		subs[sub_ident].val = hist->from ? hist->from->ident : NULL;
 		subs[sub_host].val  = hist->from ? hist->from->host  : NULL;
