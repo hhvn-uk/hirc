@@ -674,7 +674,7 @@ ui_strlenc(struct Window *window, char *s, int *lines) {
 			if ((*s & 0xC0) != 0x80)
 				cc++;
 			ret++;
-			if (cc == window->w) {
+			if (window && cc == window->w) {
 				lc++;
 				cc = 0;
 			}
