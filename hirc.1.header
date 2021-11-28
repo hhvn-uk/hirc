@@ -17,8 +17,8 @@ dump documentation data and exit
 .Sh DESCRIPTION
 .Nm
 is the result of a love/hate relationship with irssi.
-It is an attempt to majorly simplify irssi whilst keeping 
-a lot of configurability and integrating some things only 
+It is an attempt to majorly simplify irssi whilst keeping
+a lot of configurability and integrating some things only
 possible with perl plugins. That said,
 .Nm
 does not share any code with irssi.
