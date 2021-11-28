@@ -150,6 +150,48 @@ struct Config config[] = {
 		.strhandle = config_format,
 		.description = {
 		"Format of topic at top of main window", NULL}},
+	{"format.ui.error", 1, Val_string,
+		.str = "%{b}%{c:28}${3} %{b}(at ${1}:${2})",
+		.strhandle = config_format,
+		.description = {
+		"Format of SELF_ERROR messages", NULL}},
+	{"format.ui.misc", 1, Val_string,
+		.str = "${1}",
+		.strhandle = config_format,
+		.description = {
+		"Format of SELF_UI messages", NULL}},
+	{"format.ui.connectlost", 1, Val_string,
+		.str = "Connection to ${1} (${2}:${3}) lost: ${4}",
+		.strhandle = config_format,
+		.description = {
+		"Format of SELF_CONNECTLOST messages", NULL}},
+	{"format.ui.connecting", 1, Val_string,
+		.str = "Connecting to ${1}:${2}",
+		.strhandle = config_format,
+		.description = {
+		"Format of SELF_CONNECTING messages", NULL}},
+	{"format.ui.connected", 1, Val_string,
+		.str = "Connection to ${1} established",
+		.strhandle = config_format,
+		.description = {
+		"Format of SELF_CONNECTED messages", NULL}},
+	{"format.ui.lookupfail", 1, Val_string,
+		.str = "Failed to lookup ${2}: ${4}",
+		.strhandle = config_format,
+		.description = {
+		"Format of SELF_LOOKUPFAIL messages", NULL}},
+	{"format.ui.connectfail", 1, Val_string,
+		.str = "Failed to connect to ${2}:${3}: ${4}",
+		.strhandle = config_format,
+		.description = {
+		"Format of SELF_CONNECTFAIL messages", NULL}},
+#ifndef TLS
+	{"format.ui.tlsnotcompiled", 1, Val_string,
+		.str = "TLS not compiled into hirc",
+		.strhandle = config_format,
+		.description = {
+		"Format of SELF_TLSNOTCOMPILED messages", NULL}},
+#endif /* TLS */
 	{"format.privmsg", 1, Val_string,
 		.str = "${nick} ${2}",
 		.strhandle = config_format,

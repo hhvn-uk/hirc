@@ -46,7 +46,17 @@ struct {
 	char *cmd;
 	char *format;
 } formatmap[] = {
-	{"PRIVMSG", 	"format.privmsg"},
+	{"SELF_ERROR",		"format.ui.error"},
+	{"SELF_UI",		"format.ui.misc"},
+	{"SELF_CONNECTLOST",	"format.ui.connectlost"},
+	{"SELF_CONNECTING",	"format.ui.connecting"},
+	{"SELF_CONNECTED",	"format.ui.connected"},
+	{"SELF_LOOKUPFAIL",	"format.ui.lookupfail"},
+	{"SELF_CONNECTFAIL",	"format.ui.connectfail"},
+#ifndef TLS
+	{"SELF_TLSNOTCOMPILED",	"format.ui.tlsnotcompiled"},
+#endif /* TLS */
+	{"PRIVMSG", 		"format.privmsg"},
 	{NULL,		NULL},
 };
 
