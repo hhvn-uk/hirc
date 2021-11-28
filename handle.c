@@ -458,7 +458,7 @@ handle_RPL_ENDOFMOTD(char *msg, char **params, struct Server *server, time_t tim
  * Also, it might be better to have an enum for all commands and numerics somewhere */
 void
 handle_expect(struct Server *server, enum Expect cmd, char *about) {
-	if (cmd >= Expect_last || cmd < 0)
+	if (cmd >= Expect_last || cmd < 0 || readingconf)
 		return;
 
 	free(server->expect[cmd]);

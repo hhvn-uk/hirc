@@ -151,6 +151,7 @@ extern int uineedredraw;
 
 /* config.c */
 extern struct Config config[];
+extern int readingconf;
 
 /* commands.c */
 extern struct Command commands[];

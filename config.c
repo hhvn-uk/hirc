@@ -6,6 +6,8 @@
 #include <errno.h>
 #include "hirc.h"
 
+int readingconf = 0;
+
 static int config_nicklist_location(long num);
 static int config_nicklist_width(long num);
 static int config_buflist_location(long num);
@@ -374,9 +376,11 @@ config_read(char *filename) {
 		return;
 	}
 
+	readingconf = 1;
 	while (read_line(fileno(file), buf, sizeof(buf)))
 		if (*buf == '/')
 			command_eval(buf);
+	readingconf = 0;
 }
 
 static int
