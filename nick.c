@@ -155,7 +155,12 @@ nick_add(struct Nick **head, char *prefix, char priv, struct Server *server) {
 
 struct Nick *
 nick_dup(struct Nick *nick, struct Server *server) {
-	return nick_create(nick->prefix, nick->priv, server);
+	/* Use strprefix to recreate the prefix.
+	 * This is an example of trying to be clever
+	 * backfiring - I should've just strdup'd
+	 * the nick, ident and host instead of
+	 * splitting prefix and pointing to it. */
+	return nick_create(nick_strprefix(nick), nick->priv, server);
 }
 
 struct Nick *
