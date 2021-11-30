@@ -23,7 +23,9 @@ $(BIN): $(OBJ)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(OBJ)
 
 $(MAN): $(BIN) $(MAN).header $(MAN).footer
-	./$(BIN) -d | cat $(MAN).header - $(MAN).footer > $(MAN)
+	./$(BIN) -d | \
+		cat $(MAN).header - $(MAN).footer | \
+		sed "s/COMMIT/$(COMMIT)/" > $(MAN)
 
 install: all
 	mkdir -p $(BINDIR) $(MANDIR)/man1
