@@ -428,8 +428,12 @@ command_topic(struct Server *server, char *str) {
 		}
 	}
 
-	channel = strtok_r(str,  " ", &topic);
-	if (!strchr(support_get(server, "CHANTYPES"), *channel)) {
+	if (str)
+		channel = strtok_r(str,  " ", &topic);
+	else
+		channel = topic = NULL;
+
+	if (channel && !strchr(support_get(server, "CHANTYPES"), *channel)) {
 		topic = channel;
 		channel = NULL;
 	}
