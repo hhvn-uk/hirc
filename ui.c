@@ -799,11 +799,12 @@ ui_select(struct Server *server, struct Channel *channel) {
 char *
 ui_format(char *format, struct History *hist) {
 	static char ret[8192];
+	static int nots = 0;
 	int rc, escape, pn, i;
 	int rhs = 0;
 	int divider = 0;
 	char **params;
-	char *tmp, *p;
+	char *tmp, *p, *ts;
 	char colourbuf[2][3];
 	char printformat[64];
 	enum {
@@ -830,6 +831,8 @@ ui_format(char *format, struct History *hist) {
 		[sub_server]	= {"server", NULL},
 		{NULL, NULL},
 	};
+
+	/* ${time} is implemented specially so doesn't appear in list */
 
 	subs[sub_channel].val = selected.channel ? selected.channel->name  : NULL;
 	subs[sub_topic].val   = selected.channel ? selected.channel->topic : NULL;
@@ -859,6 +862,14 @@ ui_format(char *format, struct History *hist) {
 		params++;
 	}
 
+	if (!nots && hist && config_getl("timestamp.toggle")) {
+		nots = 1;
+		ts = strdup(ui_format(config_gets("format.ui.timestamp"), hist));
+		nots = 0;
+	} else {
+		ts = "";
+	}
+
 	for (escape = 0, rc = 0; format && *format && rc < sizeof(ret); ) {
 		if (!escape && *format == '$' && *(format+1) == '{' && strchr(format, '}')) {
 			escape = 0;
@@ -873,6 +884,18 @@ ui_format(char *format, struct History *hist) {
 					format = strchr(format, '}') + 1;
 					continue;
 				}
+			}
+
+			if (hist && tmp && strncmp(tmp, "time:", strlen("time:")) == 0 || strcmp(tmp, "time") == 0) {
+				tmp = strtok(tmp, ":");
+				tmp = strtok(NULL, ":");
+
+				if (!tmp)
+					rc += strftime(&ret[rc], sizeof(ret) - rc, "%H:%M", gmtime(&hist->timestamp));
+				else
+					rc += strftime(&ret[rc], sizeof(ret) - rc, tmp, gmtime(&hist->timestamp));
+				format = strchr(format, '}') + 1;
+				continue;
 			}
 
 			for (i=0; subs[i].name; i++) {
@@ -993,12 +1016,19 @@ ui_format(char *format, struct History *hist) {
 	}
 
 	ret[rc] = '\0';
-	if (divider && !rhs) {
+	if (!nots && divider && !rhs) {
 		snprintf(printformat, sizeof(printformat), "%%%lds%%s%%s", config_getl("divider.margin"));
 		tmp = strdup(ret);
 		rc = snprintf(ret, sizeof(ret), printformat, "", config_gets("divider.string"), tmp);
 		free(tmp);
 	}
+
+	tmp = strdup(ret);
+	rc = snprintf(ret, sizeof(ret), "%s%s", ts, tmp);
+	free(tmp);
+
+	if (ts[0] != '\0')
+		free(ts);
 
 	return ret;
 }

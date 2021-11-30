@@ -14,8 +14,8 @@ static int config_buflist_location(long num);
 static int config_buflist_width(long num);
 static int config_nickcolour_self(long num);
 static int config_nickcolour_range(long a, long b);
-static int config_divider(long num);
-static int config_format(char *str);
+static int config_redrawl(long num);
+static int config_redraws(char *str);
 
 char *valname[] = {
 	[Val_string] = "a string",
@@ -150,89 +150,101 @@ struct Config config[] = {
 		"Message to send on /part", NULL}},
 	{"divider.toggle", 1, Val_bool,
 		.num = 1,
-		.numhandle = config_divider,
+		.numhandle = config_redrawl,
 		.description = {
 		"Turn divider on/off", NULL}},
 	{"divider.margin", 1, Val_nzunsigned,
 		.num = 15,
-		.numhandle = config_divider,
+		.numhandle = config_redrawl,
 		.description = {
 		"Number of columns on the left of the divider", NULL}},
 	{"divider.string", 1, Val_string,
 		.str = " ",
-		.strhandle = config_format,
+		.strhandle = config_redraws,
 		.description = {
 		"String to be used as divider", NULL}},
+	{"timestamp.toggle", 1, Val_bool,
+		.num = 1,
+		.numhandle = config_redrawl,
+		.description = {
+		"Turn on/off timestamps", NULL}},
+	{"format.ui.timestamp", 1, Val_string,
+		.str = "%{c:92}${time}%{o} ",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of timestamps",
+		"Only shown if timestamp.toggle is on."
+		"This format is special as it is included in others.", NULL}},
 	{"format.ui.topic", 1, Val_string,
 		.str = "%{c:99,89}${topic}",
-		.strhandle = config_format,
+		.strhandle = config_redraws,
 		.description = {
 		"Format of topic at top of main window", NULL}},
 	{"format.ui.error", 1, Val_string,
 		.str = "%{c:28}%{b}${3} %{b}(at ${1}:${2})",
-		.strhandle = config_format,
+		.strhandle = config_redraws,
 		.description = {
 		"Format of SELF_ERROR messages", NULL}},
 	{"format.ui.misc", 1, Val_string,
 		.str = "${1}",
-		.strhandle = config_format,
+		.strhandle = config_redraws,
 		.description = {
 		"Format of SELF_UI messages", NULL}},
 	{"format.ui.connectlost", 1, Val_string,
 		.str = "Connection to ${1} (${2}:${3}) lost: ${4}",
-		.strhandle = config_format,
+		.strhandle = config_redraws,
 		.description = {
 		"Format of SELF_CONNECTLOST messages", NULL}},
 	{"format.ui.connecting", 1, Val_string,
 		.str = "Connecting to ${1}:${2}",
-		.strhandle = config_format,
+		.strhandle = config_redraws,
 		.description = {
 		"Format of SELF_CONNECTING messages", NULL}},
 	{"format.ui.connected", 1, Val_string,
 		.str = "Connection to ${1} established",
-		.strhandle = config_format,
+		.strhandle = config_redraws,
 		.description = {
 		"Format of SELF_CONNECTED messages", NULL}},
 	{"format.ui.lookupfail", 1, Val_string,
 		.str = "Failed to lookup ${2}: ${4}",
-		.strhandle = config_format,
+		.strhandle = config_redraws,
 		.description = {
 		"Format of SELF_LOOKUPFAIL messages", NULL}},
 	{"format.ui.connectfail", 1, Val_string,
 		.str = "Failed to connect to ${2}:${3}: ${4}",
-		.strhandle = config_format,
+		.strhandle = config_redraws,
 		.description = {
 		"Format of SELF_CONNECTFAIL messages", NULL}},
 #ifndef TLS
 	{"format.ui.tlsnotcompiled", 1, Val_string,
 		.str = "TLS not compiled into hirc",
-		.strhandle = config_format,
+		.strhandle = config_redraws,
 		.description = {
 		"Format of SELF_TLSNOTCOMPILED messages", NULL}},
 #endif /* TLS */
 	{"format.privmsg", 1, Val_string,
 		.str = "${nick}%{=}${2}",
-		.strhandle = config_format,
+		.strhandle = config_redraws,
 		.description = {
 		"Format of messages", NULL}},
 	{"format.join", 1, Val_string,
 		.str = "%{b}%{c:44}+%{o}%{=}${nick} (${ident}@${host})",
-		.strhandle = config_format,
+		.strhandle = config_redraws,
 		.description = {
 		"Format of JOIN messages", NULL}},
 	{"format.quit", 1, Val_string,
 		.str = "%{b}%{c:40}<%{o}%{=}${nick} (${ident}@${host}): ${1}",
-		.strhandle = config_format,
+		.strhandle = config_redraws,
 		.description = {
 		"Format of QUIT messages", NULL}},
 	{"format.part", 1, Val_string,
 		.str = "%{b}%{c:40}-%{o}%{=}${nick} (${ident}@${host}): ${2}",
-		.strhandle = config_format,
+		.strhandle = config_redraws,
 		.description = {
 		"Format of PART messages", NULL}},
 	{"format.other", 1, Val_string,
 		.str = "${raw}",
-		.strhandle = config_format,
+		.strhandle = config_redraws,
 		.description = {
 		"Format of other messages without formats", NULL}},
 	{NULL},
@@ -504,13 +516,13 @@ config_nickcolour_range(long a, long b) {
 }
 
 static int
-config_format(char *str) {
+config_redraws(char *str) {
 	ui_redraw();
 	return 1;
 }
 
 static int
-config_divider(long num) {
+config_redrawl(long num) {
 	windows[Win_main].refresh = 1;
 	return 1;
 }

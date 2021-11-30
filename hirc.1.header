@@ -71,6 +71,9 @@ Selected server, or server the message was from.
 .It ${n}
 Where n is a non-zero positive integer.
 This selects a paramater of a message.
+.It ${time}
+May also be written as ${time:format} where format is passed to
+.Xr strftime 3 "."
 .El
 
 For example, the message:
