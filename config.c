@@ -173,7 +173,7 @@ struct Config config[] = {
 		.strhandle = config_redraws,
 		.description = {
 		"Format of timestamps",
-		"Only shown if timestamp.toggle is on."
+		"Only shown if timestamp.toggle is on.",
 		"This format is special as it is included in others.", NULL}},
 	{"format.ui.topic", 1, Val_string,
 		.str = "%{c:99,89}${topic}",
