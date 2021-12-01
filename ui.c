@@ -754,6 +754,9 @@ ui_hist_print(struct Window *window, int lines, struct History *hist) {
 		if (formatmap[i].format && strcmp_n(formatmap[i].cmd, cmd) == 0)
 			return ui_wprintc(window, lines, "%s\n", ui_format(config_gets(formatmap[i].format), hist));
 
+	if (isdigit(*cmd) && isdigit(*(cmd+1)) && isdigit(*(cmd+2)) && !*(cmd+3))
+		return ui_wprintc(window, lines, "%s\n", ui_format(config_gets("format.rpl.other"), hist));
+
 raw:
 	return ui_wprintc(window, lines, "%s\n", ui_format(config_gets("format.other"), hist));
 }
@@ -777,6 +780,9 @@ ui_hist_len(struct Window *window, struct History *hist, int *lines) {
 	for (i=0; formatmap[i].cmd; i++)
 		if (formatmap[i].format && strcmp_n(formatmap[i].cmd, cmd) == 0)
 			return ui_strlenc(window, ui_format(config_gets(formatmap[i].format), hist), lines);
+
+	if (isdigit(*cmd) && isdigit(*(cmd+1)) && isdigit(*(cmd+2)) && !*(cmd+3))
+		return ui_strlenc(window, ui_format(config_gets("format.rpl.other"), hist), lines);
 
 raw:
 	return ui_strlenc(window, ui_format(config_gets("format.other"), hist), lines);

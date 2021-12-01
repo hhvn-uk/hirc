@@ -262,6 +262,11 @@ struct Config config[] = {
 		.strhandle = config_redraws,
 		.description = {
 		"Format of modes being set on channels", NULL}},
+	{"format.rpl.other", 1, Val_string,
+		.str = "${cmd} ${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of numerics without formats", NULL}},
 	{"format.other", 1, Val_string,
 		.str = "${raw}",
 		.strhandle = config_redraws,
