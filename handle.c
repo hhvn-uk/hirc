@@ -286,7 +286,7 @@ handle_RPL_ISUPPORT(char *msg, char **params, struct Server *server, time_t time
 
 	/* skip the last param ".... :are supported by this server" */
 	for (; *params && *(params+1); params++) {
-		key = *params;
+		key = strdup(*params);
 		if ((value = strchr(key, '=')) != NULL) {
 			*value = '\0';
 			if (*(value+1))
@@ -296,6 +296,7 @@ handle_RPL_ISUPPORT(char *msg, char **params, struct Server *server, time_t time
 		}
 
 		support_set(server, key, value);
+		free(key);
 	}
 }
 
