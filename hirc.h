@@ -8,7 +8,7 @@
 #define INPUT_MAX 8192
 #define MAX_HISTORY 8192
 	/* real maximum = MAX_HISTORY * (channels + servers + queries) */
-#define strcmp_n(s1, s2) s1 == s2 ? 0 : (s1 ? s2 ? strcmp(s1, s2) : -1 : -1)
+#define strcmp_n(s1, s2) (s1 == s2 ? 0 : (s1 ? s2 ? strcmp(s1, s2) : -1 : -1))
 
 /* main.c */
 void *		emalloc(size_t size);
