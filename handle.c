@@ -13,10 +13,12 @@ static void handle_PART(char *msg, char **params, struct Server *server, time_t 
 static void handle_KICK(char *msg, char **params, struct Server *server, time_t timestamp);
 static void handle_QUIT(char *msg, char **params, struct Server *server, time_t timestamp);
 static void handle_NICK(char *msg, char **params, struct Server *server, time_t timestamp);
+static void handle_MODE(char *msg, char **params, struct Server *server, time_t timestamp);
 static void handle_TOPIC(char *msg, char **params, struct Server *server, time_t timestamp);
 static void handle_PRIVMSG(char *msg, char **params, struct Server *server, time_t timestamp);
 static void handle_RPL_WELCOME(char *msg, char **params, struct Server *server, time_t timestamp);
 static void handle_RPL_ISUPPORT(char *msg, char **params, struct Server *server, time_t timestamp);
+static void handle_RPL_CHANNELMODEIS(char *msg, char **params, struct Server *server, time_t timestamp);
 static void handle_RPL_NOTOPIC(char *msg, char **params, struct Server *server, time_t timestamp);
 static void handle_RPL_TOPIC(char *msg, char **params, struct Server *server, time_t timestamp);
 static void handle_RPL_TOPICWHOTIME(char *msg, char **params, struct Server *server, time_t timestamp);
@@ -33,11 +35,13 @@ struct Handler handlers[] = {
 	{ "KICK",	handle_KICK			},
 	{ "QUIT",	handle_QUIT			},
 	{ "NICK",	handle_NICK			},
+	{ "MODE",	handle_MODE			},
 	{ "TOPIC",	handle_TOPIC			},
 	{ "PRIVMSG",	handle_PRIVMSG  		},
 	{ "NOTICE",	handle_PRIVMSG	  		},
 	{ "001",	handle_RPL_WELCOME		},
 	{ "005",	handle_RPL_ISUPPORT		},
+	{ "324",	handle_RPL_CHANNELMODEIS	},
 	{ "331",	handle_RPL_NOTOPIC		},
 	{ "332",	handle_RPL_TOPIC		},
 	{ "333",	handle_RPL_TOPICWHOTIME		},
@@ -204,6 +208,26 @@ handle_QUIT(char *msg, char **params, struct Server *server, time_t timestamp) {
 }
 
 static void
+handle_MODE(char *msg, char **params, struct Server *server, time_t timestamp) {
+	struct Channel *chan;
+
+	if (**params != ':' || param_len(params) < 4)
+		return;
+
+	if (strchr(support_get(server, "CHANTYPES"), **(params+2))) {
+		if ((chan = chan_get(&server->channels, *(params+2), -1)) == NULL)
+			chan = chan_add(server, &server->channels, *(params+2));
+
+		hist_add(chan->history, NULL, msg, params, Activity_status, timestamp, HIST_DFL);
+		ircprintf(server, "MODE %s\r\n", chan->name); /* Get full mode via RPL_CHANNELMODEIS
+						               * instead of concatenating manually */
+		ircprintf(server, "NAMES %s\r\n", chan->name); /* Also get updated priviledges */
+	} else {
+		hist_add(server->history, NULL, msg, params, Activity_status, timestamp, HIST_DFL);
+	}
+}
+
+static void
 handle_PRIVMSG(char *msg, char **params, struct Server *server, time_t timestamp) {
 	int act_direct = Activity_hilight, act_regular = Activity_message;
 	struct Channel *chan;
@@ -273,6 +297,20 @@ handle_RPL_ISUPPORT(char *msg, char **params, struct Server *server, time_t time
 
 		support_set(server, key, value);
 	}
+}
+
+static void
+handle_RPL_CHANNELMODEIS(char *msg, char **params, struct Server *server, time_t timestamp) {
+	struct Channel *chan;
+
+	if (**params != ':' && param_len(params) < 5)
+		return;
+
+	if ((chan = chan_get(&server->channels, *(params+3), -1)) == NULL)
+		chan = chan_add(server, &server->channels, *(params+3));
+
+	free(chan->mode);
+	chan->mode = strdup(*(params+4));
 }
 
 static void

@@ -46,6 +46,7 @@ struct {
 	char *cmd;
 	char *format;
 } formatmap[] = {
+	/* SELF_ commands from UI */
 	{"SELF_ERROR",		"format.ui.error"},
 	{"SELF_UI",		"format.ui.misc"},
 	{"SELF_CONNECTLOST",	"format.ui.connectlost"},
@@ -56,12 +57,17 @@ struct {
 #ifndef TLS
 	{"SELF_TLSNOTCOMPILED",	"format.ui.tlsnotcompiled"},
 #endif /* TLS */
+	/* Real commands from server */
 	{"PRIVMSG", 		"format.privmsg"},
 	{"JOIN",		"format.join"},
 	{"PART",		"format.part"},
 	{"KICK",		"format.kick"},
 	{"QUIT",		"format.quit"},
-	{NULL,		NULL},
+	/* Pseudo commands for specific formatting */
+	{"MODE-NICK-SELF",	"format.mode.nick.self"},
+	{"MODE-NICK",		"format.mode.nick"},
+	{"MODE-CHANNEL",	"format.mode.channel"},
+	{NULL,			NULL},
 };
 
 struct {
@@ -713,7 +719,7 @@ ui_wclear(struct Window *window) {
 
 int
 ui_hist_print(struct Window *window, int lines, struct History *hist) {
-	char *cmd;
+	char *cmd, *p1, *chantypes;
 	int i;
 
 	if (!hist)
@@ -722,10 +728,27 @@ ui_hist_print(struct Window *window, int lines, struct History *hist) {
 	if (!hist->params || !*(hist->params+1))
 		goto raw;
 
-	if (**(hist->params) == ':')
+	if (**(hist->params) == ':') {
 		cmd = *(hist->params+1);
-	else
+		p1 = *(hist->params+2);
+	} else {
 		cmd = *(hist->params);
+		p1 = *(hist->params+1);
+	}
+
+	if (strcmp_n(cmd, "MODE") == 0) {
+		if (hist->origin && hist->origin->server)
+			chantypes = support_get(hist->origin->server, "CHANTYPES");
+		else
+			chantypes = config_gets("def.chantypes");
+
+		if (p1 && strchr(chantypes, *p1))
+			cmd = "MODE-CHANNEL";
+		else if (hist->from && nick_isself(hist->from) && strcmp_n(hist->from->nick, p1) == 0)
+			cmd = "MODE-NICK-SELF";
+		else
+			cmd = "MODE-NICK";
+	}
 
 	for (i=0; formatmap[i].cmd; i++)
 		if (formatmap[i].format && strcmp_n(formatmap[i].cmd, cmd) == 0)

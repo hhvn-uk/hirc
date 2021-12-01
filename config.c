@@ -247,6 +247,21 @@ struct Config config[] = {
 		.strhandle = config_redraws,
 		.description = {
 		"Format of PART messages", NULL}},
+	{"format.mode.nick.self", 1, Val_string,
+		.str = "${1} set %{c:94}${2-}%{o}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of modes being set on self by server/self", NULL}},
+	{"format.mode.nick", 1, Val_string,
+		.str = "${1} set %{c:94}${2-}%{o} by ${nick} (${ident}@${host})",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of modes being on nicks", NULL}},
+	{"format.mode.channel", 1, Val_string,
+		.str = "mode%{=}%{c:94}${2-}%{o} by ${nick}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of modes being set on channels", NULL}},
 	{"format.other", 1, Val_string,
 		.str = "${raw}",
 		.strhandle = config_redraws,
