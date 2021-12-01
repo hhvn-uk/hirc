@@ -11,6 +11,7 @@
 static void command_quit(struct Server *server, char *str);
 static void command_join(struct Server *server, char *str);
 static void command_part(struct Server *server, char *str);
+static void command_kick(struct Server *server, char *str);
 static void command_ping(struct Server *server, char *str);
 static void command_quote(struct Server *server, char *str);
 static void command_connect(struct Server *server, char *str);
@@ -43,6 +44,9 @@ struct Command commands[] = {
 	{"part", command_part, {
 		"usage: /part <channel>",
 		"Part channel", NULL}},
+	{"kick", command_kick, {
+		"usage: /kick [channel] <nick> [reason]",
+		"Kick nick from channel", NULL}},
 	{"ping", command_ping, {
 		"usage: /ping message...",
 		"Send a PING to server.",
@@ -130,6 +134,37 @@ command_part(struct Server *server, char *str) {
 
 	ircprintf(server, "%s", msg);
 	handle_expect(server, Expect_part, channel);
+}
+
+static void
+command_kick(struct Server *server, char *str) {
+	char *channel, *nick, *reason;
+	char *s;
+
+	if (!str) {
+		ui_error("/kick requires argument", NULL);
+		return;
+	}
+
+	s = strtok_r(str,  " ", &reason);
+
+	if (s && strchr(support_get(server, "CHANTYPES"), *s)) {
+		channel = s;
+		nick = strtok_r(NULL, " ", &reason);
+	} else {
+		if (selected.channel == NULL) {
+			ui_error("no channel selected", NULL);
+			return;
+		}
+
+		channel = selected.channel->name;
+		nick = s;
+	}
+
+	if (reason)
+		ircprintf(server, "KICK %s %s :%s\r\n", channel, nick, reason);
+	else
+		ircprintf(server, "KICK %s %s\r\n", channel, nick);
 }
 
 static void

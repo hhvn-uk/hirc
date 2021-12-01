@@ -242,6 +242,11 @@ struct Config config[] = {
 		.strhandle = config_redraws,
 		.description = {
 		"Format of PART messages", NULL}},
+	{"format.kick", 1, Val_string,
+		.str = "%{b}%{c:40}!%{o}%{=}${2} by ${nick} (${ident}@${host}): ${3}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of PART messages", NULL}},
 	{"format.other", 1, Val_string,
 		.str = "${raw}",
 		.strhandle = config_redraws,

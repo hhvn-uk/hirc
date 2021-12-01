@@ -59,6 +59,7 @@ struct {
 	{"PRIVMSG", 		"format.privmsg"},
 	{"JOIN",		"format.join"},
 	{"PART",		"format.part"},
+	{"KICK",		"format.kick"},
 	{"QUIT",		"format.quit"},
 	{NULL,		NULL},
 };

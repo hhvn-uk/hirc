@@ -10,6 +10,7 @@ static void handle_PING(char *msg, char **params, struct Server *server, time_t 
 static void handle_PONG(char *msg, char **params, struct Server *server, time_t timestamp);
 static void handle_JOIN(char *msg, char **params, struct Server *server, time_t timestamp);
 static void handle_PART(char *msg, char **params, struct Server *server, time_t timestamp);
+static void handle_KICK(char *msg, char **params, struct Server *server, time_t timestamp);
 static void handle_QUIT(char *msg, char **params, struct Server *server, time_t timestamp);
 static void handle_NICK(char *msg, char **params, struct Server *server, time_t timestamp);
 static void handle_TOPIC(char *msg, char **params, struct Server *server, time_t timestamp);
@@ -29,6 +30,7 @@ struct Handler handlers[] = {
 	{ "PONG",	handle_PONG			},
 	{ "JOIN",	handle_JOIN			},
 	{ "PART",	handle_PART			},
+	{ "KICK",	handle_KICK			},
 	{ "QUIT",	handle_QUIT			},
 	{ "NICK",	handle_NICK			},
 	{ "TOPIC",	handle_TOPIC			},
@@ -140,6 +142,37 @@ handle_PART(char *msg, char **params, struct Server *server, time_t timestamp) {
 
 	hist_add(server->history, nick, msg, params, Activity_status, timestamp, HIST_LOG);
 	hist_add(chan->history, nick, msg, params, Activity_status, timestamp, HIST_SHOW);
+	nick_free(nick);
+}
+
+static void
+handle_KICK(char *msg, char **params, struct Server *server, time_t timestamp) {
+	struct Channel *chan;
+	struct Nick *nick;
+	char *target;
+
+	if (**params != ':' || param_len(params) < 4)
+		return;
+
+	target = *(params+2);
+	if ((chan = chan_get(&server->channels, target, -1)) == NULL)
+		chan = chan_add(server, &server->channels, target);
+
+	nick = nick_create(*(params+3), ' ', server);
+	if (nick_isself(nick)) {
+		chan_setold(chan, 1);
+		nick_free_list(&chan->nicks);
+		if (chan == selected.channel)
+			ui_select(selected.server, NULL);
+		windows[Win_buflist].refresh = 1;
+	} else {
+		nick_remove(&chan->nicks, nick->nick);
+		if (chan == selected.channel)
+			windows[Win_nicklist].refresh = 1;
+	}
+
+	hist_add(server->history, NULL, msg, params, Activity_status, timestamp, HIST_LOG);
+	hist_add(chan->history, NULL, msg, params, Activity_status, timestamp, HIST_SHOW);
 	nick_free(nick);
 }
 
