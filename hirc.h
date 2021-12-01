@@ -6,9 +6,6 @@
 #include "struct.h"
 #define PARAM_MAX 64
 #define INPUT_MAX 8192
-#define COMMANDARG_MAX (INPUT_MAX / 5)
-        /* Theoretical max: -a o -b o -c o *
-	 *                  12345          */
 #define MAX_HISTORY 8192
 	/* real maximum = MAX_HISTORY * (channels + servers + queries) */
 #define strcmp_n(s1, s2) s1 == s2 ? 0 : (s1 ? s2 ? strcmp(s1, s2) : -1 : -1)
