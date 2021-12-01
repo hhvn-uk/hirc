@@ -886,6 +886,16 @@ ui_format(char *format, struct History *hist) {
 					continue;
 				}
 			}
+			/* All are digits except a trailing '-' */
+			if (*p == '-' && *(p+1) == '\0' && hist) {
+				pn = strtol(tmp, NULL, 10) - 1;
+				if (pn >= 0 && param_len(params) >= pn) {
+					for (; *(params+pn) != NULL; pn++)
+						rc += snprintf(&ret[rc], sizeof(ret) - rc, "%s%s", *(params+pn), *(params+pn+1) ? " " : "");
+					format = strchr(format, '}') + 1;
+					continue;
+				}
+			}
 
 			if (hist && tmp && strncmp(tmp, "time:", strlen("time:")) == 0 || strcmp(tmp, "time") == 0) {
 				tmp = strtok(tmp, ":");
