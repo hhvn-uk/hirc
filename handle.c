@@ -43,6 +43,10 @@ struct Handler handlers[] = {
 	{ "005",	handle_RPL_ISUPPORT		},
 	{ "324",	handle_RPL_CHANNELMODEIS	},
 	{ "331",	handle_RPL_NOTOPIC		},
+	{ "329",	NULL				}, /* ignore this:
+							    *  - it's nonstandard
+							    *  - hirc has no use for it currently
+							    *  - it's annoyingly sent after MODE */
 	{ "332",	handle_RPL_TOPIC		},
 	{ "333",	handle_RPL_TOPICWHOTIME		},
 	{ "353",	handle_RPL_NAMREPLY		},
