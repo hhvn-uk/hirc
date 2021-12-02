@@ -826,6 +826,37 @@ ui_select(struct Server *server, struct Channel *channel) {
 	selected.name    = channel ? channel->name    : server ? server->name    : "hirc";
 }
 
+static char *
+ui_format_get_content(char *sstr, int nesting) {
+	static char ret[8192];
+	int layer, rc;
+
+	for (layer = 0, rc = 0; sstr && *sstr; sstr++) {
+		switch (*sstr) {
+		case '}':
+			if (nesting && layer) {
+				ret[rc++] = '}';
+				layer--;
+			} else {
+				goto end;
+			}
+			break;
+		case '{':
+			if (nesting)
+				layer++;
+			ret[rc++] = '{';
+			break;
+		default:
+			ret[rc++] = *sstr;
+			break;
+		}
+	}
+
+end:
+	ret[rc] = '\0';
+	return ret;
+}
+
 char *
 ui_format(char *format, struct History *hist) {
 	static char ret[8192];
@@ -905,7 +936,7 @@ ui_format(char *format, struct History *hist) {
 	for (escape = 0, rc = 0; format && *format && rc < sizeof(ret); ) {
 		if (!escape && *format == '$' && *(format+1) == '{' && strchr(format, '}')) {
 			escape = 0;
-			content = struntil(format+2, '}');
+			content = ui_format_get_content(format+2, 0);
 
 			for (p = content; *p && isdigit(*p); p++);
 			/* If all are digits, *p == '\0' */
@@ -953,7 +984,7 @@ ui_format(char *format, struct History *hist) {
 
 		if (!escape && *format == '%' && *(format+1) == '{' && strchr(format, '}')) {
 			escape = 0;
-			content = struntil(format+2, '}');
+			content = ui_format_get_content(format+2, 0);
 
 			switch (*content) {
 			case 'b':
@@ -1045,9 +1076,7 @@ ui_format(char *format, struct History *hist) {
 
 			/* This bit must come last as it modifies content */
 			if (hist && !recursive && strncmp(content, "nick:", strlen("nick:")) == 0) {
-				p = struntil(format+2+strlen("nick:"), '}');
-				content = malloc(strlen(p) + 2);
-				snprintf(content, strlen(p) + 2, "%s}", p);
+				content = strdup(ui_format_get_content(format+2+strlen("nick:"), 1));
 				save = strdup(ret); /* save ret, as this will be modified by recursing */
 				recursive = 1;
 				p = strdup(ui_format(content, hist));
@@ -1056,7 +1085,7 @@ ui_format(char *format, struct History *hist) {
 							  need strlcpy as we don't use null byte */
 				nick = nick_create(p, ' ', hist->origin ? hist->origin->server : NULL);
 				rc += snprintf(&ret[rc], sizeof(ret) - rc, "%c%02d", 3 /* ^C */, nick_getcolour(nick));
-				format = strchr(format, '}') + 2;
+				format += 3 + strlen("nick:") + strlen(content);
 
 				nick_free(nick);
 				free(content);
