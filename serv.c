@@ -78,6 +78,7 @@ serv_create(char *name, char *host, char *port, char *nick,
 	server->history->history = NULL;
 	server->channels = NULL;
 	server->privs = NULL;
+	server->schedule = NULL;
 	server->reconnect = 0;
 	for (i=0; i < Expect_last; i++)
 		server->expect[i] = NULL;
