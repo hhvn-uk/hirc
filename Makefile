@@ -16,6 +16,7 @@ CTLS	= -DTLS
 
 CFLAGS	= -g -O0 $(CTLS)
 LDFLAGS = -lncursesw $(LDTLS)
+# Gentoo and other distributions/OSes may need -ltinfo
 
 all: $(BIN) $(MAN)
 
