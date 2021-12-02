@@ -31,10 +31,11 @@ enum Activity {
 };
 
 enum HistOpt {
-	HIST_SHOW = 1, /* show in buffer */
-	HIST_LOG = 2,  /* log to server->logfd */
-	HIST_MAIN = 4, /* copy to &main_buf */
-	HIST_SELF = 8, /* from = self */
+	HIST_SHOW = 1,    /* show in buffer */
+	HIST_LOG = 2,     /* log to server->logfd */
+	HIST_MAIN = 4,    /* copy to &main_buf */
+	HIST_SELF = 8,    /* from = self */
+	HIST_SELTMP = 16, /* copy to selected buffer temporarily */
 	HIST_DFL = HIST_SHOW|HIST_LOG
 };
 

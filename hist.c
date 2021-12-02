@@ -64,13 +64,16 @@ struct History *
 hist_add(struct HistInfo *histinfo, struct Nick *from,
 		char *msg, char **params, enum Activity activity,
 		time_t timestamp, enum HistOpt options) {
+	static int recursive = 0;
 	struct History *new, *p;
 	int i;
 
 	if (options & HIST_MAIN) {
-		if (histinfo != main_buf)
+		if (histinfo != main_buf && !recursive) {
+			recursive = 1;
 			hist_add(main_buf, from, msg, params, activity, timestamp, HIST_SHOW);
-		else
+			recursive = 0;
+		} else
 			ui_error("HIST_MAIN specified, but history is &main_buf", NULL);
 	}
 
@@ -111,6 +114,33 @@ hist_add(struct HistInfo *histinfo, struct Nick *from,
 	}
 
 	return new;
+}
+
+void
+hist_purgetmp(struct HistInfo *histinfo) {
+	struct History *p, *next;
+
+	if (!histinfo)
+		return;
+
+	p = histinfo->history;
+
+	for (; p; p = next) {
+		next = p->next;
+		if (p->options & HIST_SELTMP) {
+			if (p->prev)
+				p->prev->next = p->next;
+			else
+				histinfo->history = p->next;
+
+			if (p->next)
+				p->next->prev = p->prev;
+			else
+				histinfo->history = NULL;
+
+			free(p);
+		}
+	}
 }
 
 struct History *

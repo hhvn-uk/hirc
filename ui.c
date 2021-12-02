@@ -174,14 +174,14 @@ ui_error_(char *file, int line, char *format, ...) {
 	vsnprintf(msg, sizeof(msg), format, ap);
 	va_end(ap);
 
-	hist_format(main_buf, Activity_error, HIST_SHOW,
+	hist_format(selected.history, Activity_error, HIST_SHOW|HIST_SELTMP,
 			"SELF_ERROR %s %d :%s",
 			file, line, msg);
 }
 
 void
 ui_perror_(char *file, int line, char *str) {
-	hist_format(main_buf, Activity_error, HIST_SHOW,
+	hist_format(selected.history, Activity_error, HIST_SHOW|HIST_SELTMP,
 			"SELF_ERROR %s %d :%s: %s",
 			file, line, str, strerror(errno));
 }
@@ -189,14 +189,14 @@ ui_perror_(char *file, int line, char *str) {
 #ifdef TLS
 void
 ui_tls_config_error_(char *file, int line, struct tls_config *config, char *str) {
-	hist_format(main_buf, Activity_error, HIST_SHOW,
+	hist_format(selected.history, Activity_error, HIST_SHOW|HIST_SELTMP,
 			"SELF_ERROR %s %d :%s: %s",
 			file, line, str, tls_config_error(config));
 }
 
 void
 ui_tls_error_(char *file, int line, struct tls *ctx, char *str) {
-	hist_format(main_buf, Activity_error, HIST_SHOW,
+	hist_format(selected.history, Activity_error, HIST_SHOW|HIST_SELTMP,
 			"SELF_ERROR %s %d :%s: %s",
 			file, line, str, tls_error(ctx));
 }
@@ -912,6 +912,8 @@ ui_select(struct Server *server, struct Channel *channel) {
 	selected.server  = server;
 	selected.history = channel ? channel->history : server ? server->history : main_buf;
 	selected.name    = channel ? channel->name    : server ? server->name    : "hirc";
+
+	hist_purgetmp(selected.history);
 }
 
 static char *
