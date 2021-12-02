@@ -9,16 +9,15 @@ OBJ	= main.o handle.o hist.o nick.o \
 	  config.o strlcpy.o
 MAN	= hirc.1
 COMMIT	= $(shell git log HEAD...HEAD~1 --pretty=format:%h)
-
-# Comment to disable TLS
-LDTLS	= -ltls
-CTLS	= -DTLS
-
 CFLAGS	= -g -O0 $(CTLS)
-LDFLAGS = -lncursesw $(LDTLS)
-# Gentoo and other distributions/OSes may need -ltinfow
+LDFLAGS = -lncursesw
+
+include config.mk
 
 all: $(BIN) $(MAN)
+
+config.mk:
+	./configure
 
 $(BIN): $(OBJ)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(OBJ)
@@ -40,7 +39,7 @@ uninstall:
 	-rm -f $(MANDIR)/man1/$(MAN)
 
 clean:
-	-rm -f $(OBJ) $(MAN) $(BIN)
+	-rm -f config.mk $(OBJ) $(MAN) $(BIN)
 
 .c.o:
 	$(CC) $(CFLAGS) -c $<
