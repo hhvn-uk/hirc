@@ -258,10 +258,443 @@ struct Config config[] = {
 		.description = {
 		"Format of modes being on nicks", NULL}},
 	{"format.mode.channel", 1, Val_string,
-		.str = "mode%{=}%{c:94}${2-}%{o} by ${nick}",
+		.str = "mode%{=}%{c:94}${2-}%{o} by %{nick:${nick}}${nick}",
 		.strhandle = config_redraws,
 		.description = {
 		"Format of modes being set on channels", NULL}},
+	/* Generic numerics (bit boring) */
+	{"format.rpl.welcome", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_WELCOME (001) numeric", NULL}},
+	{"format.rpl.yourhost", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_YOURHOST (002) numeric", NULL}},
+	{"format.rpl.created", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_CREATED (003) numeric", NULL}},
+	{"format.rpl.myinfo", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_MYINFO (004) numeric", NULL}},
+	{"format.rpl.isupport", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_MYSUPPORT (005) numeric", NULL}},
+	/* START: misc/rpl-conf-gen.awk */
+	{"format.rpl.tracelink", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_TRACELINK (200) numeric", NULL}},
+	{"format.rpl.traceconnecting", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_TRACECONNECTING (201) numeric", NULL}},
+	{"format.rpl.tracehandshake", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_TRACEHANDSHAKE (202) numeric", NULL}},
+	{"format.rpl.traceunknown", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_TRACEUNKNOWN (203) numeric", NULL}},
+	{"format.rpl.traceoperator", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_TRACEOPERATOR (204) numeric", NULL}},
+	{"format.rpl.traceuser", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_TRACEUSER (205) numeric", NULL}},
+	{"format.rpl.traceserver", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_TRACESERVER (206) numeric", NULL}},
+	{"format.rpl.tracenewtype", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_TRACENEWTYPE (208) numeric", NULL}},
+	{"format.rpl.traceclass", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_TRACECLASS (209) numeric", NULL}},
+	{"format.rpl.statslinkinfo", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_STATSLINKINFO (211) numeric", NULL}},
+	{"format.rpl.statscommands", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_STATSCOMMANDS (212) numeric", NULL}},
+	{"format.rpl.statscline", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_STATSCLINE (213) numeric", NULL}},
+	{"format.rpl.statsnline", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_STATSNLINE (214) numeric", NULL}},
+	{"format.rpl.statsiline", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_STATSILINE (215) numeric", NULL}},
+	{"format.rpl.statskline", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_STATSKLINE (216) numeric", NULL}},
+	{"format.rpl.statsyline", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_STATSYLINE (218) numeric", NULL}},
+	{"format.rpl.endofstats", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_ENDOFSTATS (219) numeric", NULL}},
+	{"format.rpl.umodeis", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_UMODEIS (221) numeric", NULL}},
+	{"format.rpl.serviceinfo", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_SERVICEINFO (231) numeric", NULL}},
+	{"format.rpl.service", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_SERVICE (233) numeric", NULL}},
+	{"format.rpl.servlistend", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_SERVLISTEND (235) numeric", NULL}},
+	{"format.rpl.statslline", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_STATSLLINE (241) numeric", NULL}},
+	{"format.rpl.statsuptime", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_STATSUPTIME (242) numeric", NULL}},
+	{"format.rpl.statsoline", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_STATSOLINE (243) numeric", NULL}},
+	{"format.rpl.statshline", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_STATSHLINE (244) numeric", NULL}},
+	{"format.rpl.luserclient", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_LUSERCLIENT (251) numeric", NULL}},
+	{"format.rpl.luserop", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_LUSEROP (252) numeric", NULL}},
+	{"format.rpl.luserunknown", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_LUSERUNKNOWN (253) numeric", NULL}},
+	{"format.rpl.luserchannels", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_LUSERCHANNELS (254) numeric", NULL}},
+	{"format.rpl.luserme", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_LUSERME (255) numeric", NULL}},
+	{"format.rpl.adminme", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_ADMINME (256) numeric", NULL}},
+	{"format.rpl.adminloc1", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_ADMINLOC1 (257) numeric", NULL}},
+	{"format.rpl.adminloc2", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_ADMINLOC2 (258) numeric", NULL}},
+	{"format.rpl.adminemail", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_ADMINEMAIL (259) numeric", NULL}},
+	{"format.rpl.tracelog", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_TRACELOG (261) numeric", NULL}},
+	{"format.rpl.none", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_NONE (300) numeric", NULL}},
+	{"format.rpl.away", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_AWAY (301) numeric", NULL}},
+	{"format.rpl.userhost", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_USERHOST (302) numeric", NULL}},
+	{"format.rpl.ison", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_ISON (303) numeric", NULL}},
+	{"format.rpl.unaway", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_UNAWAY (305) numeric", NULL}},
+	{"format.rpl.nowaway", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_NOWAWAY (306) numeric", NULL}},
+	{"format.rpl.whoisuser", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_WHOISUSER (311) numeric", NULL}},
+	{"format.rpl.whoisserver", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_WHOISSERVER (312) numeric", NULL}},
+	{"format.rpl.whoisoperator", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_WHOISOPERATOR (313) numeric", NULL}},
+	{"format.rpl.whowasuser", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_WHOWASUSER (314) numeric", NULL}},
+	{"format.rpl.endofwho", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_ENDOFWHO (315) numeric", NULL}},
+	{"format.rpl.whoischanop", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_WHOISCHANOP (316) numeric", NULL}},
+	{"format.rpl.whoisidle", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_WHOISIDLE (317) numeric", NULL}},
+	{"format.rpl.endofwhois", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_ENDOFWHOIS (318) numeric", NULL}},
+	{"format.rpl.whoischannels", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_WHOISCHANNELS (319) numeric", NULL}},
+	{"format.rpl.liststart", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_LISTSTART (321) numeric", NULL}},
+	{"format.rpl.list", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_LIST (322) numeric", NULL}},
+	{"format.rpl.listend", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_LISTEND (323) numeric", NULL}},
+	{"format.rpl.channelmodeis", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_CHANNELMODEIS (324) numeric", NULL}},
+	{"format.rpl.notopic", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_NOTOPIC (331) numeric", NULL}},
+	{"format.rpl.topic", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_TOPIC (332) numeric", NULL}},
+	{"format.rpl.inviting", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_INVITING (341) numeric", NULL}},
+	{"format.rpl.summoning", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_SUMMONING (342) numeric", NULL}},
+	{"format.rpl.version", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_VERSION (351) numeric", NULL}},
+	{"format.rpl.whoreply", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_WHOREPLY (352) numeric", NULL}},
+	{"format.rpl.namreply", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_NAMREPLY (353) numeric", NULL}},
+	{"format.rpl.closing", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_CLOSING (362) numeric", NULL}},
+	{"format.rpl.links", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_LINKS (364) numeric", NULL}},
+	{"format.rpl.endoflinks", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_ENDOFLINKS (365) numeric", NULL}},
+	{"format.rpl.endofnames", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_ENDOFNAMES (366) numeric", NULL}},
+	{"format.rpl.banlist", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_BANLIST (367) numeric", NULL}},
+	{"format.rpl.endofbanlist", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_ENDOFBANLIST (368) numeric", NULL}},
+	{"format.rpl.endofwhowas", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_ENDOFWHOWAS (369) numeric", NULL}},
+	{"format.rpl.info", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_INFO (371) numeric", NULL}},
+	{"format.rpl.motd", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_MOTD (372) numeric", NULL}},
+	{"format.rpl.infostart", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_INFOSTART (373) numeric", NULL}},
+	{"format.rpl.endofinfo", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_ENDOFINFO (374) numeric", NULL}},
+	{"format.rpl.motdstart", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_MOTDSTART (375) numeric", NULL}},
+	{"format.rpl.endofmotd", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_ENDOFMOTD (376) numeric", NULL}},
+	{"format.rpl.youreoper", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_YOUREOPER (381) numeric", NULL}},
+	{"format.rpl.rehashing", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_REHASHING (382) numeric", NULL}},
+	{"format.rpl.time", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_TIME (391) numeric", NULL}},
+	{"format.rpl.usersstart", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_USERSSTART (392) numeric", NULL}},
+	{"format.rpl.users", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_USERS (393) numeric", NULL}},
+	{"format.rpl.endofusers", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_ENDOFUSERS (394) numeric", NULL}},
+	{"format.rpl.nousers", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_NOUSERS (395) numeric", NULL}},
+	/* END: misc/rpl-conf-gen.awk */
 	{"format.rpl.other", 1, Val_string,
 		.str = "${cmd} ${2-}",
 		.strhandle = config_redraws,
