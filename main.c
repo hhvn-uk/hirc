@@ -73,7 +73,7 @@ char **
 param_create(char *msg) {
 	char **ret, **rp;
 	char *params[PARAM_MAX];
-	char tmp[NL_TEXTMAX];
+	char tmp[2048];
 	char *p, *cur;
 	int final = 0, i;
 
