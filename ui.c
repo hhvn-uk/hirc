@@ -831,7 +831,7 @@ ui_format_get_content(char *sstr, int nesting) {
 	static char ret[8192];
 	int layer, rc;
 
-	for (layer = 0, rc = 0; sstr && *sstr; sstr++) {
+	for (layer = 0, rc = 0; sstr && *sstr && rc < sizeof(ret); sstr++) {
 		switch (*sstr) {
 		case '}':
 			if (nesting && layer) {
