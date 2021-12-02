@@ -830,11 +830,12 @@ char *
 ui_format(char *format, struct History *hist) {
 	static char ret[8192];
 	static int nots = 0;
+	struct Nick *nick;
 	int rc, escape, pn, i;
 	int rhs = 0;
 	int divider = 0;
 	char **params;
-	char *tmp, *p, *ts;
+	char *tmp, *p, *ts, *save;
 	char colourbuf[2][3];
 	char printformat[64];
 	enum {
@@ -1028,9 +1029,9 @@ ui_format(char *format, struct History *hist) {
 					snprintf(printformat, sizeof(printformat), "%%%lds%%s",
 							config_getl("divider.margin") + (strlen(ret) - ui_strlenc(NULL, ret, NULL)));
 					/* Save ret for use in snprintf */
-					tmp = strdup(ret);
-					rc = snprintf(ret, sizeof(ret), printformat, tmp, config_gets("divider.string"));
-					free(tmp);
+					save = strdup(ret);
+					rc = snprintf(ret, sizeof(ret), printformat, save, config_gets("divider.string"));
+					free(save);
 					format = strchr(format, '}') + 1;
 					continue;
 				} else if (*(tmp+1) == '\0') {
@@ -1039,6 +1040,27 @@ ui_format(char *format, struct History *hist) {
 					continue;
 				}
 				break;
+			}
+
+			/* This bit must come last as it modified tmp */
+			if (hist && !nots && strncmp(tmp, "nick:", strlen("nick:")) == 0) {
+				p = struntil(format+2+strlen("nick:"), '}');
+				tmp = malloc(strlen(p) + 2);
+				snprintf(tmp, strlen(p) + 2, "%s}", p);
+				save = strdup(ret);
+				nots = 1;
+				p = strdup(ui_format(tmp, hist));
+				nots = 0;
+				memcpy(ret, save, rc); /* don't need strlcpy as we don't use null byte */
+				nick = nick_create(p, ' ', hist->origin ? hist->origin->server : NULL);
+				rc += snprintf(&ret[rc], sizeof(ret) - rc, "%c%02d", 3 /* ^C */, nick_getcolour(nick));
+				format = strchr(format, '}') + 2;
+
+				nick_free(nick);
+				free(tmp);
+				free(p);
+				free(save);
+				continue;
 			}
 		}
 
@@ -1058,14 +1080,14 @@ ui_format(char *format, struct History *hist) {
 	ret[rc] = '\0';
 	if (!nots && divider && !rhs) {
 		snprintf(printformat, sizeof(printformat), "%%%lds%%s%%s", config_getl("divider.margin"));
-		tmp = strdup(ret);
-		rc = snprintf(ret, sizeof(ret), printformat, "", config_gets("divider.string"), tmp);
-		free(tmp);
+		save = strdup(ret);
+		rc = snprintf(ret, sizeof(ret), printformat, "", config_gets("divider.string"), save);
+		free(save);
 	}
 
-	tmp = strdup(ret);
-	rc = snprintf(ret, sizeof(ret), "%s%s", ts, tmp);
-	free(tmp);
+	save = strdup(ret);
+	rc = snprintf(ret, sizeof(ret), "%s%s", ts, save);
+	free(save);
 
 	if (ts[0] != '\0')
 		free(ts);

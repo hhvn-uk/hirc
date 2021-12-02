@@ -223,27 +223,27 @@ struct Config config[] = {
 		"Format of SELF_TLSNOTCOMPILED messages", NULL}},
 #endif /* TLS */
 	{"format.privmsg", 1, Val_string,
-		.str = "${nick}%{=}${2}",
+		.str = "%{nick:${nick}}${nick}%{o}%{=}${2}",
 		.strhandle = config_redraws,
 		.description = {
 		"Format of messages", NULL}},
 	{"format.join", 1, Val_string,
-		.str = "%{b}%{c:44}+%{o}%{=}${nick} (${ident}@${host})",
+		.str = "%{b}%{c:44}+%{o}%{=}%{nick:${nick}}${nick}%{o} (${ident}@${host})",
 		.strhandle = config_redraws,
 		.description = {
 		"Format of JOIN messages", NULL}},
 	{"format.quit", 1, Val_string,
-		.str = "%{b}%{c:40}<%{o}%{=}${nick} (${ident}@${host}): ${1}",
+		.str = "%{b}%{c:40}<%{o}%{=}%{nick:${nick}}${nick}%{o} (${ident}@${host}): ${1}",
 		.strhandle = config_redraws,
 		.description = {
 		"Format of QUIT messages", NULL}},
 	{"format.part", 1, Val_string,
-		.str = "%{b}%{c:40}-%{o}%{=}${nick} (${ident}@${host}): ${2}",
+		.str = "%{b}%{c:40}-%{o}%{=}%{nick:${nick}}${nick}%{o} (${ident}@${host}): ${2}",
 		.strhandle = config_redraws,
 		.description = {
 		"Format of PART messages", NULL}},
 	{"format.kick", 1, Val_string,
-		.str = "%{b}%{c:40}!%{o}%{=}${2} by ${nick} (${ident}@${host}): ${3}",
+		.str = "%{b}%{c:40}!%{o}%{=}%{nick:${2}}${2}${o} by %{nick:${nick}}${nick}%{o} (${ident}@${host}): ${3}",
 		.strhandle = config_redraws,
 		.description = {
 		"Format of PART messages", NULL}},

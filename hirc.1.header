@@ -38,6 +38,9 @@ Set/reset boldness.
 .It %{c:fg[,bg]}
 Set foreground/background colours.
 Background optional.
+.It %{nick:...}
+Set foreground colour to colourised version of text in ellipsis.
+Ellipsis may contain a variable.
 .It %{i}
 Set/reset italics.
 .It %{o}
