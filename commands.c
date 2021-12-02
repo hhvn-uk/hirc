@@ -118,19 +118,28 @@ command_join(struct Server *server, char *str) {
 
 static void
 command_part(struct Server *server, char *str) {
-	char *channel, *chantypes, msg[512];
-
-	channel = str ? str : selected.channel ? selected.channel->name : NULL;
-	if (!channel) {
-		ui_error("/part requires argument", NULL);
-		return;
-	}
+	char *channel = NULL, *reason = NULL;
+	char *chantypes, msg[512];
 
 	chantypes = support_get(server, "CHANTYPES");
-	if (strchr(chantypes, *str))
-		snprintf(msg, sizeof(msg), "PART %s\r\n", str);
-	else
-		snprintf(msg, sizeof(msg), "PART %c%s\r\n", chantypes ? *chantypes : '#', str);
+
+	if (str) {
+		if (strchr(chantypes, *str))
+			channel = strtok_r(str, " ", &reason);
+		else
+			reason = str;
+	}
+
+	if (!channel) {
+		if (selected.channel) {
+			channel = selected.channel->name;
+		} else {
+			ui_error("/part requires argument", NULL);
+			return;
+		}
+	}
+
+	snprintf(msg, sizeof(msg), "PART %s :%s\r\n", channel, reason ? reason : config_gets("misc.partmessage"));
 
 	ircprintf(server, "%s", msg);
 	handle_expect(server, Expect_part, channel);
