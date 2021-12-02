@@ -16,6 +16,10 @@ include config.mk
 
 all: $(BIN) $(MAN)
 
+# Some make implementation will
+# use a target to create an include
+# file if it doesn't yet exist,
+# but this is not a standard feature.
 config.mk:
 	./configure
 
