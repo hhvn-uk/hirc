@@ -829,13 +829,14 @@ ui_select(struct Server *server, struct Channel *channel) {
 char *
 ui_format(char *format, struct History *hist) {
 	static char ret[8192];
-	static int nots = 0;
+	static int recursive = 0;
 	struct Nick *nick;
 	int rc, escape, pn, i;
 	int rhs = 0;
 	int divider = 0;
 	char **params;
-	char *tmp, *p, *ts, *save;
+	char *content, *p;
+	char *ts, *save;
 	char colourbuf[2][3];
 	char printformat[64];
 	enum {
@@ -893,10 +894,10 @@ ui_format(char *format, struct History *hist) {
 		params++;
 	}
 
-	if (!nots && hist && config_getl("timestamp.toggle")) {
-		nots = 1;
+	if (!recursive && hist && config_getl("timestamp.toggle")) {
+		recursive = 1;
 		ts = strdup(ui_format(config_gets("format.ui.timestamp"), hist));
-		nots = 0;
+		recursive = 0;
 	} else {
 		ts = "";
 	}
@@ -904,12 +905,12 @@ ui_format(char *format, struct History *hist) {
 	for (escape = 0, rc = 0; format && *format && rc < sizeof(ret); ) {
 		if (!escape && *format == '$' && *(format+1) == '{' && strchr(format, '}')) {
 			escape = 0;
-			tmp = struntil(format+2, '}');
+			content = struntil(format+2, '}');
 
-			for (p = tmp; *p && isdigit(*p); p++);
+			for (p = content; *p && isdigit(*p); p++);
 			/* If all are digits, *p == '\0' */
 			if (!*p && hist) {
-				pn = strtol(tmp, NULL, 10) - 1;
+				pn = strtol(content, NULL, 10) - 1;
 				if (pn >= 0 && param_len(params) >= pn) {
 					rc += snprintf(&ret[rc], sizeof(ret) - rc, "%s", *(params+pn));
 					format = strchr(format, '}') + 1;
@@ -918,7 +919,7 @@ ui_format(char *format, struct History *hist) {
 			}
 			/* All are digits except a trailing '-' */
 			if (*p == '-' && *(p+1) == '\0' && hist) {
-				pn = strtol(tmp, NULL, 10) - 1;
+				pn = strtol(content, NULL, 10) - 1;
 				if (pn >= 0 && param_len(params) >= pn) {
 					for (; *(params+pn) != NULL; pn++)
 						rc += snprintf(&ret[rc], sizeof(ret) - rc, "%s%s", *(params+pn), *(params+pn+1) ? " " : "");
@@ -927,20 +928,21 @@ ui_format(char *format, struct History *hist) {
 				}
 			}
 
-			if (hist && tmp && strncmp(tmp, "time:", strlen("time:")) == 0 || strcmp(tmp, "time") == 0) {
-				tmp = strtok(tmp, ":");
-				tmp = strtok(NULL, ":");
+			if (hist && content && strncmp(content, "time:", strlen("time:")) == 0 || strcmp(content, "time") == 0) {
+				/* This always continues, so okay to modify content */
+				content = strtok(content, ":");
+				content = strtok(NULL, ":");
 
-				if (!tmp)
+				if (!content)
 					rc += strftime(&ret[rc], sizeof(ret) - rc, "%H:%M", gmtime(&hist->timestamp));
 				else
-					rc += strftime(&ret[rc], sizeof(ret) - rc, tmp, gmtime(&hist->timestamp));
+					rc += strftime(&ret[rc], sizeof(ret) - rc, content, gmtime(&hist->timestamp));
 				format = strchr(format, '}') + 1;
 				continue;
 			}
 
 			for (i=0; subs[i].name; i++) {
-				if (strcmp_n(subs[i].name, tmp) == 0) {
+				if (strcmp_n(subs[i].name, content) == 0) {
 					if (subs[i].val)
 						rc += snprintf(&ret[rc], sizeof(ret) - rc, "%s", subs[i].val);
 					format = strchr(format, '}') + 1;
@@ -951,9 +953,9 @@ ui_format(char *format, struct History *hist) {
 
 		if (!escape && *format == '%' && *(format+1) == '{' && strchr(format, '}')) {
 			escape = 0;
-			tmp = struntil(format+2, '}');
+			content = struntil(format+2, '}');
 
-			switch (*tmp) {
+			switch (*content) {
 			case 'b':
 			case 'B':
 				ret[rc++] = 2; /* ^B */
@@ -961,25 +963,24 @@ ui_format(char *format, struct History *hist) {
 				continue;
 			case 'c':
 			case 'C':
-				tmp++;
-				if (*tmp == ':' && isdigit(*(tmp+1))) {
-					tmp++;
+				if (*(content+1) == ':' && isdigit(*(content+2))) {
+					content += 2;
 					memset(colourbuf, 0, sizeof(colourbuf));
-					colourbuf[0][0] = *tmp;
-					tmp++;
-					if (isdigit(*tmp)) {
-						colourbuf[0][1] = *tmp;
-						tmp += 1;
+					colourbuf[0][0] = *content;
+					content++;
+					if (isdigit(*content)) {
+						colourbuf[0][1] = *content;
+						content += 1;
 					}
-					if (*tmp == ',' && isdigit(*(tmp+1))) {
-						colourbuf[1][0] = *(tmp+1);
-						tmp += 2;
+					if (*content == ',' && isdigit(*(content+1))) {
+						colourbuf[1][0] = *(content+1);
+						content += 2;
 					}
-					if (colourbuf[1][0] && isdigit(*tmp)) {
-						colourbuf[1][1] = *(tmp);
-						tmp += 1;
+					if (colourbuf[1][0] && isdigit(*content)) {
+						colourbuf[1][1] = *(content);
+						content += 1;
 					}
-					if (*tmp == '\0') {
+					if (*content == '\0') {
 						rc += snprintf(&ret[rc], sizeof(ret) - rc, "%c%02d,%02d", 3 /* ^C */,
 								atoi(colourbuf[0]), colourbuf[1][0] ? atoi(colourbuf[1]) : 99);
 						format = strchr(format, '}') + 1;
@@ -989,7 +990,7 @@ ui_format(char *format, struct History *hist) {
 				break;
 			case 'i':
 			case 'I':
-				if (*(tmp+1) == '\0') {
+				if (*(content+1) == '\0') {
 					ret[rc++] = 9; /* ^I */
 					format = strchr(format, '}') + 1;
 					continue;
@@ -997,7 +998,7 @@ ui_format(char *format, struct History *hist) {
 				break;
 			case 'o':
 			case 'O':
-				if (*(tmp+1) == '\0') {
+				if (*(content+1) == '\0') {
 					ret[rc++] = 15; /* ^O */
 					format = strchr(format, '}') + 1;
 					continue;
@@ -1005,7 +1006,7 @@ ui_format(char *format, struct History *hist) {
 				break;
 			case 'r':
 			case 'R':
-				if (*(tmp+1) == '\0') {
+				if (*(content+1) == '\0') {
 					ret[rc++] = 18; /* ^R */
 					format = strchr(format, '}') + 1;
 					continue;
@@ -1013,14 +1014,14 @@ ui_format(char *format, struct History *hist) {
 				break;
 			case 'u':
 			case 'U':
-				if (*(tmp+1) == '\0') {
+				if (*(content+1) == '\0') {
 					ret[rc++] = 21; /* ^U */
 					format = strchr(format, '}') + 1;
 					continue;
 				}
 				break;
 			case '=':
-				if (*(tmp+1) == '\0' && divider) {
+				if (*(content+1) == '\0' && divider) {
 					rhs = 1;
 					ret[rc] = '\0';
 					/* strlen(ret) - ui_strlenc(NULL, ret, NULL) should get
@@ -1034,7 +1035,7 @@ ui_format(char *format, struct History *hist) {
 					free(save);
 					format = strchr(format, '}') + 1;
 					continue;
-				} else if (*(tmp+1) == '\0') {
+				} else if (*(content+1) == '\0') {
 					ret[rc++] = ' ';
 					format = strchr(format, '}') + 1;
 					continue;
@@ -1042,24 +1043,25 @@ ui_format(char *format, struct History *hist) {
 				break;
 			}
 
-			/* This bit must come last as it modified tmp */
-			if (hist && !nots && strncmp(tmp, "nick:", strlen("nick:")) == 0) {
+			/* This bit must come last as it modifies content */
+			if (hist && !recursive && strncmp(content, "nick:", strlen("nick:")) == 0) {
 				p = struntil(format+2+strlen("nick:"), '}');
-				tmp = malloc(strlen(p) + 2);
-				snprintf(tmp, strlen(p) + 2, "%s}", p);
-				save = strdup(ret);
-				nots = 1;
-				p = strdup(ui_format(tmp, hist));
-				nots = 0;
-				memcpy(ret, save, rc); /* don't need strlcpy as we don't use null byte */
+				content = malloc(strlen(p) + 2);
+				snprintf(content, strlen(p) + 2, "%s}", p);
+				save = strdup(ret); /* save ret, as this will be modified by recursing */
+				recursive = 1;
+				p = strdup(ui_format(content, hist));
+				recursive = 0;
+				memcpy(ret, save, rc); /* copy saved value back into ret, we don't 
+							  need strlcpy as we don't use null byte */
 				nick = nick_create(p, ' ', hist->origin ? hist->origin->server : NULL);
 				rc += snprintf(&ret[rc], sizeof(ret) - rc, "%c%02d", 3 /* ^C */, nick_getcolour(nick));
 				format = strchr(format, '}') + 2;
 
 				nick_free(nick);
-				free(tmp);
-				free(p);
+				free(content);
 				free(save);
+				free(p);
 				continue;
 			}
 		}
@@ -1078,7 +1080,7 @@ ui_format(char *format, struct History *hist) {
 	}
 
 	ret[rc] = '\0';
-	if (!nots && divider && !rhs) {
+	if (!recursive && divider && !rhs) {
 		snprintf(printformat, sizeof(printformat), "%%%lds%%s%%s", config_getl("divider.margin"));
 		save = strdup(ret);
 		rc = snprintf(ret, sizeof(ret), printformat, "", config_gets("divider.string"), save);
