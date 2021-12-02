@@ -22,6 +22,7 @@ struct Nick {
 
 enum Activity {
 	Activity_ignore,
+	Activity_none,
 	Activity_self = Activity_ignore,
 	Activity_status,
 	Activity_notice = Activity_status,
