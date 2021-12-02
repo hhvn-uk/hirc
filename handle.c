@@ -137,7 +137,7 @@ handle_PART(char *msg, char **params, struct Server *server, time_t timestamp) {
 	if (nick_isself(nick)) {
 		chan_setold(chan, 1);
 		nick_free_list(&chan->nicks);
-		if (chan == selected.channel && strcmp_n(target, handle_expect_get(server, Expect_part))) {
+		if (chan == selected.channel && strcmp_n(target, handle_expect_get(server, Expect_part)) == 0) {
 			ui_select(selected.server, NULL);
 			handle_expect(server, Expect_part, NULL);
 		}
