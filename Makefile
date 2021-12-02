@@ -6,7 +6,7 @@ MANDIR	= $(PREFIX)/share/man
 BIN	= hirc
 OBJ	= main.o handle.o hist.o nick.o \
 	  chan.o serv.o ui.o commands.o \
-	  config.o
+	  config.o strlcpy.o
 MAN	= hirc.1
 COMMIT	= $(shell git log HEAD...HEAD~1 --pretty=format:%h)
 

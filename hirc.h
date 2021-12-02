@@ -10,6 +10,12 @@
 	/* real maximum = MAX_HISTORY * (channels + servers + queries) */
 #define strcmp_n(s1, s2) (s1 == s2 ? 0 : (s1 ? s2 ? strcmp(s1, s2) : -1 : -1))
 
+/* strlcpy.c */
+#ifndef __OpenBSD__
+#undef strlcpy
+size_t		strlcpy(char *dst, const char *src, size_t dsize);
+#endif /* __OpenBSD__ */
+
 /* main.c */
 void *		emalloc(size_t size);
 char *		estrdup(const char *str);
