@@ -262,7 +262,8 @@ main(int argc, char *argv[]) {
 		config_read(argv[1]);
 
 	for (;;) {
-		if (serv_poll(&servers, 5) < 0) {
+		/* 25 seems fast enough not to cause any visual lag */
+		if (serv_poll(&servers, 25) < 0) {
 			perror("serv_poll()");
 			exit(EXIT_FAILURE);
 		}

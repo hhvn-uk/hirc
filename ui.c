@@ -269,12 +269,15 @@ ui_placewindow(struct Window *window) {
 
 void
 ui_read(void) {
-	static int needrefresh;
 	int key;
 
-	switch (key = wgetch(windows[Win_input].window)) {
-	case ERR: /* no input received */
-		if (needrefresh) {
+	/* Loop over input, return only if ERR is received.
+	 * Normally wgetch exits fast enough that unless something
+	 * is being pasted in this won't waste any time that should
+	 * be used for other stuff */
+	for (;;) {
+		switch (key = wgetch(windows[Win_input].window)) {
+		case ERR: /* no input received */
 			/* Only redraw the input window if there
 			 * hasn't been any input received - this
 			 * is to avoid forcing a redraw for each
@@ -285,41 +288,40 @@ ui_read(void) {
 			 * Theoretically this could be done with
 			 * bracketed paste stuff, but a solution
 			 * that works with all terminals is nice */
-			windows[Win_input].refresh = 1;
-			needrefresh = 0;
-		}
-		return;
-	case KEY_RESIZE:
-		ui_redraw();
-		return;
-	case KEY_BACKSPACE:
-		if (input.counter) {
-			if (ui_input_delete(1, input.counter) > 0)
+			windows[Win_input].handler();
+			wrefresh(windows[Win_input].window);
+			windows[Win_input].refresh = 0;
+			return;
+		case KEY_RESIZE:
+			ui_redraw();
+			return;
+		case KEY_BACKSPACE:
+			if (input.counter) {
+				if (ui_input_delete(1, input.counter) > 0)
+					input.counter--;
+			}
+			break;
+		case KEY_LEFT:
+			if (input.counter)
 				input.counter--;
-		}
-		break;
-	case KEY_LEFT:
-		if (input.counter)
-			input.counter--;
-		break;
-	case KEY_RIGHT:
-		if (input.string[input.counter])
-			input.counter++;
-		break;
-	case '\n':
-		command_eval(input.string);
-		memset(input.string, '\0', sizeof(input.string));
-		input.counter = 0;
-		break;
-	default:
-		if ((key & 0xFF80) == 0x80 || isprint(key) || iscntrl(key)) {
-			if (ui_input_insert(key, input.counter) > 0)
+			break;
+		case KEY_RIGHT:
+			if (input.string[input.counter])
 				input.counter++;
+			break;
+		case '\n':
+			command_eval(input.string);
+			memset(input.string, '\0', sizeof(input.string));
+			input.counter = 0;
+			break;
+		default:
+			if ((key & 0xFF80) == 0x80 || isprint(key) || iscntrl(key)) {
+				if (ui_input_insert(key, input.counter) > 0)
+					input.counter++;
+			}
+			break;
 		}
-		break;
 	}
-
-	needrefresh = 1;
 }
 
 int
