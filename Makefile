@@ -43,7 +43,7 @@ uninstall:
 	-rm -f $(MANDIR)/man1/$(MAN)
 
 clean:
-	-rm -f config.mk $(OBJ) $(MAN) $(BIN)
+	-rm -f $(OBJ) $(MAN) $(BIN)
 
 .c.o:
 	$(CC) $(CFLAGS) -c $<
