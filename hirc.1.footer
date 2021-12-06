@@ -1,4 +1,14 @@
 .\" vim: set syntax=nroff :
+.Sh EXAMPLES
+.Ss Commands
+.Dl /set def.nick hhvn
+Set your default nickname to 'hhvn'.
+
+.Dl /connect -network hlircnet irc.hlirc.net
+Connect to 'irc.hlirc.net' with the network name 'hlircnet'.
+
+.Dl /bind ^[1 /select 1
+Bind alt-1 so that it selects buffer 1.
 .Sh SEE ALSO
 .Xr irssi 1
 .Sh AUTHOR

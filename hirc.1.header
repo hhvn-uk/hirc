@@ -108,3 +108,5 @@ If a variable does exist, but is empty, nothing is printed.
 The divider is inspired by weechat's feature where it creates a bar seperating two elements of a line.
 If divider.toggle is set to 1, the divider will appear in all messages in channels.
 The left hand side of the divider will be padded out to the length specified in divider.margin, and divider.string is inserted between the left and right hand side elements.
+.Ss Variables
+The following variables can be set using the /set command:

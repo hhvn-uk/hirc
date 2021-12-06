@@ -220,7 +220,6 @@ main(int argc, char *argv[]) {
 	}
 
 	if (argc == 2 && strcmp(argv[1], "-d") == 0) {
-		printf(".Ss Variables\n");
 		printf(".Bl -tag\n");
 		for (i=0; config[i].name; i++) {
 			printf(".It %s\n", config[i].name);
