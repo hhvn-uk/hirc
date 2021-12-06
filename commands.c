@@ -21,6 +21,7 @@ static void command_format(struct Server *server, char *str);
 static void command_server(struct Server *server, char *str);
 static void command_names(struct Server *server, char *str);
 static void command_topic(struct Server *server, char *str);
+static void command_bind(struct Server *server, char *str);
 static void command_help(struct Server *server, char *str);
 
 static char *command_optarg;
@@ -78,6 +79,13 @@ struct Command commands[] = {
 		"usage: /topic [-clear] [channel] [topic]",
 		"Sets, clears, or checks topic in channel.",
 		"Provide only channel name to check.", NULL}},
+	{"bind", command_bind, {
+		"usage: /bind [<keybind> ['/']<cmd>]",
+		"       /bind -delete <keybind>",
+		"Bind command to key.",
+		"Accepts caret formatted control characters (eg, ^C).",
+		"Accepts multiple characters (alt-c = '^[c'), though",
+		"these must be inputted faster than wgetch can read.", NULL}},
 	{"help", command_help, {
 		"usage: /help [command or variable]",
 		"Print help information.",
@@ -501,6 +509,57 @@ command_topic(struct Server *server, char *str) {
 		ircprintf(server, "TOPIC %s\r\n", channel);
 		handle_expect(server, Expect_topic, channel);
 	} else ircprintf(server, "TOPIC %s :%s\r\n", channel, topic);
+}
+
+static void
+command_bind(struct Server *server, char *str) {
+	struct Keybind *p;
+	char *binding = NULL, *cmd = NULL;
+	int delete = 0, ret;
+	enum { opt_delete, };
+	struct CommandOpts opts[] = {
+		{"delete", CMD_NARG, opt_delete},
+		{NULL, 0, 0},
+	};
+
+	while ((ret = command_getopt(&str, opts)) != opt_done) {
+		switch (ret) {
+		case opt_error:
+			return;
+		case opt_delete:
+			delete = 1;
+			break;
+		}
+	}
+
+	if (str)
+		binding = strtok_r(str, " ", &cmd);
+
+	if (delete) {
+		if (ui_unbind(binding) == -1)
+			ui_error("no such keybind: '%s'", binding);
+		return;
+	}
+
+	if (!binding) {
+		hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_KEYBIND_START :Keybindings:");
+		for (p = keybinds; p; p = p->next)
+			hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_KEYBIND_LIST %s :%s", ui_unctrl(p->binding), p->cmd);
+		hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_KEYBIND_END :End of keybindings");
+	} else if (!cmd) {
+		for (p = keybinds; p; p = p->next) {
+			if (strcmp(p->binding, binding) == 0) {
+				hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_KEYBIND_START :Keybindings:");
+				hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_KEYBIND_LIST %s :%s", ui_unctrl(p->binding), p->cmd);
+				hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_KEYBIND_END :End of keybindings");
+				return;
+			}
+		}
+
+		ui_error("no such keybind: '%s'", binding);
+	} else {
+		ui_bind(binding, cmd);
+	}
 }
 
 static void

@@ -210,4 +210,11 @@ struct Selected {
 	char *name;
 };
 
+struct Keybind {
+	struct Keybind *prev;
+	char *binding;
+	char *cmd;
+	struct Keybind *next;
+};
+
 #endif /* H_STRUCT */

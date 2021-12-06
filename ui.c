@@ -57,6 +57,9 @@ struct {
 #ifndef TLS
 	{"SELF_TLSNOTCOMPILED",	"format.ui.tlsnotcompiled"},
 #endif /* TLS */
+	{"SELF_KEYBIND_START",	"format.ui.keybind.start"},
+	{"SELF_KEYBIND_LIST",	"format.ui.keybind"},
+	{"SELF_KEYBIND_END",	"format.ui.keybind.end"},
 	/* Real commands/numerics from server */
 	{"PRIVMSG", 		"format.privmsg"},
 	{"JOIN",		"format.join"},
@@ -164,6 +167,7 @@ struct {
 } input;
 
 struct Selected selected;
+struct Keybind *keybinds = NULL;
 
 void
 ui_error_(char *file, int line, char *format, ...) {
@@ -269,7 +273,11 @@ ui_placewindow(struct Window *window) {
 
 void
 ui_read(void) {
+	struct Keybind *kp;
 	int key;
+	int savecounter;
+
+	savecounter = input.counter;
 
 	/* Loop over input, return only if ERR is received.
 	 * Normally wgetch exits fast enough that unless something
@@ -278,6 +286,24 @@ ui_read(void) {
 	for (;;) {
 		switch (key = wgetch(windows[Win_input].window)) {
 		case ERR: /* no input received */
+			/* Match keybinds here - this allows multikey
+			 * bindings such as those with alt, but since
+			 * there is no delay with wgetch() it's unlikely
+			 * that the user pressing multiple keys will
+			 * trigger one. */
+			if (input.counter != savecounter) {
+				for (kp = keybinds; kp; kp = kp->next) {
+					if (strncmp(kp->binding, &input.string[savecounter], (input.counter - savecounter)) == 0) {
+						command_eval(kp->cmd);
+						memmove(&input.string[savecounter],
+								&input.string[input.counter],
+								strlen(&input.string[input.counter]) + 1);
+						input.counter = savecounter;
+						return;
+					}
+				}
+			}
+
 			/* Only redraw the input window if there
 			 * hasn't been any input received - this
 			 * is to avoid forcing a redraw for each
@@ -1216,4 +1242,116 @@ ui_format(char *format, struct History *hist) {
 		free(ts);
 
 	return ret;
+}
+
+char *
+ui_rectrl(char *str) {
+	static char ret[8192];
+	static char *rp = NULL;
+	int caret, rc;
+	char c;
+
+	if (rp) {
+		free(rp);
+		rp = NULL;
+	}
+
+	for (rc = 0; str && *str; str++) {
+		if (caret) {
+			c = toupper(*str) - 64;
+			if (c <= 31 && c >= 0) {
+				ret[rc++] = c;
+			} else {
+				ret[rc++] = '^';
+				ret[rc++] = *str;
+			}
+			caret = 0;
+		} else if (*str == '^') {
+			caret = 1;
+		} else {
+			ret[rc++] = *str;
+		}
+	}
+
+	ret[rc] = '\0';
+	rp = strdup(ret);
+
+	return rp;
+}
+
+char *
+ui_unctrl(char *str) {
+	static char ret[8192];
+	static char *rp = NULL;;
+	int rc;
+
+	if (rp) {
+		free(rp);
+		rp = NULL;
+	}
+
+	for (rc = 0; str && *str; str++) {
+		if (*str <= 31 && *str >= 0) {
+			ret[rc++] = '^';
+			ret[rc++] = (*str) + 64;
+		} else {
+			ret[rc++] = *str;
+		}
+	}
+
+	ret[rc] = '\0';
+	rp = strdup(ret);
+
+	return rp;
+}
+
+int
+ui_bind(char *binding, char *cmd) {
+	struct Keybind *p;
+	char *tmp;
+
+	if (!binding || !cmd)
+		return -1;
+
+	p = malloc(sizeof(struct Keybind));
+	p->binding = strdup(ui_rectrl(binding));
+	if (*cmd != '/') {
+		tmp = malloc(strlen(cmd) + 2);
+		snprintf(tmp, sizeof(tmp) + 2, "/%s", cmd);
+		p->cmd = tmp;
+	} else {
+		p->cmd = strdup(cmd);
+	}
+	p->prev = NULL;
+	p->next = keybinds;
+	if (keybinds)
+		keybinds->prev = p;
+	keybinds = p;
+
+	return 0;
+}
+
+int
+ui_unbind(char *binding) {
+	struct Keybind *p;
+
+	if (!binding)
+		return -1;
+
+	for (p=keybinds; p; p = p->next) {
+		if (strcmp(p->binding, binding) == 0) {
+			if (p->prev)
+				p->prev->next = p->next;
+			else
+				keybinds = p->next;
+
+			if (p->next)
+				p->next->prev = p->prev;
+
+			free(p);
+			return 0;
+		}
+	}
+
+	return -1;
 }

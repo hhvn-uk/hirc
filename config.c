@@ -222,6 +222,21 @@ struct Config config[] = {
 		.description = {
 		"Format of SELF_TLSNOTCOMPILED messages", NULL}},
 #endif /* TLS */
+	{"format.ui.keybind", 1, Val_string,
+		.str = " ${1}: ${2}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of /bind output", NULL}},
+	{"format.ui.keybind.start", 1, Val_string,
+		.str = "Keybindings:",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of header of /bind output", NULL}},
+	{"format.ui.keybind.end", 1, Val_string,
+		.str = "",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of footer of /bind output", NULL}},
 	{"format.privmsg", 1, Val_string,
 		.str = "%{nick:${nick}}${nick}%{o}%{=}${2}",
 		.strhandle = config_redraws,
