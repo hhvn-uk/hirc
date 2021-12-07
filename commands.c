@@ -23,6 +23,7 @@ static void command_names(struct Server *server, char *str);
 static void command_topic(struct Server *server, char *str);
 static void command_bind(struct Server *server, char *str);
 static void command_help(struct Server *server, char *str);
+static void command_echo(struct Server *server, char *str);
 
 static char *command_optarg;
 enum {
@@ -90,6 +91,9 @@ struct Command commands[] = {
 		"usage: /help [command or variable]",
 		"Print help information.",
 		"`/help commands` and `/help variables` will list respectively", NULL}},
+	{"echo", command_echo, {
+		"usage: /echo ...",
+		"Print temporarily to selected buffer.", NULL}},
 	{NULL, NULL},
 };
 
@@ -616,6 +620,14 @@ command_help(struct Server *server, char *str) {
 	}
 
 	ui_error("no help on '%s'", str);
+}
+
+static void
+command_echo(struct Server *server, char *str) {
+	if (!str)
+		str = "";
+
+	hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP, "SELF_UI :%s", str);
 }
 
 int
