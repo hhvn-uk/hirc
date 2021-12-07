@@ -77,8 +77,7 @@ param_create(char *msg) {
 	char *p, *cur;
 	int final = 0, i;
 
-	for (i=0; i < PARAM_MAX; i++)
-		params[i] = NULL;
+	memset(params, 0, sizeof(params));
 	strlcpy(tmp, msg, sizeof(tmp));
 
 	for (p=cur=tmp, i=0; p && *p && i < PARAM_MAX; p++) {
