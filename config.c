@@ -709,6 +709,236 @@ struct Config config[] = {
 		.strhandle = config_redraws,
 		.description = {
 		"Format of RPL_NOUSERS (395) numeric", NULL}},
+	{"format.err.nosuchnick", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of ERR_NOSUCHNICK (401) numeric", NULL}},
+	{"format.err.nosuchserver", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of ERR_NOSUCHSERVER (402) numeric", NULL}},
+	{"format.err.nosuchchannel", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of ERR_NOSUCHCHANNEL (403) numeric", NULL}},
+	{"format.err.cannotsendtochan", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of ERR_CANNOTSENDTOCHAN (404) numeric", NULL}},
+	{"format.err.toomanychannels", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of ERR_TOOMANYCHANNELS (405) numeric", NULL}},
+	{"format.err.wasnosuchnick", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of ERR_WASNOSUCHNICK (406) numeric", NULL}},
+	{"format.err.toomanytargets", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of ERR_TOOMANYTARGETS (407) numeric", NULL}},
+	{"format.err.noorigin", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of ERR_NOORIGIN (409) numeric", NULL}},
+	{"format.err.norecipient", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of ERR_NORECIPIENT (411) numeric", NULL}},
+	{"format.err.notexttosend", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of ERR_NOTEXTTOSEND (412) numeric", NULL}},
+	{"format.err.notoplevel", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of ERR_NOTOPLEVEL (413) numeric", NULL}},
+	{"format.err.wildtoplevel", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of ERR_WILDTOPLEVEL (414) numeric", NULL}},
+	{"format.err.unknowncommand", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of ERR_UNKNOWNCOMMAND (421) numeric", NULL}},
+	{"format.err.nomotd", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of ERR_NOMOTD (422) numeric", NULL}},
+	{"format.err.noadmininfo", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of ERR_NOADMININFO (423) numeric", NULL}},
+	{"format.err.fileerror", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of ERR_FILEERROR (424) numeric", NULL}},
+	{"format.err.nonicknamegiven", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of ERR_NONICKNAMEGIVEN (431) numeric", NULL}},
+	{"format.err.erroneusnickname", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of ERR_ERRONEUSNICKNAME (432) numeric", NULL}},
+	{"format.err.nicknameinuse", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of ERR_NICKNAMEINUSE (433) numeric", NULL}},
+	{"format.err.nickcollision", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of ERR_NICKCOLLISION (436) numeric", NULL}},
+	{"format.err.usernotinchannel", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of ERR_USERNOTINCHANNEL (441) numeric", NULL}},
+	{"format.err.notonchannel", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of ERR_NOTONCHANNEL (442) numeric", NULL}},
+	{"format.err.useronchannel", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of ERR_USERONCHANNEL (443) numeric", NULL}},
+	{"format.err.nologin", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of ERR_NOLOGIN (444) numeric", NULL}},
+	{"format.err.summondisabled", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of ERR_SUMMONDISABLED (445) numeric", NULL}},
+	{"format.err.usersdisabled", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of ERR_USERSDISABLED (446) numeric", NULL}},
+	{"format.err.notregistered", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of ERR_NOTREGISTERED (451) numeric", NULL}},
+	{"format.err.needmoreparams", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of ERR_NEEDMOREPARAMS (461) numeric", NULL}},
+	{"format.err.alreadyregistred", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of ERR_ALREADYREGISTRED (462) numeric", NULL}},
+	{"format.err.nopermforhost", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of ERR_NOPERMFORHOST (463) numeric", NULL}},
+	{"format.err.passwdmismatch", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of ERR_PASSWDMISMATCH (464) numeric", NULL}},
+	{"format.err.yourebannedcreep", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of ERR_YOUREBANNEDCREEP (465) numeric", NULL}},
+	{"format.err.youwillbebanned", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of ERR_YOUWILLBEBANNED (466) numeric", NULL}},
+	{"format.err.keyset", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of ERR_KEYSET (467) numeric", NULL}},
+	{"format.err.channelisfull", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of ERR_CHANNELISFULL (471) numeric", NULL}},
+	{"format.err.unknownmode", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of ERR_UNKNOWNMODE (472) numeric", NULL}},
+	{"format.err.inviteonlychan", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of ERR_INVITEONLYCHAN (473) numeric", NULL}},
+	{"format.err.bannedfromchan", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of ERR_BANNEDFROMCHAN (474) numeric", NULL}},
+	{"format.err.badchannelkey", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of ERR_BADCHANNELKEY (475) numeric", NULL}},
+	{"format.err.noprivileges", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of ERR_NOPRIVILEGES (481) numeric", NULL}},
+	{"format.err.chanoprivsneeded", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of ERR_CHANOPRIVSNEEDED (482) numeric", NULL}},
+	{"format.err.cantkillserver", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of ERR_CANTKILLSERVER (483) numeric", NULL}},
+	{"format.err.nooperhost", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of ERR_NOOPERHOST (491) numeric", NULL}},
+	{"format.err.noservicehost", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of ERR_NOSERVICEHOST (492) numeric", NULL}},
+	{"format.err.umodeunknownflag", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of ERR_UMODEUNKNOWNFLAG (501) numeric", NULL}},
+	{"format.err.usersdontmatch", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of ERR_USERSDONTMATCH (502) numeric", NULL}},
 	/* END: misc/rpl-conf-gen.awk */
 	{"format.rpl.other", 1, Val_string,
 		.str = "${cmd} ${2-}",

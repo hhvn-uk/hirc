@@ -1,7 +1,7 @@
 #!/bin/awk -f
 # Parses RFC1459 for config[]
 
-$1 ~ /^[0-9][0-9][0-9]$/ && $2 ~ /RPL_/ {
+$1 ~ /^[0-9][0-9][0-9]$/ && ($2 ~ /RPL_/ || $2 ~ /ERR_/) {
 	rpl = tolower($2);
 	sub(/_/, ".", rpl);
 	printf("\t{\"format.%s\", 1, Val_string,\n", rpl);
