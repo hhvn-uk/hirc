@@ -98,7 +98,7 @@ param_create(char *msg) {
 	params[i] = cur;
 
 	ret = emalloc(sizeof(params));
-	for (rp=ret, i=0; params[i] && *params[i]; i++, rp++)
+	for (rp=ret, i=0; params[i]; i++, rp++)
 		*rp = estrdup(params[i]);
 	*rp = NULL;
 
