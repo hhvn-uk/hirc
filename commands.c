@@ -24,6 +24,7 @@ static void command_topic(struct Server *server, char *str);
 static void command_bind(struct Server *server, char *str);
 static void command_help(struct Server *server, char *str);
 static void command_echo(struct Server *server, char *str);
+static void command_grep(struct Server *server, char *str);
 
 static char *command_optarg;
 enum {
@@ -579,7 +580,7 @@ command_help(struct Server *server, char *str) {
 	if (strcmp(str, "commands") == 0) {
 		hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_UI :Commands:");
 		for (i=0; commands[i].name && commands[i].func; i++)
-			hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_UI : %s", commands[i].name);
+			hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_UI : /%s", commands[i].name);
 		return;
 	}
 

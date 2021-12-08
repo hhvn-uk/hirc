@@ -237,7 +237,7 @@ main(int argc, char *argv[]) {
 		printf(".Sh COMMANDS\n");
 		printf(".Bl -tag\n");
 		for (i=0; commands[i].name && commands[i].func; i++) {
-			printf(".It %s\n", commands[i].name);
+			printf(".It /%s\n", commands[i].name);
 			printf(".Bd -literal -compact\n");
 			for (j=0; commands[i].description[j]; j++)
 				printf("%s\n", commands[i].description[j]);
