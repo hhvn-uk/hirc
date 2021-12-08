@@ -672,15 +672,17 @@ command_eval(char *str) {
 	char *cmd;
 	char *s;
 
-	if (*str != '/' || strncmp(str, "/ /", sizeof("/ /")) == 0) {
+	s = strdup(str);
+
+	if (*s != '/' || strncmp(s, "/ /", sizeof("/ /")) == 0) {
 		/* Provide a way to escape commands
 		 *      "/ /cmd" --> "/cmd"      */
-		if (strncmp(str, "/ /", sizeof("/ /")) == 0)
-			str += 3;
+		if (strncmp(s, "/ /", sizeof("/ /")) == 0)
+			s += 3;
 
 		if (selected.channel && selected.server) {
 			// TODO: message splitting
-			snprintf(msg, sizeof(msg), "PRIVMSG %s :%s", selected.channel->name, str);
+			snprintf(msg, sizeof(msg), "PRIVMSG %s :%s", selected.channel->name, s);
 			ircprintf(selected.server, "%s\r\n", msg);
 			hist_format(selected.channel->history, Activity_self, HIST_SHOW|HIST_LOG|HIST_SELF, msg);
 		} else
@@ -688,23 +690,25 @@ command_eval(char *str) {
 
 		return;
 	} else {
-		str++;
-		cmd = str;
-		str = strchr(str, ' ');
-		if (str && *str) {
-			*str = '\0';
-			str++;
-			if (*str == '\0')
-				str = NULL;
+		s++;
+		cmd = s;
+		s = strchr(s, ' ');
+		if (s && *s) {
+			*s = '\0';
+			s++;
+			if (*s == '\0')
+				s = NULL;
 		}
 
 		for (cmdp = commands; cmdp->name && cmdp->func; cmdp++) {
 			if (strcmp(cmdp->name, cmd) == 0) {
-				cmdp->func(selected.server, str);
+				cmdp->func(selected.server, s);
 				return;
 			}
 		}
 
 		ui_error("no such command: '%s'", cmd);
 	}
+
+	free(s);
 }
