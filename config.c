@@ -85,6 +85,16 @@ struct Config config[] = {
 		.description = {
 		"Maximum reconnect interval in seconds.",
 		"See reconnect.interval", NULL}},
+	{"regex.extended", 1, Val_bool,
+		.num = 0,
+		.numhandle = NULL,
+		.description = {
+		"Use POSIX extended regex at all times.", NULL}},
+	{"regex.icase", 1, Val_bool,
+		.num = 0,
+		.numhandle = NULL,
+		.description = {
+		"Use case insensitive regex at all times.", NULL}},
 	{"nickcolour.self", 1, Val_colour,
 		.num = 90,
 		.numhandle = config_nickcolour_self,
