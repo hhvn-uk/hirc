@@ -118,7 +118,7 @@ hist_add(struct HistInfo *histinfo, struct Nick *from,
 }
 
 void
-hist_purgetmp(struct HistInfo *histinfo) {
+hist_purgeopt(struct HistInfo *histinfo, enum HistOpt options) {
 	struct History *p, *next;
 
 	if (!histinfo)
@@ -128,7 +128,7 @@ hist_purgetmp(struct HistInfo *histinfo) {
 
 	for (; p; p = next) {
 		next = p->next;
-		if (p->options & HIST_TMP) {
+		if (p->options & options) {
 			if (p->prev)
 				p->prev->next = p->next;
 			else

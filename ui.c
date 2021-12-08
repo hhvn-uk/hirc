@@ -987,7 +987,7 @@ ui_select(struct Server *server, struct Channel *channel) {
 	selected.history = channel ? channel->history : server ? server->history : main_buf;
 	selected.name    = channel ? channel->name    : server ? server->name    : "hirc";
 
-	hist_purgetmp(selected.history);
+	hist_purgeopt(selected.history, HIST_TMP);
 }
 
 static char *

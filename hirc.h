@@ -69,7 +69,7 @@ struct History *hist_format(struct HistInfo *history, enum Activity activity,
 		enum HistOpt options, char *format, ...);
 int		hist_len(struct History **history);
 int		hist_log(char *msg, struct Nick *from, time_t timestamp, struct Server *server);
-void		hist_purgetmp(struct HistInfo *histinfo);
+void		hist_purgeopt(struct HistInfo *histinfo, enum HistOpt options);
 
 /* serv.c */
 void		serv_free(struct Server *server);
