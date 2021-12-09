@@ -9,6 +9,10 @@ Connect to 'irc.hlirc.net' with the network name 'hlircnet'.
 
 .Dl /bind ^[1 /select 1
 Bind alt-1 so that it selects buffer 1.
+
+.Dl /alias /unalias /alias -delete
+Alias '/unalias' to '/alias -delete',
+so that '/unalias /command` is translated to `/alias -delete /command`
 .Sh SEE ALSO
 .Xr irssi 1
 .Sh AUTHOR

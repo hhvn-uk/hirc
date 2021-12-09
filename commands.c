@@ -85,7 +85,7 @@ struct Command commands[] = {
 		"Sets, clears, or checks topic in channel.",
 		"Provide only channel name to check.", NULL}},
 	{"bind", command_bind, {
-		"usage: /bind [<keybind> [cmd]]",
+		"usage: /bind [<keybind> [cmd [..]]]",
 		"       /bind -delete <keybind>",
 		"Bind command to key.",
 		"Accepts caret formatted control characters (eg, ^C).",
@@ -110,7 +110,7 @@ struct Command commands[] = {
 		"usage: /clear [-tmp]",
 		"Clear selected buffer of (temporary if -tmp) messages", NULL}},
 	{"alias", command_alias, {
-		"usage: /alias [<alias> [cmd]]",
+		"usage: /alias [<alias> [cmd [...]]]",
 		"       /alias -delete <alias>",
 		"Add or remove an alias that expands to a command.", NULL}},
 	{NULL, NULL},
