@@ -1365,7 +1365,7 @@ ui_bind(char *binding, char *cmd) {
 	p->binding = strdup(ui_rectrl(binding));
 	if (*cmd != '/') {
 		tmp = malloc(strlen(cmd) + 2);
-		snprintf(tmp, sizeof(tmp) + 2, "/%s", cmd);
+		snprintf(tmp, strlen(cmd) + 2, "/%s", cmd);
 		p->cmd = tmp;
 	} else {
 		p->cmd = strdup(cmd);
