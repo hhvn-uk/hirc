@@ -1396,6 +1396,8 @@ ui_unbind(char *binding) {
 			if (p->next)
 				p->next->prev = p->prev;
 
+			free(p->binding);
+			free(p->cmd);
 			free(p);
 			return 0;
 		}
