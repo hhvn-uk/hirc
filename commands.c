@@ -26,6 +26,7 @@ static void command_bind(struct Server *server, char *str);
 static void command_help(struct Server *server, char *str);
 static void command_echo(struct Server *server, char *str);
 static void command_grep(struct Server *server, char *str);
+static void command_clear(struct Server *server, char *str);
 
 static char *command_optarg;
 enum {
@@ -104,6 +105,9 @@ struct Command commands[] = {
 		"If no argument supplied, clears previous search",
 		"Searches are also cleared after selecting another buffer",
 		"See also config variables: regex.extended and regex.icase", NULL}},
+	{"clear", command_clear, {
+		"usage: /clear [-tmp]",
+		"Clear selected buffer of (temporary if -tmp) messages", NULL}},
 	{NULL, NULL},
 };
 
@@ -701,6 +705,34 @@ command_grep(struct Server *server, char *str) {
 	hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_GREP, "SELF_GREP_END :end of /grep command");
 }
 
+static void
+command_clear(struct Server *server, char *str) {
+	int ret, tmp = 0;
+	enum { opt_tmp };
+	static struct CommandOpts opts[] = {
+		{"tmp", CMD_NARG, opt_tmp},
+		{NULL, 0, 0},
+	};
+
+	if (str) {
+		while ((ret = command_getopt(&str, opts)) != opt_done) {
+			switch (ret) {
+			case opt_error:
+				return;
+			case opt_tmp:
+				tmp = 1;
+				break;
+			}
+		}
+
+		if (*str)
+			ui_error("ignoring remaining args to /clear", NULL);
+	}
+
+	hist_purgeopt(selected.history, tmp ? HIST_TMP : HIST_ALL);
+	windows[Win_main].refresh = 1;
+}
+
 int
 command_getopt(char **str, struct CommandOpts *opts) {
 	char *opt;
@@ -725,8 +757,13 @@ command_getopt(char **str, struct CommandOpts *opts) {
 					(*str)++;
 				}
 			} else {
-				*((*str)-1) = '\0';
+				if (*str && **str)
+					*((*str)-1) = '\0';
 			}
+
+			/* Always return something that's not NULL */
+			if (!*str)
+				*str = "";
 
 			return opts->ret;
 		}
