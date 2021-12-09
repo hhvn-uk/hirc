@@ -341,7 +341,8 @@ ui_read(void) {
 			 * trigger one. */
 			if (input.counter != savecounter) {
 				for (kp = keybinds; kp; kp = kp->next) {
-					if (strncmp(kp->binding, &input.string[savecounter], (input.counter - savecounter)) == 0) {
+					if ((input.counter - savecounter) == strlen(kp->binding) &&
+							strncmp(kp->binding, &input.string[savecounter], (input.counter - savecounter)) == 0) {
 						command_eval(kp->cmd);
 						memmove(&input.string[savecounter],
 								&input.string[input.counter],
