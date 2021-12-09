@@ -247,6 +247,16 @@ struct Config config[] = {
 		.strhandle = config_redraws,
 		.description = {
 		"Format of footer of /bind output", NULL}},
+	{"format.ui.grep.start", 1, Val_string,
+		.str = "%{b}%{c:94}Results of ${1}:",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of start of /grep output", NULL}},
+	{"format.ui.grep.end", 1, Val_string,
+		.str = "",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of end of /grep output", NULL}},
 	{"format.privmsg", 1, Val_string,
 		.str = "%{nick:${nick}}${nick}%{o}%{=}${2}",
 		.strhandle = config_redraws,
