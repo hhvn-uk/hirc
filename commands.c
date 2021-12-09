@@ -84,7 +84,7 @@ struct Command commands[] = {
 		"Sets, clears, or checks topic in channel.",
 		"Provide only channel name to check.", NULL}},
 	{"bind", command_bind, {
-		"usage: /bind [<keybind> ['/']<cmd>]",
+		"usage: /bind [<keybind> [cmd]]",
 		"       /bind -delete <keybind>",
 		"Bind command to key.",
 		"Accepts caret formatted control characters (eg, ^C).",
