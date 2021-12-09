@@ -136,6 +136,9 @@ void		ui_tls_error_(char *file, int line, struct tls *ctx, char *str);
 /* commands.c */
 void		command_eval(char *str);
 int		command_getopt(char **str, struct CommandOpts *opts);
+int		alias_add(char *binding, char *cmd);
+int		alias_remove(char *binding);
+char *		alias_eval(char *cmd);
 
 /* config.c */
 void		config_get_print(char *name);
@@ -164,5 +167,6 @@ extern int readingconf;
 
 /* commands.c */
 extern struct Command commands[];
+extern struct Alias *aliases;
 
 #endif /* H_HIRC */

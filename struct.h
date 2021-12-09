@@ -219,4 +219,11 @@ struct Keybind {
 	struct Keybind *next;
 };
 
+struct Alias {
+	struct Alias *prev;
+	char *alias;
+	char *cmd;
+	struct Alias *next;
+};
+
 #endif /* H_STRUCT */

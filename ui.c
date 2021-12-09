@@ -62,6 +62,9 @@ struct {
 	{"SELF_KEYBIND_END",	"format.ui.keybind.end"},
 	{"SELF_GREP_START",	"format.ui.grep.start"},
 	{"SELF_GREP_END",	"format.ui.grep.end"},
+	{"SELF_ALIAS_START",	"format.ui.alias.start"},
+	{"SELF_ALIAS_LIST",	"format.ui.alias"},
+	{"SELF_ALIAS_END",	"format.ui.alias.end"},
 	/* Real commands/numerics from server */
 	{"PRIVMSG", 		"format.privmsg"},
 	{"JOIN",		"format.join"},

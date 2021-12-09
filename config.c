@@ -257,6 +257,21 @@ struct Config config[] = {
 		.strhandle = config_redraws,
 		.description = {
 		"Format of end of /grep output", NULL}},
+	{"format.ui.alias", 1, Val_string,
+		.str = " ${1}: ${2}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of /alias output", NULL}},
+	{"format.ui.alias.start", 1, Val_string,
+		.str = "Aliases:",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of header of /alias output", NULL}},
+	{"format.ui.alias.end", 1, Val_string,
+		.str = "",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of footer of /alias output", NULL}},
 	{"format.privmsg", 1, Val_string,
 		.str = "%{nick:${nick}}${nick}%{o}%{=}${2}",
 		.strhandle = config_redraws,

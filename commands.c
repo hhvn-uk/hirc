@@ -27,6 +27,7 @@ static void command_help(struct Server *server, char *str);
 static void command_echo(struct Server *server, char *str);
 static void command_grep(struct Server *server, char *str);
 static void command_clear(struct Server *server, char *str);
+static void command_alias(struct Server *server, char *str);
 
 static char *command_optarg;
 enum {
@@ -108,8 +109,14 @@ struct Command commands[] = {
 	{"clear", command_clear, {
 		"usage: /clear [-tmp]",
 		"Clear selected buffer of (temporary if -tmp) messages", NULL}},
+	{"alias", command_alias, {
+		"usage: /alias [<alias> [cmd]]",
+		"       /alias -delete <alias>",
+		"Add or remove an alias that expands to a command.", NULL}},
 	{NULL, NULL},
 };
+
+struct Alias *aliases = NULL;
 
 static void
 command_quit(struct Server *server, char *str) {
@@ -580,6 +587,59 @@ command_bind(struct Server *server, char *str) {
 	}
 }
 
+static
+void
+command_alias(struct Server *server, char *str) {
+	struct Alias *p;
+	char *alias = NULL, *cmd = NULL;
+	int delete = 0, ret;
+	enum { opt_delete, };
+	struct CommandOpts opts[] = {
+		{"delete", CMD_NARG, opt_delete},
+		{NULL, 0, 0},
+	};
+
+	while ((ret = command_getopt(&str, opts)) != opt_done) {
+		switch (ret) {
+		case opt_error:
+			return;
+		case opt_delete:
+			delete = 1;
+			break;
+		}
+	}
+
+	if (str)
+		alias = strtok_r(str, " ", &cmd);
+
+	if (delete) {
+		if (alias_remove(alias) == -1)
+			ui_error("no such alias: '%s'", alias);
+		return;
+	}
+
+	if (!alias) {
+		hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_ALIAS_START :Aliases:");
+		for (p = aliases; p; p = p->next)
+			hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_ALIAS_LIST %s :%s", p->alias, p->cmd);
+		hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_ALIAS_END :End of aliases");
+	} else if (!cmd) {
+		for (p = aliases; p; p = p->next) {
+			if (strcmp(p->alias, alias) == 0) {
+				hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_ALIAS_START :Aliases:");
+				hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_ALIAS_LIST %s :%s", p->alias, p->cmd);
+				hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_ALIAS_END :End of aliases");
+				return;
+			}
+		}
+
+		ui_error("no such alias: '%s'", alias);
+	} else {
+		alias_add(alias, cmd);
+	}
+}
+
+
 static void
 command_help(struct Server *server, char *str) {
 	int cmdonly = 0;
@@ -773,6 +833,87 @@ command_getopt(char **str, struct CommandOpts *opts) {
 	return opt_error;
 }
 
+int
+alias_add(char *alias, char *cmd) {
+	struct Alias *p;
+	char *tmp;
+
+	if (!alias || !cmd)
+		return -1;
+
+	p = malloc(sizeof(struct Alias));
+	if (*alias != '/') {
+		tmp = malloc(strlen(alias) + 2);
+		snprintf(tmp, strlen(alias) + 2, "/%s", alias);
+		p->alias = tmp;
+	} else p->alias = strdup(alias);
+	if (*cmd != '/') {
+		tmp = malloc(strlen(cmd) + 2);
+		snprintf(tmp, strlen(cmd) + 2, "/%s", cmd);
+		p->cmd = tmp;
+	} else p->cmd = strdup(cmd);
+	p->prev = NULL;
+	p->next = aliases;
+	if (aliases)
+		aliases->prev = p;
+	aliases = p;
+
+	return 0;
+}
+
+int
+alias_remove(char *alias) {
+	struct Alias *p;
+
+	if (!alias)
+		return -1;
+
+	for (p=aliases; p; p = p->next) {
+		if (strcmp(p->alias, alias) == 0) {
+			if (p->prev)
+				p->prev->next = p->next;
+			else
+				aliases = p->next;
+
+			if (p->next)
+				p->next->prev = p->prev;
+
+			free(p->alias);
+			free(p->cmd);
+			free(p);
+			return 0;
+		}
+	}
+
+	return -1;
+}
+
+char *
+alias_eval(char *cmd) {
+	static char ret[8192];
+	struct Alias *p;
+	int len, rc = 0;
+	char *s;
+
+	if ((s = strchr(cmd, ' ')) != NULL)
+		len = s - cmd;
+	else
+		len = strlen(cmd);
+
+	for (p = aliases; p; p = p->next) {
+		if (p->cmd && strlen(p->alias) == len && strncmp(p->alias, cmd, len) == 0) {
+			rc += strlcpy(&ret[rc], p->cmd, sizeof(ret) - rc);
+			break;
+		}
+	}
+
+	if (!rc)
+		return cmd;
+
+	rc += strlcpy(&ret[rc], cmd + len, sizeof(ret) - rc);
+	return ret;
+}
+
 void
 command_eval(char *str) {
 	struct Command *cmdp;
@@ -780,7 +921,7 @@ command_eval(char *str) {
 	char *cmd;
 	char *s;
 
-	s = strdup(str);
+	s = strdup(alias_eval(str));
 
 	if (*s != '/' || strncmp(s, "/ /", sizeof("/ /")) == 0) {
 		/* Provide a way to escape commands
@@ -793,9 +934,9 @@ command_eval(char *str) {
 			snprintf(msg, sizeof(msg), "PRIVMSG %s :%s", selected.channel->name, s);
 			ircprintf(selected.server, "%s\r\n", msg);
 			hist_format(selected.channel->history, Activity_self, HIST_SHOW|HIST_LOG|HIST_SELF, msg);
-		} else
+		} else {
 			ui_error("channel not selected, message ignored", NULL);
-
+		}
 		return;
 	} else {
 		s++;
