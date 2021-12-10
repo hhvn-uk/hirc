@@ -48,4 +48,4 @@ clean:
 .c.o:
 	$(CC) $(CFLAGS) -c $<
 
-$(OBJ):
+.PHONY: clean install uninstall
