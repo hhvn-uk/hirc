@@ -94,7 +94,7 @@ hist_add(struct HistInfo *histinfo, struct Nick *from,
 	}
 
 	for (i=0, p = histinfo->history; p && p->next; p = p->next, i++);
-	if (i == (MAX_HISTORY-1)) {
+	if (i == (HIST_MAX-1)) {
 		free(p->next);
 		p->next = NULL;
 	}

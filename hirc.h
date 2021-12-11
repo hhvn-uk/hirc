@@ -6,8 +6,8 @@
 #include "struct.h"
 #define PARAM_MAX 64
 #define INPUT_MAX 8192
-#define MAX_HISTORY 8192
-	/* real maximum = MAX_HISTORY * (channels + servers + queries) */
+#define HIST_MAX 8192
+	/* real maximum = HIST_MAX * (channels + servers + queries) */
 #define strcmp_n(s1, s2) (s1 == s2 ? 0 : (s1 ? s2 ? strcmp(s1, s2) : -1 : -1))
 
 /* strlcpy.c */
