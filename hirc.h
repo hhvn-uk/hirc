@@ -6,6 +6,7 @@
 #include "struct.h"
 #define PARAM_MAX 64
 #define INPUT_MAX 8192
+#define INPUT_HIST_MAX 64
 #define HIST_MAX 8192
 	/* real maximum = HIST_MAX * (channels + servers + queries) */
 #define strcmp_n(s1, s2) (s1 == s2 ? 0 : (s1 ? s2 ? strcmp(s1, s2) : -1 : -1))

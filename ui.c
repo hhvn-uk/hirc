@@ -215,6 +215,7 @@ struct {
 struct {
 	char string[INPUT_MAX];
 	unsigned counter;
+	char *history[INPUT_HIST_MAX];
 } input;
 
 struct Selected selected;
@@ -266,7 +267,8 @@ ui_init(void) {
 	raw();
 	noecho();
 
-	memset(input.string, '\0', sizeof(input.string));
+	input.string[0] = '\0';
+	memset(input.history, 0, sizeof(input.history));
 	input.counter = 0;
 
 	windows[Win_nicklist].location = config_getl("nicklist.location");
@@ -324,6 +326,8 @@ ui_placewindow(struct Window *window) {
 
 void
 ui_read(void) {
+	static int histindex = -1; /* -1 == current input */
+	static char *backup = NULL;
 	struct Keybind *kp;
 	int key;
 	int savecounter;
@@ -354,31 +358,51 @@ ui_read(void) {
 						return;
 					}
 				}
+
+				if (histindex) {
+					free(backup);
+					backup = NULL;
+					histindex = -1;
+				}
+
 			}
 
-			/* Only redraw the input window if there
-			 * hasn't been any input received - this
-			 * is to avoid forcing a redraw for each
-			 * keystroke if they arrive in very fast
-			 * succession, i.e. text that is pasted.
-			 * KEY_RESIZE will still force a redraw.
-			 *
-			 * Theoretically this could be done with
-			 * bracketed paste stuff, but a solution
-			 * that works with all terminals is nice */
 			windows[Win_input].handler();
 			wrefresh(windows[Win_input].window);
 			windows[Win_input].refresh = 0;
 			return;
 		case KEY_RESIZE:
 			ui_redraw();
-			return;
+			break;
 		case KEY_BACKSPACE:
 			if (input.counter) {
 				if (ui_input_delete(1, input.counter) > 0)
 					input.counter--;
 			}
 			break;
+		case KEY_UP:
+			if (histindex < INPUT_HIST_MAX && input.history[histindex + 1]) {
+				if (histindex == -1)
+					backup = strdup(input.string);
+				histindex++;
+				strlcpy(input.string, input.history[histindex], sizeof(input.string));
+				input.counter = strlen(input.string);
+			}
+			return; /* return so histindex and backup aren't reset */
+		case KEY_DOWN:
+			if (histindex > -1) {
+				histindex--;
+				if (histindex == -1) {
+					if (backup)
+						strlcpy(input.string, backup, sizeof(input.string));
+					free(backup);
+					backup = NULL;
+				} else {
+					strlcpy(input.string, input.history[histindex], sizeof(input.string));
+				}
+				input.counter = strlen(input.string);
+			}
+			return; /* return so histindex and backup aren't reset */
 		case KEY_LEFT:
 			if (input.counter)
 				input.counter--;
@@ -389,7 +413,11 @@ ui_read(void) {
 			break;
 		case '\n':
 			command_eval(input.string);
-			memset(input.string, '\0', sizeof(input.string));
+			/* free checks for null */
+			free(input.history[INPUT_HIST_MAX - 1]);
+			memmove(input.history + 1, input.history, (sizeof(input.history) / INPUT_HIST_MAX) * (INPUT_HIST_MAX - 1));
+			input.history[0] = strdup(input.string);
+			input.string[0] = '\0';
 			input.counter = 0;
 			break;
 		default:
