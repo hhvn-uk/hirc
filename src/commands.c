@@ -9,6 +9,7 @@
 #include <sys/types.h>
 #include "hirc.h"
 
+static void command_query(struct Server *server, char *str);
 static void command_quit(struct Server *server, char *str);
 static void command_join(struct Server *server, char *str);
 static void command_part(struct Server *server, char *str);
@@ -38,6 +39,9 @@ enum {
 };
 
 struct Command commands[] = {
+	{"query", command_query, {
+		"usage: /query <nick>",
+		"Open a buffer for communication with a nick", NULL}},
 	{"quit", command_quit, {
 		"usage: /quit",
 		"Cleanup and exit", NULL}},
@@ -117,6 +121,32 @@ struct Command commands[] = {
 };
 
 struct Alias *aliases = NULL;
+
+static void
+command_query(struct Server *server, char *str) {
+	struct Channel *priv;
+
+	if (!server) {
+		ui_error("must select server or use /server to use /query", NULL);
+		return;
+	}
+
+	if (!str || strchr(str, ' ')) {
+		ui_error("/query takes 1 argument", NULL);
+		return;
+	}
+
+	if (strchr(support_get(server, "CHANTYPES"), *str)) {
+		ui_error("can't query a channel", NULL);
+		return;
+	}
+
+	if ((priv = chan_get(&server->privs, str, -1)) == NULL)
+		priv = chan_add(server, &server->privs, str, 1);
+
+	if (!readingconf)
+		ui_select(server, priv);
+}
 
 static void
 command_quit(struct Server *server, char *str) {
