@@ -657,6 +657,7 @@ ui_draw_buflist(void) {
 	struct Channel *chp;
 	int i = 1, len, tmp;
 	int sc, cc, y;
+	char *indicator;
 
 	ui_wclear(&windows[Win_buflist]);
 
@@ -665,7 +666,7 @@ ui_draw_buflist(void) {
 
 	if (selected.history == main_buf)
 		wattron(windows[Win_buflist].window, A_BOLD);
-	len = wprintw(windows[Win_buflist].window, "%02d: %s\n", i++, "hirc");
+	len = ui_wprintc(&windows[Win_buflist], 1, "%02d: %s\n", i++, "hirc");
 	wattroff(windows[Win_buflist].window, A_BOLD);
 
 	for (sc = cc = 0, sp = servers; sp; sp = sp->next, sc++) {
@@ -674,9 +675,26 @@ ui_draw_buflist(void) {
 		else if (sp->status != ConnStatus_connected)
 			wattron(windows[Win_buflist].window, A_DIM);
 
-		len = wprintw(windows[Win_buflist].window, "%02d: %s─ %s\n", i++, sp->next ? "├" : "└", sp->name);
-		wattroff(windows[Win_buflist].window, A_BOLD);
-		wattroff(windows[Win_buflist].window, A_DIM);
+		switch (sp->history->activity) {
+		case Activity_status:
+			indicator = ui_format(config_gets("format.ui.buflist.activity.status"), NULL);
+			break;
+		case Activity_error:
+			indicator = ui_format(config_gets("format.ui.buflist.activity.error"), NULL);
+			break;
+		case Activity_message:
+			indicator = ui_format(config_gets("format.ui.buflist.activity.message"), NULL);
+			break;
+		case Activity_hilight:
+			indicator = ui_format(config_gets("format.ui.buflist.activity.hilight"), NULL);
+			break;
+		default:
+			indicator = ui_format(config_gets("format.ui.buflist.activity.none"), NULL);
+			break;
+		}
+
+		len = ui_wprintc(&windows[Win_buflist], 1, "%02d: %s─ %s%s\n", i++, sp->next ? "├" : "└", indicator, sp->name);
+		wattrset(windows[Win_buflist].window, A_NORMAL);
 
 		for (chp = sp->channels; chp; chp = chp->next, cc++) {
 			if (selected.channel == chp)
@@ -684,10 +702,27 @@ ui_draw_buflist(void) {
 			else if (chp->old)
 				wattron(windows[Win_buflist].window, A_DIM);
 
-			len = wprintw(windows[Win_buflist].window, "%02d: %s  %s─ %s\n", i++,
-					sp->next ? "│" : " ", chp->next ? "├" : "└", chp->name);
-			wattroff(windows[Win_buflist].window, A_BOLD);
-			wattroff(windows[Win_buflist].window, A_DIM);
+			switch (chp->history->activity) {
+			case Activity_status:
+				indicator = ui_format(config_gets("format.ui.buflist.activity.status"), NULL);
+				break;
+			case Activity_error:
+				indicator = ui_format(config_gets("format.ui.buflist.activity.error"), NULL);
+				break;
+			case Activity_message:
+				indicator = ui_format(config_gets("format.ui.buflist.activity.message"), NULL);
+				break;
+			case Activity_hilight:
+				indicator = ui_format(config_gets("format.ui.buflist.activity.hilight"), NULL);
+				break;
+			default:
+				indicator = ui_format(config_gets("format.ui.buflist.activity.none"), NULL);
+				break;
+			}
+
+			len = ui_wprintc(&windows[Win_buflist], 1, "%02d: %s  %s─ %s%s\n", i++,
+					sp->next ? "│" : " ", chp->next ? "├" : "└", indicator, chp->name);
+			wattrset(windows[Win_buflist].window, A_NORMAL);
 		}
 	}
 
@@ -1020,6 +1055,9 @@ ui_select(struct Server *server, struct Channel *channel) {
 	selected.server  = server;
 	selected.history = channel ? channel->history : server ? server->history : main_buf;
 	selected.name    = channel ? channel->name    : server ? server->name    : "hirc";
+
+	selected.history->activity = Activity_none;
+	selected.history->unread = 0;
 
 	hist_purgeopt(selected.history, HIST_TMP);
 }

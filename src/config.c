@@ -272,6 +272,31 @@ struct Config config[] = {
 		.strhandle = config_redraws,
 		.description = {
 		"Format of footer of /alias output", NULL}},
+	{"format.ui.buflist.activity.none", 1, Val_string,
+		.str = "",
+		.strhandle = config_redraws,
+		.description = {
+		"Indicator for buffer with activity of level `none`", NULL}},
+	{"format.ui.buflist.activity.status", 1, Val_string,
+		.str = "%{c:95}",
+		.strhandle = config_redraws,
+		.description = {
+		"Indicator for buffer with activity of level `status`", NULL}},
+	{"format.ui.buflist.activity.error", 1, Val_string,
+		.str = "%{c:28}",
+		.strhandle = config_redraws,
+		.description = {
+		"Indicator for buffer with activity of level `error`", NULL}},
+	{"format.ui.buflist.activity.message", 1, Val_string,
+		.str = "%{c:45}",
+		.strhandle = config_redraws,
+		.description = {
+		"Indicator for buffer with activity of level `message`", NULL}},
+	{"format.ui.buflist.activity.hilight", 1, Val_string,
+		.str = "%{c:45}%{r}",
+		.strhandle = config_redraws,
+		.description = {
+		"Indicator for buffer with activity of level `hilight`", NULL}},
 	{"format.privmsg", 1, Val_string,
 		.str = "%{nick:${nick}}${nick}%{o}%{=}${2}",
 		.strhandle = config_redraws,

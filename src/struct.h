@@ -21,14 +21,14 @@ struct Nick {
 };
 
 enum Activity {
-	Activity_ignore,
-	Activity_none,
+	Activity_ignore = 0,
 	Activity_self = Activity_ignore,
-	Activity_status,
+	Activity_none = 1,
+	Activity_status = 2,
 	Activity_notice = Activity_status,
-	Activity_error,
-	Activity_message,
-	Activity_hilight,
+	Activity_error = 3,
+	Activity_message = 4,
+	Activity_hilight = 5,
 };
 
 enum HistOpt {

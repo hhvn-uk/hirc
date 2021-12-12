@@ -83,9 +83,11 @@ hist_add(struct HistInfo *histinfo, struct Nick *from,
 
 	new = hist_create(histinfo, from, msg, params, activity, timestamp, options);
 
-	if (histinfo && options & HIST_SHOW && activity > histinfo->activity)
+	if (histinfo && options & HIST_SHOW && activity > histinfo->activity && histinfo != selected.history) {
 		histinfo->activity = activity;
-	if (histinfo && options & HIST_SHOW && !chan_selected(histinfo->channel) && !serv_selected(histinfo->server))
+		windows[Win_buflist].refresh = 1;
+	}
+	if (histinfo && options & HIST_SHOW && histinfo != selected.history)
 		histinfo->unread++;
 
 	if (!histinfo->history) {
