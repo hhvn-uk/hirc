@@ -1061,15 +1061,23 @@ ui_draw_main(void) {
 
 void
 ui_select(struct Server *server, struct Channel *channel) {
-	selected.channel = channel;
-	selected.server  = server;
-	selected.history = channel ? channel->history : server ? server->history : main_buf;
-	selected.name    = channel ? channel->name    : server ? server->name    : "hirc";
+	int oldhasnicks = selected.hasnicks;
+
+	selected.channel  = channel;
+	selected.server   = server;
+	selected.history  = channel ? channel->history : server ? server->history : main_buf;
+	selected.name     = channel ? channel->name    : server ? server->name    : "hirc";
+	selected.hasnicks = channel ? !channel->priv   : 0;
 
 	selected.history->activity = Activity_none;
 	selected.history->unread = 0;
 
 	hist_purgeopt(selected.history, HIST_TMP);
+	if (!selected.hasnicks)
+		windows[Win_nicklist].location = HIDDEN;
+	else
+		windows[Win_nicklist].location = config_getl("nicklist.location");
+	ui_redraw();
 }
 
 static char *

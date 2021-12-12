@@ -69,6 +69,7 @@ struct Channel {
 	char *name;
 	char *mode;
 	char *topic;
+	int priv;
 	struct Nick *nicks;
 	struct HistInfo *history;
 	struct Server *server;
@@ -210,6 +211,7 @@ struct Selected {
 	struct Server *server;
 	struct HistInfo *history;
 	char *name;
+	int hasnicks;
 };
 
 struct Keybind {

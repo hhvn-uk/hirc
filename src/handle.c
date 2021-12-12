@@ -97,7 +97,7 @@ handle_JOIN(char *msg, char **params, struct Server *server, time_t timestamp) {
 
 	target = *(params+2);
 	if ((chan = chan_get(&server->channels, target, -1)) == NULL)
-		chan = chan_add(server, &server->channels, target);
+		chan = chan_add(server, &server->channels, target, 0);
 	chan_setold(chan, 0);
 
 	nick = nick_create(*params, ' ', server);
@@ -131,7 +131,7 @@ handle_PART(char *msg, char **params, struct Server *server, time_t timestamp) {
 
 	target = *(params+2);
 	if ((chan = chan_get(&server->channels, target, -1)) == NULL)
-		chan = chan_add(server, &server->channels, target);
+		chan = chan_add(server, &server->channels, target, 0);
 
 	nick = nick_create(*params, ' ', server);
 	if (nick_isself(nick)) {
@@ -164,7 +164,7 @@ handle_KICK(char *msg, char **params, struct Server *server, time_t timestamp) {
 
 	target = *(params+2);
 	if ((chan = chan_get(&server->channels, target, -1)) == NULL)
-		chan = chan_add(server, &server->channels, target);
+		chan = chan_add(server, &server->channels, target, 0);
 
 	nick = nick_create(*(params+3), ' ', server);
 	if (nick_isself(nick)) {
@@ -220,7 +220,7 @@ handle_MODE(char *msg, char **params, struct Server *server, time_t timestamp) {
 
 	if (strchr(support_get(server, "CHANTYPES"), **(params+2))) {
 		if ((chan = chan_get(&server->channels, *(params+2), -1)) == NULL)
-			chan = chan_add(server, &server->channels, *(params+2));
+			chan = chan_add(server, &server->channels, *(params+2), 0);
 
 		hist_add(chan->history, NULL, msg, params, Activity_status, timestamp, HIST_DFL);
 		ircprintf(server, "MODE %s\r\n", chan->name); /* Get full mode via RPL_CHANNELMODEIS
@@ -253,21 +253,21 @@ handle_PRIVMSG(char *msg, char **params, struct Server *server, time_t timestamp
 	} else if (strcmp(target, server->self->nick) == 0) {
 		/* it's messaging me */
 		if ((priv = chan_get(&server->privs, nick->nick, -1)) == NULL)
-			priv = chan_add(server, &server->privs, nick->nick);
+			priv = chan_add(server, &server->privs, nick->nick, 1);
 		chan_setold(priv, 0);
 
 		hist_add(priv->history, nick, msg, params, act_direct, timestamp, HIST_DFL);
 	} else if (nick_isself(nick) && !chrcmp(*target, "#&!+")) {
 		/* i'm messaging someone */
 		if ((priv = chan_get(&server->privs, target, -1)) == NULL)
-			priv = chan_add(server, &server->privs, target);
+			priv = chan_add(server, &server->privs, target, 1);
 		chan_setold(priv, 0);
 
 		hist_add(priv->history, nick, msg, params, act_regular, timestamp, HIST_DFL);
 	} else {
 		/* message to a channel */
 		if ((chan = chan_get(&server->channels, target, -1)) == NULL)
-			chan = chan_add(server, &server->channels, target);
+			chan = chan_add(server, &server->channels, target, 0);
 
 		hist_add(chan->history, nick, msg, params,
 				strstr(*(params+3), server->self->nick) ? act_direct : act_regular,
@@ -314,7 +314,7 @@ handle_RPL_CHANNELMODEIS(char *msg, char **params, struct Server *server, time_t
 		return;
 
 	if ((chan = chan_get(&server->channels, *(params+3), -1)) == NULL)
-		chan = chan_add(server, &server->channels, *(params+3));
+		chan = chan_add(server, &server->channels, *(params+3), 0);
 
 	free(chan->mode);
 	chan->mode = strdup(*(params+4));
@@ -339,7 +339,7 @@ handle_RPL_NAMREPLY(char *msg, char **params, struct Server *server, time_t time
 	target = *params;
 
 	if ((chan = chan_get(&server->channels, target, -1)) == NULL)
-		chan = chan_add(server, &server->channels, target);
+		chan = chan_add(server, &server->channels, target, 0);
 
 	if (strcmp_n(target, handle_expect_get(server, Expect_names)) == 0)
 		hist_add(chan->history, NULL, msg, bparams, Activity_status, timestamp, HIST_DFL);
