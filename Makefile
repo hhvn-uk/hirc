@@ -4,9 +4,9 @@ PREFIX	= /usr/local
 BINDIR	= $(PREFIX)/bin
 MANDIR	= $(PREFIX)/share/man
 BIN	= hirc
-OBJ	= main.o handle.o hist.o nick.o \
-	  chan.o serv.o ui.o commands.o \
-	  config.o strlcpy.o
+OBJ	= src/main.o src/handle.o src/hist.o src/nick.o \
+	  src/chan.o src/serv.o src/ui.o src/commands.o \
+	  src/config.o src/strlcpy.o
 MAN	= hirc.1
 COMMIT	= $(shell git log HEAD...HEAD~1 --pretty=format:%h)
 CFLAGS	= -g -O0 $(CTLS)
@@ -46,6 +46,6 @@ clean:
 	-rm -f $(OBJ) $(MAN) $(BIN)
 
 .c.o:
-	$(CC) $(CFLAGS) -c $<
+	$(CC) $(CFLAGS) -c $< -o $@
 
 .PHONY: clean install uninstall
