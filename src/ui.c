@@ -598,21 +598,26 @@ ui_draw_nicklist(void) {
 }
 
 int
-ui_buflist_count(int *ret_servers, int *ret_channels) {
+ui_buflist_count(int *ret_servers, int *ret_channels, int *ret_privs) {
 	struct Server *sp;
 	struct Channel *chp;
-	int sc, cc;
+	int sc, cc, pc;
 
-	for (sc = cc = 0, sp = servers; sp; sp = sp->next, sc++)
+	for (sc = cc = pc = 0, sp = servers; sp; sp = sp->next, sc++) {
 		for (chp = sp->channels; chp; chp = chp->next, cc++)
 			;
+		for (chp = sp->privs; chp; chp = chp->next, pc++)
+			;
+	}
 
 	if (ret_servers)
 		*ret_servers = sc;
 	if (ret_channels)
 		*ret_channels = cc;
+	if (ret_privs)
+		*ret_channels = pc;
 
-	return sc + cc + 1;
+	return sc + cc + pc + 1;
 }
 
 void
@@ -646,9 +651,33 @@ ui_buflist_select(int num) {
 				return;
 			}
 		}
+		for (chp = sp->privs; chp; chp = chp->next, i++) {
+			if (i == num) {
+				ui_select(sp, chp);
+				return;
+			}
+		}
 	}
 
 	ui_error("couldn't select buffer with index %d", num);
+}
+
+char *
+ui_format_activity(int activity) {
+	switch (activity) {
+	case Activity_status:
+		return ui_format(config_gets("format.ui.buflist.activity.status"), NULL);
+	case Activity_error:
+		return ui_format(config_gets("format.ui.buflist.activity.error"), NULL);
+	case Activity_message:
+		return ui_format(config_gets("format.ui.buflist.activity.message"), NULL);
+	case Activity_hilight:
+		return ui_format(config_gets("format.ui.buflist.activity.hilight"), NULL);
+	default:
+		return ui_format(config_gets("format.ui.buflist.activity.none"), NULL);
+	}
+
+	return NULL; /* should be possible *shrug*/
 }
 
 void
@@ -656,7 +685,7 @@ ui_draw_buflist(void) {
 	struct Server *sp;
 	struct Channel *chp;
 	int i = 1, len, tmp;
-	int sc, cc, y;
+	int sc, cc, pc, y;
 	char *indicator;
 
 	ui_wclear(&windows[Win_buflist]);
@@ -669,29 +698,13 @@ ui_draw_buflist(void) {
 	len = ui_wprintc(&windows[Win_buflist], 1, "%02d: %s\n", i++, "hirc");
 	wattroff(windows[Win_buflist].window, A_BOLD);
 
-	for (sc = cc = 0, sp = servers; sp; sp = sp->next, sc++) {
+	for (sc = cc = pc = 0, sp = servers; sp; sp = sp->next, sc++) {
 		if (selected.server == sp && !selected.channel)
 			wattron(windows[Win_buflist].window, A_BOLD);
 		else if (sp->status != ConnStatus_connected)
 			wattron(windows[Win_buflist].window, A_DIM);
 
-		switch (sp->history->activity) {
-		case Activity_status:
-			indicator = ui_format(config_gets("format.ui.buflist.activity.status"), NULL);
-			break;
-		case Activity_error:
-			indicator = ui_format(config_gets("format.ui.buflist.activity.error"), NULL);
-			break;
-		case Activity_message:
-			indicator = ui_format(config_gets("format.ui.buflist.activity.message"), NULL);
-			break;
-		case Activity_hilight:
-			indicator = ui_format(config_gets("format.ui.buflist.activity.hilight"), NULL);
-			break;
-		default:
-			indicator = ui_format(config_gets("format.ui.buflist.activity.none"), NULL);
-			break;
-		}
+		indicator = ui_format_activity(sp->history->activity);
 
 		len = ui_wprintc(&windows[Win_buflist], 1, "%02d: %s─ %s%s\n", i++, sp->next ? "├" : "└", indicator, sp->name);
 		wattrset(windows[Win_buflist].window, A_NORMAL);
@@ -702,23 +715,20 @@ ui_draw_buflist(void) {
 			else if (chp->old)
 				wattron(windows[Win_buflist].window, A_DIM);
 
-			switch (chp->history->activity) {
-			case Activity_status:
-				indicator = ui_format(config_gets("format.ui.buflist.activity.status"), NULL);
-				break;
-			case Activity_error:
-				indicator = ui_format(config_gets("format.ui.buflist.activity.error"), NULL);
-				break;
-			case Activity_message:
-				indicator = ui_format(config_gets("format.ui.buflist.activity.message"), NULL);
-				break;
-			case Activity_hilight:
-				indicator = ui_format(config_gets("format.ui.buflist.activity.hilight"), NULL);
-				break;
-			default:
-				indicator = ui_format(config_gets("format.ui.buflist.activity.none"), NULL);
-				break;
-			}
+			indicator = ui_format_activity(chp->history->activity);
+
+			len = ui_wprintc(&windows[Win_buflist], 1, "%02d: %s  %s─ %s%s\n", i++,
+					sp->next ? "│" : " ", chp->next ? "├" : "└", indicator, chp->name);
+			wattrset(windows[Win_buflist].window, A_NORMAL);
+		}
+
+		for (chp = sp->privs; chp; chp = chp->next, pc++) {
+			if (selected.channel == chp)
+				wattron(windows[Win_buflist].window, A_BOLD);
+			else if (chp->old)
+				wattron(windows[Win_buflist].window, A_DIM);
+
+			indicator = ui_format_activity(chp->history->activity);
 
 			len = ui_wprintc(&windows[Win_buflist], 1, "%02d: %s  %s─ %s%s\n", i++,
 					sp->next ? "│" : " ", chp->next ? "├" : "└", indicator, chp->name);
@@ -730,7 +740,7 @@ ui_draw_buflist(void) {
 	 * it requires two passes over the servers and channels, whilst only one
 	 * when integrated to the loop above. */
 	wmove(windows[Win_buflist].window, windows[Win_buflist].h - 1, 0);
-	len = wprintw(windows[Win_buflist].window, "[S: %02d | C: %02d]", sc, cc);
+	len = wprintw(windows[Win_buflist].window, "[S: %02d | C: %02d | P: %02d]", sc, cc, pc);
 }
 
 int
