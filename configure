@@ -13,10 +13,17 @@ EOF
 ${CC} -ltls -o test test.c >/dev/null 2>/dev/null && {
 	printf '%s\n' "yes"
 	cat >> config.mk <<- EOF
+		# libretls or libtls (standalone tls.h implementation) configuration
 		LDFLAGS	+= -ltls
 		CFLAGS	+= -DTLS
 	EOF
-} || printf '%s\n' "no"
+} || {
+	printf '%s\n' "no"
+	cat >> config.mk <<- EOF
+		# no TLS configured
+		# install libretls or libtls (standalone tls.h implementation) for TLS
+	EOF
+}
 
 printf '%s' "checking for libtinfow... "
 cat > test.c <<- EOF
@@ -37,14 +44,15 @@ ${CC} -ltinfow -o test test.c >/dev/null 2>/dev/null && {
 		#include <ncurses.h>
 		int main(void) { initscr(); endwin(); return 0; }
 	EOF
-	if ${CC} -ltinfow -o test test.c >/dev/null 2>/dev/null && ./test >/dev/null 2>/dev/null; then
+	${CC} -ltinfow -o test test.c >/dev/null 2>/dev/null && ./test >/dev/null 2>/dev/null && {
 		printf '%s\n' "yes"
 		cat >> config.mk <<- EOF
+			# linking with tinfow
+			# on some systems both ncursesw and tinfow must be linked
+			# otherwise, thank ncurses for the nondescript segfault in initscr()...
 			LDFLAGS += -ltinfow
 		EOF
-	else
-		printf '%s\n' "no"
-	fi
+	} || printf '%s\n' "no"
 }
 
 printf '%s' "checking for strlcpy... "
@@ -57,6 +65,7 @@ ${CC} -o test test.c >/dev/null 2>/dev/null && ./test >/dev/null 2>/dev/null && 
 } || {
 	printf '%s\n' "no"
 	cat >> config.mk <<- EOF
+		# linking an included version of strlcpy, as your system doesn't have it
 		CFLAGS	+= -DHIRC_STRLCPY
 		SRC	+= src/strlcpy.c
 	EOF
