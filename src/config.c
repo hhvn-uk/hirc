@@ -272,6 +272,11 @@ struct Config config[] = {
 		.strhandle = config_redraws,
 		.description = {
 		"Format of footer of /alias output", NULL}},
+	{"format.ui.buflist.old", 1, Val_string,
+		.str = "%{c:91}",
+		.strhandle = config_redraws,
+		.description = {
+		"Indicator for disconnected servers or parted channels", NULL}},
 	{"format.ui.buflist.activity.none", 1, Val_string,
 		.str = "",
 		.strhandle = config_redraws,

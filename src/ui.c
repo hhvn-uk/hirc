@@ -701,10 +701,11 @@ ui_draw_buflist(void) {
 	for (sc = cc = pc = 0, sp = servers; sp; sp = sp->next, sc++) {
 		if (selected.server == sp && !selected.channel)
 			wattron(windows[Win_buflist].window, A_BOLD);
-		else if (sp->status != ConnStatus_connected)
-			wattron(windows[Win_buflist].window, A_DIM);
 
-		indicator = ui_format_activity(sp->history->activity);
+		if (sp->status == ConnStatus_notconnected)
+			indicator = ui_format(config_gets("format.ui.buflist.old"), NULL);
+		else
+			indicator = ui_format_activity(sp->history->activity);
 
 		len = ui_wprintc(&windows[Win_buflist], 1, "%02d: %s─ %s%s\n", i++, sp->next ? "├" : "└", indicator, sp->name);
 		wattrset(windows[Win_buflist].window, A_NORMAL);
@@ -712,10 +713,11 @@ ui_draw_buflist(void) {
 		for (chp = sp->channels; chp; chp = chp->next, cc++) {
 			if (selected.channel == chp)
 				wattron(windows[Win_buflist].window, A_BOLD);
-			else if (chp->old)
-				wattron(windows[Win_buflist].window, A_DIM);
 
-			indicator = ui_format_activity(chp->history->activity);
+			if (chp->old)
+				indicator = ui_format(config_gets("format.ui.buflist.old"), NULL);
+			else
+				indicator = ui_format_activity(chp->history->activity);
 
 			len = ui_wprintc(&windows[Win_buflist], 1, "%02d: %s  %s─ %s%s\n", i++,
 					sp->next ? "│" : " ", chp->next ? "├" : "└", indicator, chp->name);
@@ -725,10 +727,11 @@ ui_draw_buflist(void) {
 		for (chp = sp->privs; chp; chp = chp->next, pc++) {
 			if (selected.channel == chp)
 				wattron(windows[Win_buflist].window, A_BOLD);
-			else if (chp->old)
-				wattron(windows[Win_buflist].window, A_DIM);
 
-			indicator = ui_format_activity(chp->history->activity);
+			if (chp->old)
+				indicator = ui_format(config_gets("format.ui.buflist.old"), NULL);
+			else
+				indicator = ui_format_activity(chp->history->activity);
 
 			len = ui_wprintc(&windows[Win_buflist], 1, "%02d: %s  %s─ %s%s\n", i++,
 					sp->next ? "│" : " ", chp->next ? "├" : "└", indicator, chp->name);
@@ -1067,7 +1070,7 @@ ui_select(struct Server *server, struct Channel *channel) {
 	selected.server   = server;
 	selected.history  = channel ? channel->history : server ? server->history : main_buf;
 	selected.name     = channel ? channel->name    : server ? server->name    : "hirc";
-	selected.hasnicks = channel ? !channel->priv   : 0;
+	selected.hasnicks = channel ? !channel->priv && !channel->old : 0;
 
 	selected.history->activity = Activity_none;
 	selected.history->unread = 0;
