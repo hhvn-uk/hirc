@@ -24,6 +24,13 @@ all: $(BIN) $(MAN)
 config.mk:
 	./configure
 
+# All objects should be rebuild if
+# struct.h changes, as, for example,
+# if an enum changes value that will
+# only be recognized in source files
+# that have been changed aswell.
+$(OBJ): src/struct.h
+
 $(BIN): $(OBJ)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(OBJ)
 
