@@ -157,6 +157,12 @@ command_quit(struct Server *server, char *str) {
 static void
 command_join(struct Server *server, char *str) {
 	char *chantypes, msg[512];
+
+	if (!server) {
+		ui_error("must select server or use /server to use /join", NULL);
+		return;
+	}
+
 	if (!str) {
 		ui_error("/join requires argument", NULL);
 		return;
@@ -183,6 +189,11 @@ static void
 command_part(struct Server *server, char *str) {
 	char *channel = NULL, *reason = NULL;
 	char *chantypes, msg[512];
+
+	if (!server) {
+		ui_error("must select server or use /server to use /part", NULL);
+		return;
+	}
 
 	chantypes = support_get(server, "CHANTYPES");
 
@@ -213,6 +224,11 @@ command_kick(struct Server *server, char *str) {
 	char *channel, *nick, *reason;
 	char *s;
 
+	if (!server) {
+		ui_error("must select server or use /server to use /kick", NULL);
+		return;
+	}
+
 	if (!str) {
 		ui_error("/kick requires argument", NULL);
 		return;
@@ -241,6 +257,11 @@ command_kick(struct Server *server, char *str) {
 
 static void
 command_ping(struct Server *server, char *str) {
+	if (!server) {
+		ui_error("must select server or use /server to use /ping", NULL);
+		return;
+	}
+
 	if (!str) {
 		ui_error("/ping requires argument", NULL);
 		return;
@@ -253,6 +274,11 @@ command_ping(struct Server *server, char *str) {
 static void
 command_quote(struct Server *server, char *str) {
 	char msg[512];
+
+	if (!server) {
+		ui_error("must select server or use /server to use /quote", NULL);
+		return;
+	}
 
 	if (!str) {
 		ui_error("/quote requires argument", NULL);
@@ -500,6 +526,11 @@ static void
 command_names(struct Server *server, char *str) {
 	char *channel, *save = NULL;
 
+	if (!server) {
+		ui_error("must select server or use /server to use /names", NULL);
+		return;
+	}
+
 	channel = strtok_r(str, " ", &save);
 	if (!channel)
 		channel = selected.channel ? selected.channel->name : NULL;
@@ -525,6 +556,11 @@ command_topic(struct Server *server, char *str) {
 		{"clear", CMD_NARG, opt_clear},
 		{NULL, 0, 0},
 	};
+
+	if (!server) {
+		ui_error("must select server or use /server to use /topic", NULL);
+		return;
+	}
 
 	while ((ret = command_getopt(&str, opts)) != opt_done) {
 		switch (ret) {
