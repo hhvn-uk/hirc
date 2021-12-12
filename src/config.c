@@ -1204,7 +1204,7 @@ config_nicklist_location(long num) {
 	}
 
 	if (!selected.hasnicks)
-		return;
+		return 0;
 
 	if (num == windows[Win_buflist].location != HIDDEN)
 		windows[Win_buflist].location = num == LEFT ? RIGHT : LEFT;
