@@ -39,70 +39,70 @@ enum {
 };
 
 struct Command commands[] = {
-	{"query", command_query, {
+	{"query", command_query, 1, {
 		"usage: /query <nick>",
 		"Open a buffer for communication with a nick", NULL}},
-	{"quit", command_quit, {
+	{"quit", command_quit, 0, {
 		"usage: /quit",
 		"Cleanup and exit", NULL}},
-	{"quote", command_quote, {
+	{"quote", command_quote, 1, {
 		"usage: /quote <message>",
 		"Send raw message to server", NULL}},
-	{"join", command_join, {
+	{"join", command_join, 1, {
 		"usage: /join <channel>",
 		"Join channel", NULL}},
-	{"part", command_part, {
+	{"part", command_part, 1, {
 		"usage: /part <channel>",
 		"Part channel", NULL}},
-	{"kick", command_kick, {
+	{"kick", command_kick, 1, {
 		"usage: /kick [channel] <nick> [reason]",
 		"Kick nick from channel", NULL}},
-	{"ping", command_ping, {
+	{"ping", command_ping, 1, {
 		"usage: /ping message...",
 		"Send a PING to server.",
 		"hirc will do this itself in the background,",
 		"but will hide it unless this command is used.", NULL}},
-	{"connect", command_connect, {
+	{"connect", command_connect, 0, {
 		"usage: /connect [-network <name>] [-nick <nick>] [-user <user>]",
 		"                [-real <comment>] [-tls] [-verify] <host> [port]",
 		"Connect to a network/server", NULL}},
-	{"select", command_select, {
+	{"select", command_select, 0, {
 		"usage: /select [-network <name>] [-channel <name>] [buffer id]",
 		"Select a buffer", NULL}},
-	{"set",	command_set, {
+	{"set",	command_set, 0, {
 		"usage: /set <variable> [number/range] [end of range]",
 		"       /set <variable> string....",
 		"Set a configuration variable.",
 		"Passing only the name prints content.", NULL}},
-	{"format", command_format, {
+	{"format", command_format, 0, {
 		"usage: /format <format> string...",
 		"Set a formatting variable.",
 		"This is equivalent to /set format.<format> string...", NULL}},
-	{"server", command_server, {
+	{"server", command_server, 0, {
 		"usage: /server <server> cmd....",
 		"Run (non-raw) command with server as target.", NULL}},
-	{"names", command_names, {
+	{"names", command_names, 1, {
 		"usage: /names <channel>",
 		"List nicks in channel (pretty useless with nicklist.", NULL}},
-	{"topic", command_topic, {
+	{"topic", command_topic, 1, {
 		"usage: /topic [-clear] [channel] [topic]",
 		"Sets, clears, or checks topic in channel.",
 		"Provide only channel name to check.", NULL}},
-	{"bind", command_bind, {
+	{"bind", command_bind, 0, {
 		"usage: /bind [<keybind> [cmd [..]]]",
 		"       /bind -delete <keybind>",
 		"Bind command to key.",
 		"Accepts caret formatted control characters (eg, ^C).",
 		"Accepts multiple characters (alt-c = '^[c'), though",
 		"these must be inputted faster than wgetch can read.", NULL}},
-	{"help", command_help, {
+	{"help", command_help, 0, {
 		"usage: /help [command or variable]",
 		"Print help information.",
 		"`/help commands` and `/help variables` will list respectively", NULL}},
-	{"echo", command_echo, {
+	{"echo", command_echo, 0, {
 		"usage: /echo ...",
 		"Print temporarily to selected buffer.", NULL}},
-	{"grep", command_grep, {
+	{"grep", command_grep, 0, {
 		"usage: /grep [-iE] [regex]",
 		"Search selected buffer",
 		" -i: case insensitive",
@@ -110,10 +110,10 @@ struct Command commands[] = {
 		"If no argument supplied, clears previous search",
 		"Searches are also cleared after selecting another buffer",
 		"See also config variables: regex.extended and regex.icase", NULL}},
-	{"clear", command_clear, {
+	{"clear", command_clear, 0, {
 		"usage: /clear [-tmp]",
 		"Clear selected buffer of (temporary if -tmp) messages", NULL}},
-	{"alias", command_alias, {
+	{"alias", command_alias, 0, {
 		"usage: /alias [<alias> [cmd [...]]]",
 		"       /alias -delete <alias>",
 		"Add or remove an alias that expands to a command.", NULL}},
@@ -125,11 +125,6 @@ struct Alias *aliases = NULL;
 static void
 command_query(struct Server *server, char *str) {
 	struct Channel *priv;
-
-	if (!server) {
-		ui_error("must select server or use /server to use /query", NULL);
-		return;
-	}
 
 	if (!str || strchr(str, ' ')) {
 		ui_error("/query takes 1 argument", NULL);
@@ -158,11 +153,6 @@ static void
 command_join(struct Server *server, char *str) {
 	char *chantypes, msg[512];
 
-	if (!server) {
-		ui_error("must select server or use /server to use /join", NULL);
-		return;
-	}
-
 	if (!str) {
 		ui_error("/join requires argument", NULL);
 		return;
@@ -189,11 +179,6 @@ static void
 command_part(struct Server *server, char *str) {
 	char *channel = NULL, *reason = NULL;
 	char *chantypes, msg[512];
-
-	if (!server) {
-		ui_error("must select server or use /server to use /part", NULL);
-		return;
-	}
 
 	chantypes = support_get(server, "CHANTYPES");
 
@@ -224,11 +209,6 @@ command_kick(struct Server *server, char *str) {
 	char *channel, *nick, *reason;
 	char *s;
 
-	if (!server) {
-		ui_error("must select server or use /server to use /kick", NULL);
-		return;
-	}
-
 	if (!str) {
 		ui_error("/kick requires argument", NULL);
 		return;
@@ -257,11 +237,6 @@ command_kick(struct Server *server, char *str) {
 
 static void
 command_ping(struct Server *server, char *str) {
-	if (!server) {
-		ui_error("must select server or use /server to use /ping", NULL);
-		return;
-	}
-
 	if (!str) {
 		ui_error("/ping requires argument", NULL);
 		return;
@@ -274,11 +249,6 @@ command_ping(struct Server *server, char *str) {
 static void
 command_quote(struct Server *server, char *str) {
 	char msg[512];
-
-	if (!server) {
-		ui_error("must select server or use /server to use /quote", NULL);
-		return;
-	}
 
 	if (!str) {
 		ui_error("/quote requires argument", NULL);
@@ -526,11 +496,6 @@ static void
 command_names(struct Server *server, char *str) {
 	char *channel, *save = NULL;
 
-	if (!server) {
-		ui_error("must select server or use /server to use /names", NULL);
-		return;
-	}
-
 	channel = strtok_r(str, " ", &save);
 	if (!channel)
 		channel = selected.channel ? selected.channel->name : NULL;
@@ -556,11 +521,6 @@ command_topic(struct Server *server, char *str) {
 		{"clear", CMD_NARG, opt_clear},
 		{NULL, 0, 0},
 	};
-
-	if (!server) {
-		ui_error("must select server or use /server to use /topic", NULL);
-		return;
-	}
 
 	while ((ret = command_getopt(&str, opts)) != opt_done) {
 		switch (ret) {
@@ -1017,7 +977,11 @@ command_eval(char *str) {
 
 		for (cmdp = commands; cmdp->name && cmdp->func; cmdp++) {
 			if (strcmp(cmdp->name, cmd) == 0) {
-				cmdp->func(selected.server, s);
+				if (cmdp->needserver && !selected.server) {
+					ui_error("/%s requires a server to be selected or provided by /server", cmdp->name);
+				} else {
+					cmdp->func(selected.server, s);
+				}
 				return;
 			}
 		}

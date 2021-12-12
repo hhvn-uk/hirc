@@ -148,6 +148,7 @@ struct Handler {
 struct Command {
 	char *name;
 	void (*func)(struct Server *server, char *str);
+	int needserver;
 	char *description[64];
 };
 
