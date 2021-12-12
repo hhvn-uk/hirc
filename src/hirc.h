@@ -12,10 +12,10 @@
 #define strcmp_n(s1, s2) (s1 == s2 ? 0 : (s1 ? s2 ? strcmp(s1, s2) : -1 : -1))
 
 /* strlcpy.c */
-#ifndef __OpenBSD__
+#ifdef HIRC_STRLCPY
 #undef strlcpy
 size_t		strlcpy(char *dst, const char *src, size_t dsize);
-#endif /* __OpenBSD__ */
+#endif /* HIST_STRLCPY */
 
 /* main.c */
 void *		emalloc(size_t size);
