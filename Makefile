@@ -4,9 +4,10 @@ PREFIX	= /usr/local
 BINDIR	= $(PREFIX)/bin
 MANDIR	= $(PREFIX)/share/man
 BIN	= hirc
-OBJ	= src/main.o src/handle.o src/hist.o src/nick.o \
-	  src/chan.o src/serv.o src/ui.o src/commands.o \
-	  src/config.o src/strlcpy.o
+SRC	= src/main.c src/handle.c src/hist.c src/nick.c \
+	  src/chan.c src/serv.c src/ui.c src/commands.c \
+	  src/config.c src/strlcpy.c
+OBJ	= $(SRC:.c=.o)
 MAN	= hirc.1
 COMMIT	= $(shell git log HEAD...HEAD~1 --pretty=format:%h)
 CFLAGS	= -g -O0 $(CTLS)
