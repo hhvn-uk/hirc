@@ -269,7 +269,9 @@ handle_PRIVMSG(char *msg, char **params, struct Server *server, time_t timestamp
 		if ((chan = chan_get(&server->channels, target, -1)) == NULL)
 			chan = chan_add(server, &server->channels, target);
 
-		hist_add(chan->history, nick, msg, params, act_regular, timestamp, HIST_DFL);
+		hist_add(chan->history, nick, msg, params,
+				strstr(*(params+3), server->self->nick) ? act_direct : act_regular,
+				timestamp, HIST_DFL);
 	}
 
 	nick_free(nick);
