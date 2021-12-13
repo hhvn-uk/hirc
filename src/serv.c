@@ -293,6 +293,8 @@ serv_poll(struct Server **head, int timeout) {
 
 void
 serv_disconnect(struct Server *server, int reconnect, char *msg) {
+	struct Channel *chan;
+
 	if (msg)
 		ircprintf(server, "QUIT %s\r\n", msg);
 	shutdown(server->rfd, SHUT_RDWR);
@@ -305,6 +307,11 @@ serv_disconnect(struct Server *server, int reconnect, char *msg) {
 	server->lastrecv = server->pingsent = 0;
 	server->lastconnected = time(NULL);
 	server->reconnect = reconnect;
+
+	for (chan = server->channels; chan; chan = chan->next)
+		chan_setold(chan, 1);
+
+	windows[Win_buflist].refresh = 1;
 }
 
 int

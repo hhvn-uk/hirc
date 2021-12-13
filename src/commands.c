@@ -34,6 +34,7 @@ static void command_kick(struct Server *server, char *str);
 static void command_ping(struct Server *server, char *str);
 static void command_quote(struct Server *server, char *str);
 static void command_connect(struct Server *server, char *str);
+static void command_disconnect(struct Server *server, char *str);
 static void command_select(struct Server *server, char *str);
 static void command_set(struct Server *server, char *str);
 static void command_format(struct Server *server, char *str);
@@ -83,6 +84,9 @@ struct Command commands[] = {
 		"usage: /connect [-network <name>] [-nick <nick>] [-user <user>]",
 		"                [-real <comment>] [-tls] [-verify] <host> [port]",
 		"Connect to a network/server", NULL}},
+	{"disconnect", command_disconnect, 0, {
+		"usage: /disconnect [network]",
+		"Disconnect from a network/server", NULL}},
 	{"select", command_select, 0, {
 		"usage: /select [-network <name>] [-channel <name>] [buffer id]",
 		"Select a buffer", NULL}},
@@ -375,6 +379,36 @@ command_connect(struct Server *server, char *str) {
 	serv_connect(tserver);
 	if (!readingconf)
 		ui_select(tserver, NULL);
+}
+
+static void
+command_disconnect(struct Server *server, char *str) {
+	struct Server *sp;
+	int len;
+	char *msg;
+
+	if (str) {
+		len = strcspn(str, " ");
+		for (sp = servers; sp; sp = sp->next) {
+			if (strlen(sp->name) == len && strncmp(sp->name, str, len) == 0) {
+				msg = strchr(str, ' ');
+				if (msg && *msg)
+					msg++;
+				break;
+			}
+		}
+
+		if (sp == NULL) {
+			sp = server;
+			msg = str;
+			return;
+		}
+	} else sp = server;
+
+	if (!msg || !*msg)
+		msg = config_gets("def.quitmessage");
+
+	serv_disconnect(sp, 0, msg);
 }
 
 static void
