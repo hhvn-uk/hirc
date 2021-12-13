@@ -360,7 +360,13 @@ command_connect(struct Server *server, char *str) {
 	host = strtok(str,  " ");
 	port = strtok(NULL, " ");
 
-	if (!host) {
+	if (!host && network && serv_get(&servers, network)) {
+		serv_connect(serv_get(&servers, network));
+		return;
+	} else if (!host && server) {
+		serv_connect(server);
+		return;
+	} else if (!host) {
 		ui_error("must specify host", NULL);
 		return;
 	}

@@ -83,8 +83,6 @@ serv_create(char *name, char *host, char *port, char *nick,
 	server->host = estrdup(host);
 	server->port = estrdup(port);
 	server->supports = NULL;
-	support_set(server, "CHANTYPES", config_gets("def.chantypes"));
-	support_set(server, "PREFIX", config_gets("def.prefixes"));
 	server->self = nick_create(nick, ' ', NULL);
 	server->self->self = 1;
 	server->history = emalloc(sizeof(struct HistInfo));
@@ -212,9 +210,30 @@ serv_remove(struct Server **head, char *name) {
 
 void
 serv_connect(struct Server *server) {
+	struct Support *s, *prev;
 	struct addrinfo hints;
 	struct addrinfo *ai;
 	int fd, ret, serrno;
+
+	if (!server)
+		return;
+
+	if (server->status != ConnStatus_notconnected) {
+		ui_error("server '%s' is already connected", server->name);
+		return;
+	}
+
+	for (s = server->supports, prev = NULL; s; s = s->next) {
+		if (prev) {
+			free(prev->key);
+			free(prev->value);
+			free(prev);
+		}
+		prev = s;
+	}
+	server->supports = NULL;
+	support_set(server, "CHANTYPES", config_gets("def.chantypes"));
+	support_set(server, "PREFIX", config_gets("def.prefixes"));
 
 	server->status = ConnStatus_connecting;
 	hist_format(server->history, Activity_status, HIST_SHOW|HIST_MAIN,
@@ -294,6 +313,7 @@ serv_poll(struct Server **head, int timeout) {
 void
 serv_disconnect(struct Server *server, int reconnect, char *msg) {
 	struct Channel *chan;
+	struct Support *s, *prev = NULL;
 
 	if (msg)
 		ircprintf(server, "QUIT %s\r\n", msg);
@@ -310,6 +330,8 @@ serv_disconnect(struct Server *server, int reconnect, char *msg) {
 
 	for (chan = server->channels; chan; chan = chan->next)
 		chan_setold(chan, 1);
+
+	server->supports = NULL;
 
 	windows[Win_buflist].refresh = 1;
 }
