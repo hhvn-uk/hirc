@@ -332,8 +332,6 @@ serv_disconnect(struct Server *server, int reconnect, char *msg) {
 	for (chan = server->channels; chan; chan = chan->next)
 		chan_setold(chan, 1);
 
-	server->supports = NULL;
-
 	windows[Win_buflist].refresh = 1;
 }
 
