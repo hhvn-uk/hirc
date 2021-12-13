@@ -58,14 +58,16 @@ estrdup(const char *str) {
 
 void
 cleanup(char *quitmsg) {
-	struct Server *sp;
+	struct Server *sp, *prev;
 
-	for (sp = servers; sp; sp = sp->next) {
-		if (sp->prev)
-			serv_free(sp->prev);
+	for (sp = servers, prev = NULL; sp; sp = sp->next) {
+		if (prev)
+			serv_free(prev);
 		serv_disconnect(sp, 0, quitmsg);
+		prev = sp;
 	}
 
+	serv_free(prev);
 	ui_deinit();
 }
 
