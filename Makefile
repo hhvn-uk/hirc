@@ -24,7 +24,7 @@ all: $(BIN) $(MAN)
 config.mk:
 	./configure
 
-# All objects should be rebuild if
+# All objects should be rebuilt if
 # struct.h changes, as, for example,
 # if an enum changes value that will
 # only be recognized in source files
