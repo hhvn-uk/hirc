@@ -273,7 +273,8 @@ fail:
 	serv_disconnect(server, 1, NULL);
 	if (server->connectfail * config_getl("reconnect.interval") < config_getl("reconnect.maxinterval"))
 		server->connectfail += 1;
-	freeaddrinfo(ai);
+	if (ai)
+		freeaddrinfo(ai);
 }
 
 int
