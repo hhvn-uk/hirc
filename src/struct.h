@@ -216,6 +216,7 @@ struct Window {
 };
 
 enum {
+	Win_dummy,
 	Win_main,
 	Win_nicklist,
 	Win_buflist,

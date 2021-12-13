@@ -319,6 +319,26 @@ struct Config config[] = {
 		.strhandle = config_redraws,
 		.description = {
 		"Indicator for buffer with activity of level `hilight`", NULL}},
+	{"format.ui.separator.vertical", 1, Val_string,
+		.str = "│",
+		.strhandle = config_redraws,
+		.description = {
+		"Used for vertical line seperating windows", NULL}},
+	{"format.ui.separator.split.left", 1, Val_string,
+		.str = "├",
+		.strhandle = config_redraws,
+		.description = {
+		"Joins left vertical separator to input seperator", NULL}},
+	{"format.ui.separator.split.right", 1, Val_string,
+		.str = "┤",
+		.strhandle = config_redraws,
+		.description = {
+		"Joins right vertical separator to input seperator", NULL}},
+	{"format.ui.separator.horizontal", 1, Val_string,
+		.str = "─",
+		.strhandle = config_redraws,
+		.description = {
+		"Used for horizontal line separating input and main window", NULL}},
 	{"format.privmsg", 1, Val_string,
 		.str = "%{nick:${nick}}${nick}%{o}%{=}${2}",
 		.strhandle = config_redraws,

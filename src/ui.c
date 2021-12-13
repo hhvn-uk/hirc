@@ -53,6 +53,7 @@ static unsigned short colourmap[HIRC_COLOURS] = {
 };
 
 struct Window windows[Win_last] = {
+	[Win_dummy]	= {.handler = NULL},
 	[Win_main]	= {.handler = ui_draw_main},
 	[Win_input]	= {.handler = ui_draw_input},
 	[Win_nicklist]	= {.handler = ui_draw_nicklist},
@@ -291,8 +292,11 @@ ui_init(void) {
 	windows[Win_nicklist].location = config_getl("nicklist.location");
 	windows[Win_buflist].location = config_getl("buflist.location");
 
+	windows[Win_dummy].window = stdscr;
 	windows[Win_main].window = newwin(0, 0, 0, 0);
 	windows[Win_input].window = newwin(0, 0, 0, 0);
+
+	windows[Win_dummy].location = HIDDEN;
 	windows[Win_main].location = -1;
 	windows[Win_input].location = -1;
 	if (windows[Win_nicklist].location)
@@ -501,6 +505,7 @@ ui_input_delete(int num, int counter) {
 
 void
 ui_redraw(void) {
+	char *format;
 	long nicklistwidth, buflistwidth;
 	int x = 0, rx = 0;
 	int i;
@@ -546,17 +551,48 @@ ui_redraw(void) {
 	windows[Win_input].h = 1;
 	windows[Win_input].w = COLS - x - rx;
 
-	if (x)
-		mvvline(0, x - 1, '|', LINES);
-	if (rx)
-		mvvline(0, COLS - rx, '|', LINES);
+	windows[Win_dummy].x = 0;
+	windows[Win_dummy].y = 0;
+	windows[Win_dummy].h = LINES;
+	windows[Win_dummy].w = COLS;
 
-	mvhline(LINES - 2, x, '-', COLS - x - rx);
+	format = ui_format(config_gets("format.ui.separator.horizontal"), NULL);
+	for (i = x; i <= COLS - rx; i++) {
+		wmove(windows[Win_dummy].window, LINES - 2, i);
+		ui_wprintc(&windows[Win_dummy], 1, "%s", format);
+	}
+
+	if (x) {
+		format = ui_format(config_gets("format.ui.separator.vertical"), NULL);
+		for (i = 0; i <= LINES; i++) {
+			wmove(windows[Win_dummy].window, i, x - 1);
+			ui_wprintc(&windows[Win_dummy], 1, "%s", format);
+		}
+
+		format = ui_format(config_gets("format.ui.separator.split.left"), NULL);
+		wmove(windows[Win_dummy].window, LINES - 2, x - 1);
+		ui_wprintc(&windows[Win_dummy], 1, "%s", format);
+	}
+
+	if (rx) {
+		format = ui_format(config_gets("format.ui.separator.vertical"), NULL);
+		for (i = 0; i <= LINES; i++) {
+			wmove(windows[Win_dummy].window, i, COLS - rx);
+			ui_wprintc(&windows[Win_dummy], 1, "%s", format);
+		}
+
+		format = ui_format(config_gets("format.ui.separator.split.right"), NULL);
+		wmove(windows[Win_dummy].window, LINES - 2, COLS - rx);
+		ui_wprintc(&windows[Win_dummy], 1, "%s", format);
+	}
+
 	refresh();
 
 	for (i = 0; i < Win_last; i++) {
-		ui_placewindow(&windows[i]);
-		windows[i].refresh = 1;
+		if (windows[i].location) {
+			ui_placewindow(&windows[i]);
+			windows[i].refresh = 1;
+		}
 	}
 }
 
