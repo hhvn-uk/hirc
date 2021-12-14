@@ -1465,6 +1465,8 @@ ui_rectrl(char *str) {
 		}
 	}
 
+	if (caret)
+		ret[rc++] = '^';
 	ret[rc] = '\0';
 	rp = strdup(ret);
 
