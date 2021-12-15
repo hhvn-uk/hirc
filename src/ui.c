@@ -1110,6 +1110,9 @@ ui_draw_main(void) {
 	for (i=0, p = selected.history->history; p && p->next && i < windows[Win_main].scroll; i++)
 		p = p->next;
 
+	if (i)
+		windows[Win_main].scroll = i;
+
 	y = windows[Win_main].h;
 	for (; p && y > 0; p = p->next) {
 		if (!(p->options & HIST_SHOW))
