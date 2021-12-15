@@ -289,6 +289,21 @@ struct Config config[] = {
 		.strhandle = config_redraws,
 		.description = {
 		"Format of footer of /alias output", NULL}},
+	{"format.ui.help", 1, Val_string,
+		.str = "${1}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of /alias output", NULL}},
+	{"format.ui.help.start", 1, Val_string,
+		.str = "${1} help:",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of header of /alias output", NULL}},
+	{"format.ui.help.end", 1, Val_string,
+		.str = "",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of footer of /alias output", NULL}},
 	{"format.ui.buflist.old", 1, Val_string,
 		.str = "%{c:91}",
 		.strhandle = config_redraws,

@@ -83,6 +83,9 @@ struct {
 	{"SELF_ALIAS_START",	"format.ui.alias.start"},
 	{"SELF_ALIAS_LIST",	"format.ui.alias"},
 	{"SELF_ALIAS_END",	"format.ui.alias.end"},
+	{"SELF_HELP_START",	"format.ui.help.start"},
+	{"SELF_HELP",		"format.ui.help"},
+	{"SELF_HELP_END",	"format.ui.help.end"},
 	/* Real commands/numerics from server */
 	{"PRIVMSG", 		"format.privmsg"},
 	{"JOIN",		"format.join"},

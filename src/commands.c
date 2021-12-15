@@ -742,16 +742,18 @@ command_help(struct Server *server, char *str) {
 	}
 
 	if (strcmp(str, "commands") == 0) {
-		hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_UI :Commands:");
+		hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_HELP_START :%s", str);
 		for (i=0; commands[i].name && commands[i].func; i++)
-			hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_UI : /%s", commands[i].name);
+			hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_HELP : /%s", commands[i].name);
+		hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_HELP_END :end of help");
 		return;
 	}
 
 	if (strcmp(str, "variables") == 0) {
-		hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_UI :Variables:");
+		hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_HELP_START :%s", str);
 		for (i=0; config[i].name; i++)
 			hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_UI : %s", config[i].name);
+		hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_HELP_END :end of help");
 		return;
 	}
 
@@ -762,11 +764,10 @@ command_help(struct Server *server, char *str) {
 
 	for (i=0; commands[i].name && commands[i].func; i++) {
 		if (strcmp(commands[i].name, str) == 0) {
-			hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_UI :%s", str);
-			hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_UI :===");
+			hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_HELP_START :%s", str);
 			for (j=0; commands[i].description[j]; j++)
-				hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_UI :%s", commands[i].description[j]);
-			hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_UI :");
+				hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_HELP :%s", commands[i].description[j]);
+			hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_HELP_END :end of help");
 			return;
 		}
 	}
@@ -774,11 +775,10 @@ command_help(struct Server *server, char *str) {
 	if (!cmdonly) {
 		for (i=0; config[i].name; i++) {
 			if (strcmp(config[i].name, str) == 0) {
-				hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_UI :%s", str);
-				hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_UI :===");
+				hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_HELP_START :%s", str);
 				for (j=0; config[i].description[j]; j++)
 					hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_UI :%s", config[i].description[j]);
-				hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_UI :");
+				hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_HELP_END :end of help");
 				return;
 			}
 		}
