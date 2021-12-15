@@ -635,7 +635,7 @@ ui_draw_input(void) {
 void
 ui_draw_nicklist(void) {
 	struct Nick *p;
-	int y;
+	int y = 0, i;
 
 	ui_wclear(&windows[Win_nicklist]);
 
@@ -645,11 +645,23 @@ ui_draw_nicklist(void) {
 	wmove(windows[Win_nicklist].window, 0, 0);
 
 	nick_sort(&selected.channel->nicks, selected.server);
-	/* TODO: more nicks than screen height? */
-	for (p = selected.channel->nicks; p; p = p->next) {
-		ui_wprintc(&windows[Win_nicklist], 0, "%c%02d%c%s\n",
+
+	for (i=0, p = selected.channel->nicks; p && p->next && p->next->next && i < windows[Win_nicklist].scroll; i++)
+		p = p->next;
+	if (i != 0) {
+		ui_wprintc(&windows[Win_nicklist], 1, "%s\n", ui_format(config_gets("format.ui.nicklist.more"), NULL));
+		y++;
+		p = p->next;
+		windows[Win_nicklist].scroll = i;
+	}
+
+	for (; p && y < windows[Win_nicklist].h - (p->next ? 1 : 0); p = p->next, y++) {
+		ui_wprintc(&windows[Win_nicklist], 1, "%c%02d%c%s\n",
 				3 /* ^C */, nick_getcolour(p), p->priv, p->nick);
 	}
+
+	if (p)
+		ui_wprintc(&windows[Win_nicklist], 1, "%s\n", ui_format(config_gets("format.ui.nicklist.more"), NULL));
 }
 
 int
