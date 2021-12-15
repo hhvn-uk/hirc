@@ -319,6 +319,11 @@ struct Config config[] = {
 		.strhandle = config_redraws,
 		.description = {
 		"Indicator for buffer with activity of level `hilight`", NULL}},
+	{"format.ui.buflist.more", 1, Val_string,
+		.str = "%{c:92}...",
+		.strhandle = config_redraws,
+		.description = {
+		"Shown if there are more nicks that must be scrolled to see.", NULL}},
 	{"format.ui.nicklist.more", 1, Val_string,
 		.str = "%{c:92}...",
 		.strhandle = config_redraws,

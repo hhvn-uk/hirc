@@ -750,67 +750,85 @@ ui_format_activity(int activity) {
 void
 ui_draw_buflist(void) {
 	struct Server *sp;
-	struct Channel *chp;
-	int i = 1, len, tmp;
-	int sc, cc, pc, y;
+	struct Channel *chp, *prp;
+	int i = 1, scroll;
 	char *indicator;
 
 	ui_wclear(&windows[Win_buflist]);
 
+	if (windows[Win_buflist].scroll < 0)
+		scroll = 0;
+	else
+		scroll = windows[Win_buflist].scroll;
+
 	if (!windows[Win_buflist].location)
 		return;
 
-	if (selected.history == main_buf)
-		wattron(windows[Win_buflist].window, A_BOLD);
-	len = ui_wprintc(&windows[Win_buflist], 1, "%02d: %s\n", i++, "hirc");
-	wattroff(windows[Win_buflist].window, A_BOLD);
-
-	for (sc = cc = pc = 0, sp = servers; sp; sp = sp->next, sc++) {
-		if (selected.server == sp && !selected.channel)
+	if (scroll > 0) {
+		ui_wprintc(&windows[Win_buflist], 1, "%s\n", ui_format(config_gets("format.ui.buflist.more"), NULL));
+	} else if (scroll < i) {
+		if (selected.history == main_buf)
 			wattron(windows[Win_buflist].window, A_BOLD);
+		ui_wprintc(&windows[Win_buflist], 1, "%02d: %s\n", i, "hirc");
+		wattroff(windows[Win_buflist].window, A_BOLD);
+	}
+	i++;
 
-		if (sp->status == ConnStatus_notconnected)
-			indicator = ui_format(config_gets("format.ui.buflist.old"), NULL);
-		else
-			indicator = ui_format_activity(sp->history->activity);
-
-		len = ui_wprintc(&windows[Win_buflist], 1, "%02d: %s─ %s%s\n", i++, sp->next ? "├" : "└", indicator, sp->name);
-		wattrset(windows[Win_buflist].window, A_NORMAL);
-
-		for (chp = sp->channels; chp; chp = chp->next, cc++) {
-			if (selected.channel == chp)
+	for (sp = servers; sp && (i - scroll - 1) < windows[Win_buflist].h; sp = sp->next) {
+		if (scroll < i - 1) {
+			if (selected.server == sp && !selected.channel)
 				wattron(windows[Win_buflist].window, A_BOLD);
 
-			if (chp->old)
+			if (sp->status == ConnStatus_notconnected)
 				indicator = ui_format(config_gets("format.ui.buflist.old"), NULL);
 			else
-				indicator = ui_format_activity(chp->history->activity);
+				indicator = ui_format_activity(sp->history->activity);
 
-			len = ui_wprintc(&windows[Win_buflist], 1, "%02d: %s  %s─ %s%s\n", i++,
-					sp->next ? "│" : " ", chp->next ? "├" : "└", indicator, chp->name);
+			ui_wprintc(&windows[Win_buflist], 1, "%02d: %s─ %s%s\n", i, sp->next ? "├" : "└", indicator, sp->name);
 			wattrset(windows[Win_buflist].window, A_NORMAL);
 		}
+		i++;
 
-		for (chp = sp->privs; chp; chp = chp->next, pc++) {
-			if (selected.channel == chp)
-				wattron(windows[Win_buflist].window, A_BOLD);
+		for (chp = sp->channels; chp && (i - scroll - 1) < windows[Win_buflist].h; chp = chp->next) {
+			if (scroll < i - 1) {
+				if (selected.channel == chp)
+					wattron(windows[Win_buflist].window, A_BOLD);
 
-			if (chp->old)
-				indicator = ui_format(config_gets("format.ui.buflist.old"), NULL);
-			else
-				indicator = ui_format_activity(chp->history->activity);
+				if (chp->old)
+					indicator = ui_format(config_gets("format.ui.buflist.old"), NULL);
+				else
+					indicator = ui_format_activity(chp->history->activity);
 
-			len = ui_wprintc(&windows[Win_buflist], 1, "%02d: %s  %s─ %s%s\n", i++,
-					sp->next ? "│" : " ", chp->next ? "├" : "└", indicator, chp->name);
-			wattrset(windows[Win_buflist].window, A_NORMAL);
+				ui_wprintc(&windows[Win_buflist], 1, "%02d: %s  %s─ %s%s\n", i,
+						sp->next ? "│" : " ", chp->next ? "├" : "└", indicator, chp->name);
+				wattrset(windows[Win_buflist].window, A_NORMAL);
+			}
+			i++;
+		}
+
+		for (prp = sp->privs; prp && (i - scroll - 1) < windows[Win_buflist].h; prp = prp->next) {
+			if (scroll < i - 1) {
+				if (selected.channel == prp)
+					wattron(windows[Win_buflist].window, A_BOLD);
+
+				if (prp->old)
+					indicator = ui_format(config_gets("format.ui.buflist.old"), NULL);
+				else
+					indicator = ui_format_activity(prp->history->activity);
+
+				ui_wprintc(&windows[Win_buflist], 1, "%02d: %s  %s─ %s%s\n", i,
+						sp->next ? "│" : " ", prp->next ? "├" : "└", indicator, prp->name);
+				wattrset(windows[Win_buflist].window, A_NORMAL);
+			}
+			i++;
 		}
 	}
 
-	/* One could use ui_buflist_count here (and I have tested it: works) but
-	 * it requires two passes over the servers and channels, whilst only one
-	 * when integrated to the loop above. */
-	wmove(windows[Win_buflist].window, windows[Win_buflist].h - 1, 0);
-	len = wprintw(windows[Win_buflist].window, "[S: %02d | C: %02d | P: %02d]", sc, cc, pc);
+	if (i <= ui_buflist_count(NULL, NULL, NULL)) {
+		wmove(windows[Win_buflist].window, windows[Win_buflist].h - 1, 0);
+		ui_wprintc(&windows[Win_buflist], 1, "%s\n", ui_format(config_gets("format.ui.buflist.more"), NULL));
+		ui_filltoeol(&windows[Win_buflist], ' ');
+	}
 }
 
 int
