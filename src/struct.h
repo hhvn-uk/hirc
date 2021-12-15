@@ -210,6 +210,7 @@ struct Window {
 	int x, y;
 	int h, w;
 	int refresh;
+	int scroll;
 	enum WindowLocation location;
 	void (*handler)(void);
 	WINDOW *window;

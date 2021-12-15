@@ -21,6 +21,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <limits.h>
+#include <ctype.h>
 #include <regex.h>
 #include <pwd.h>
 #include <sys/types.h>
@@ -47,6 +49,7 @@ static void command_echo(struct Server *server, char *str);
 static void command_grep(struct Server *server, char *str);
 static void command_clear(struct Server *server, char *str);
 static void command_alias(struct Server *server, char *str);
+static void command_scroll(struct Server *server, char *str);
 
 static char *command_optarg;
 enum {
@@ -138,6 +141,11 @@ struct Command commands[] = {
 		"usage: /alias [<alias> [cmd [...]]]",
 		"       /alias -delete <alias>",
 		"Add or remove an alias that expands to a command.", NULL}},
+	{"scroll", command_scroll, 0, {
+		"usage: /scroll [-buflist] [-nicklist] [-|+]lines",
+		"Scroll a window (main by default).",
+		"Positive scrolls up, negative down, 0 resets and tracks",
+		"Probably most useful with /bind", NULL}},
 	{NULL, NULL},
 };
 
@@ -874,6 +882,54 @@ command_clear(struct Server *server, char *str) {
 
 	hist_purgeopt(selected.history, tmp ? HIST_TMP : HIST_ALL);
 	windows[Win_main].refresh = 1;
+}
+
+static void
+command_scroll(struct Server *server, char *str) {
+	int ret, winid = Win_main;
+	long diff;
+	enum { opt_buflist, opt_nicklist };
+	static struct CommandOpts opts[] = {
+		{"buflist", CMD_NARG, opt_buflist},
+		{"nicklist", CMD_NARG, opt_nicklist},
+		{NULL, 0, 0},
+	};
+
+	if (!str)
+		goto narg;
+
+	while (!(*str == '-' && isdigit(*(str+1))) && (ret = command_getopt(&str, opts)) != opt_done) {
+		switch (ret) {
+		case opt_error:
+			return;
+		case opt_buflist:
+			winid = Win_buflist;
+			break;
+		case opt_nicklist:
+			winid = Win_nicklist;
+			break;
+		}
+
+		if (*str == '-' && isdigit(*(str+1)))
+			break;
+	}
+
+	if (!*str)
+		goto narg;
+
+	diff = strtol(str, NULL, 10);
+	if (diff == 0 || diff == LONG_MIN)
+		windows[winid].scroll = -1; /* no scroll, tracking */
+	else if (windows[winid].scroll >= 0)
+		windows[winid].scroll += diff;
+	else
+		windows[winid].scroll = diff;
+
+	windows[winid].refresh = 1;
+	return;
+
+narg:
+	ui_error("/scroll requires argument", NULL);
 }
 
 int

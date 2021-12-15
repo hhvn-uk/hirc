@@ -123,8 +123,13 @@ hist_add(struct HistInfo *histinfo, struct Nick *from,
 	histinfo->history = new;
 
 	/* TODO: this triggers way too often, need to have some sort of delay */
-	if (selected.history == histinfo)
+	if (selected.history == histinfo) {
+		if (options & HIST_SELF)
+			windows[Win_main].scroll = -1;
+		else if (windows[Win_main].scroll >= 0)
+			windows[Win_main].scroll += 1;
 		windows[Win_main].refresh = 1;
+	}
 
 	if (options & HIST_LOG) {
 		if (histinfo->server)

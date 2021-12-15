@@ -53,11 +53,11 @@ static unsigned short colourmap[HIRC_COLOURS] = {
 };
 
 struct Window windows[Win_last] = {
-	[Win_dummy]	= {.handler = NULL},
-	[Win_main]	= {.handler = ui_draw_main},
-	[Win_input]	= {.handler = ui_draw_input},
-	[Win_nicklist]	= {.handler = ui_draw_nicklist},
-	[Win_buflist]	= {.handler = ui_draw_buflist},
+	[Win_dummy]	= {.handler = NULL, .scroll = -1},
+	[Win_main]	= {.handler = ui_draw_main, .scroll = -1},
+	[Win_input]	= {.handler = ui_draw_input, .scroll = -1},
+	[Win_nicklist]	= {.handler = ui_draw_nicklist, .scroll = -1},
+	[Win_buflist]	= {.handler = ui_draw_buflist, .scroll = -1},
 };
 
 struct {
@@ -284,6 +284,7 @@ ui_init(void) {
 	use_default_colors();
 	raw();
 	noecho();
+	nonl(); /* get ^j */
 
 	input.string[0] = '\0';
 	memset(input.history, 0, sizeof(input.history));
@@ -432,7 +433,8 @@ ui_read(void) {
 			if (input.string[input.counter])
 				input.counter++;
 			break;
-		case '\n':
+		case KEY_ENTER:
+		case '\r':
 			command_eval(input.string);
 			/* free checks for null */
 			free(input.history[INPUT_HIST_MAX - 1]);
@@ -1089,11 +1091,15 @@ void
 ui_draw_main(void) {
 	struct History *p;
 	int y, lines;
+	int i;
 
 	ui_wclear(&windows[Win_main]);
 
+	for (i=0, p = selected.history->history; p && p->next && i < windows[Win_main].scroll; i++)
+		p = p->next;
+
 	y = windows[Win_main].h;
-	for (p = selected.history->history; p && y > 0; p = p->next) {
+	for (; p && y > 0; p = p->next) {
 		if (!(p->options & HIST_SHOW))
 			continue;
 		if (ui_hist_len(&windows[Win_main], p, &lines) <= 0)
@@ -1133,6 +1139,7 @@ ui_select(struct Server *server, struct Channel *channel) {
 		windows[Win_nicklist].location = HIDDEN;
 	else
 		windows[Win_nicklist].location = config_getl("nicklist.location");
+	windows[Win_main].scroll = -1;
 	ui_redraw();
 }
 
