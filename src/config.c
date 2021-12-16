@@ -732,7 +732,7 @@ struct Config config[] = {
 		.description = {
 		"Format of RPL_WHOREPLY (352) numeric", NULL}},
 	{"format.rpl.namreply", 1, Val_string,
-		.str = "${2-}",
+		.str = "names%{=}${4-}",
 		.strhandle = config_redraws,
 		.description = {
 		"Format of RPL_NAMREPLY (353) numeric", NULL}},
