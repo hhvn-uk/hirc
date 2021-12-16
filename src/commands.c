@@ -33,6 +33,7 @@ static void command_quit(struct Server *server, char *str);
 static void command_join(struct Server *server, char *str);
 static void command_part(struct Server *server, char *str);
 static void command_kick(struct Server *server, char *str);
+static void command_mode(struct Server *server, char *str);
 static void command_ping(struct Server *server, char *str);
 static void command_quote(struct Server *server, char *str);
 static void command_connect(struct Server *server, char *str);
@@ -78,6 +79,9 @@ struct Command commands[] = {
 	{"kick", command_kick, 1, {
 		"usage: /kick [channel] <nick> [reason]",
 		"Kick nick from channel", NULL}},
+	{"mode", command_mode, 1, {
+		"usage: /mode <channel> modes...",
+		"Set/unset channel modes", NULL}},
 	{"ping", command_ping, 1, {
 		"usage: /ping message...",
 		"Send a PING to server.",
@@ -262,6 +266,37 @@ command_kick(struct Server *server, char *str) {
 		ircprintf(server, "KICK %s %s :%s\r\n", channel, nick, reason);
 	else
 		ircprintf(server, "KICK %s %s\r\n", channel, nick);
+}
+
+static void
+command_mode(struct Server *server, char *str) {
+	char *channel, *modes;
+	char *s = NULL;
+
+	if (str)
+		s = strtok_r(str,  " ", &modes);
+
+	if (s && strchr(support_get(server, "CHANTYPES"), *s)) {
+		channel = s;
+	} else {
+		if (selected.channel == NULL) {
+			ui_error("no channel selected", NULL);
+			return;
+		}
+
+		channel = selected.channel->name;
+		if (modes) {
+			*(modes - 1) = ' ';
+			modes = s;
+		}
+	}
+
+	if (modes) {
+		ircprintf(server, "MODE %s %s\r\n", channel, modes);
+	} else {
+		handle_expect(server, Expect_channelmodeis, channel);
+		ircprintf(server, "MODE %s\r\n", channel);
+	}
 }
 
 static void

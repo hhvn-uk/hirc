@@ -114,6 +114,7 @@ enum Expect {
 	Expect_names,
 	Expect_topic,
 	Expect_topicwhotime,
+	Expect_channelmodeis,
 	Expect_last,
 };
 

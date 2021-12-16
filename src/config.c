@@ -697,7 +697,7 @@ struct Config config[] = {
 		.description = {
 		"Format of RPL_LISTEND (323) numeric", NULL}},
 	{"format.rpl.channelmodeis", 1, Val_string,
-		.str = "${2-}",
+		.str = "mode%{=}%{c:94}${3-}%{o}",
 		.strhandle = config_redraws,
 		.description = {
 		"Format of RPL_CHANNELMODEIS (324) numeric", NULL}},

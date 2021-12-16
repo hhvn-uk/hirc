@@ -335,6 +335,13 @@ handle_RPL_CHANNELMODEIS(char *msg, char **params, struct Server *server, time_t
 
 	free(chan->mode);
 	chan->mode = strdup(*(params+4));
+
+	if (handle_expect_get(server, Expect_channelmodeis)) {
+		hist_add(chan->history, NULL, msg, params, Activity_status, timestamp, HIST_DFL);
+		handle_expect(server, Expect_channelmodeis, NULL);
+	} else {
+		hist_add(chan->history, NULL, msg, params, Activity_status, timestamp, HIST_LOG);
+	}
 }
 
 static void
