@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include "hirc.h"
 
+static void handle_ERROR(char *msg, char **params, struct Server *server, time_t timestamp);
 static void handle_PING(char *msg, char **params, struct Server *server, time_t timestamp);
 static void handle_PONG(char *msg, char **params, struct Server *server, time_t timestamp);
 static void handle_JOIN(char *msg, char **params, struct Server *server, time_t timestamp);
@@ -45,6 +46,7 @@ static void handle_RPL_ENDOFMOTD(char *msg, char **params, struct Server *server
 static void handle_ERR_NICKNAMEINUSE(char *msg, char **params, struct Server *server, time_t timestamp);
 
 struct Handler handlers[] = {
+	{ "ERROR",	handle_ERROR			},
 	{ "PING", 	handle_PING			},
 	{ "PONG",	handle_PONG			},
 	{ "JOIN",	handle_JOIN			},
@@ -202,6 +204,12 @@ handle_KICK(char *msg, char **params, struct Server *server, time_t timestamp) {
 }
 
 static void
+handle_ERROR(char *msg, char **params, struct Server *server, time_t timestamp) {
+	serv_disconnect(server, 0, NULL);
+	hist_add(server->history, NULL, msg, params, Activity_status, timestamp, HIST_DFL);
+}
+
+static void
 handle_QUIT(char *msg, char **params, struct Server *server, time_t timestamp) {
 	struct Channel *chan;
 	struct Nick *nick;
@@ -211,8 +219,7 @@ handle_QUIT(char *msg, char **params, struct Server *server, time_t timestamp) {
 
 	nick = nick_create(*params, ' ', server);
 	if (nick_isself(nick)) {
-		/* TODO: umm, sound like a big deal anyone? */
-		(void)0;
+		serv_disconnect(server, 0, NULL);
 	}
 
 	hist_add(server->history, nick, msg, params, Activity_status, timestamp, HIST_LOG);
