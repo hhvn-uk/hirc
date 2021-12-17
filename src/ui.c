@@ -73,7 +73,10 @@ struct {
 	{"SELF_LOOKUPFAIL",	"format.ui.lookupfail"},
 	{"SELF_CONNECTFAIL",	"format.ui.connectfail"},
 #ifndef TLS
-	{"SELF_TLSNOTCOMPILED",	"format.ui.tlsnotcompiled"},
+	{"SELF_TLSNOTCOMPILED",	"format.ui.tls.notcompiled"},
+#else
+	{"SELF_TLS_VERSION",	"format.ui.tls.version"},
+	{"SELF_TLS_NAMES",	"format.ui.tls.names"},
 #endif /* TLS */
 	{"SELF_KEYBIND_START",	"format.ui.keybind.start"},
 	{"SELF_KEYBIND_LIST",	"format.ui.keybind"},

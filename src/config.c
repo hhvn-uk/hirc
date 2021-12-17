@@ -243,11 +243,22 @@ struct Config config[] = {
 		.description = {
 		"Format of SELF_CONNECTFAIL messages", NULL}},
 #ifndef TLS
-	{"format.ui.tlsnotcompiled", 1, Val_string,
+	{"format.ui.tls.notcompiled", 1, Val_string,
 		.str = "TLS not compiled into hirc",
 		.strhandle = config_redraws,
 		.description = {
 		"Format of SELF_TLSNOTCOMPILED messages", NULL}},
+#else
+	{"format.ui.tls.version", 1, Val_string,
+		.str = "Protocol: %{b}${2}%{b} (%{b}${3}%{b} bits, %{b}${4}%{b})",
+		.strhandle = config_redraws,
+		.description = {
+		"TLS version information", NULL}},
+	{"format.ui.tls.names", 1, Val_string,
+		.str = "SNI name: %{b}${2}%{b}\nCert subject: %{b}${3}%{b}\nCert issuer: %{b}${3}%{b}",
+		.strhandle = config_redraws,
+		.description = {
+		"TLS identification", NULL}},
 #endif /* TLS */
 	{"format.ui.keybind", 1, Val_string,
 		.str = " ${1}: ${2}",

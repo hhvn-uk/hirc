@@ -124,6 +124,30 @@ param_create(char *msg) {
 }
 
 int
+ircgets(struct Server *server, char *buf, size_t buf_len) {
+	size_t i = 0;
+	char c = 0;
+
+	do {
+#ifdef TLS
+		if (server->tls) {
+			if (tls_read(server->tls_ctx, &c, sizeof(char)) != sizeof(char))
+				return 0;
+		} else {
+#endif /* TLS */
+			if (read(server->rfd, &c, sizeof(char)) != sizeof(char))
+				return 0;
+#ifdef TLS
+		}
+#endif /* TLS */
+		if (c != '\r')
+			buf[i++] = c;
+	} while (c != '\n' && i < buf_len);
+	buf[i - 1] = '\0';
+	return 1;
+}
+
+int
 read_line(int fd, char *buf, size_t buf_len) {
 	size_t  i = 0;
 	char    c = 0;
@@ -155,7 +179,12 @@ ircprintf(struct Server *server, char *format, ...) {
 		return -1;
 	}
 
-	ret = write(server->wfd, msg, strlen(msg));
+#ifdef TLS
+	if (server->tls)
+		ret = tls_write(server->tls_ctx, msg, strlen(msg));
+	else
+		ret = write(server->wfd, msg, strlen(msg));
+#endif /* TLS */
 
 	if (ret == -1 && server->status == ConnStatus_connected) {
 		serv_disconnect(server, 1, NULL);
@@ -294,7 +323,7 @@ main(int argc, char *argv[]) {
 				sp->pingsent = 0;
 				sp->lastrecv = time(NULL);
 				sp->rpollfd->revents = 0;
-				handle(sp->rfd, sp);
+				handle(sp);
 			} else if (!sp->pingsent && sp->lastrecv && (time(NULL) - sp->lastrecv) >= pinginact) {
 				/* haven't heard from server in pinginact seconds, sending a ping */
 				ircprintf(sp, "PING :ground control to Major Tom\r\n");

@@ -581,7 +581,7 @@ handle_logonly(char *msg, char **params, struct Server *server, time_t timestamp
 }
 
 void
-handle(int rfd, struct Server *server) {
+handle(struct Server *server) {
 	time_t timestamp;
 	char **params;
 	char *cmd;
@@ -594,7 +594,8 @@ handle(int rfd, struct Server *server) {
 	 * - a \0 is needed at the end, so 510 + 1 = 511 */
 	int i;
 
-	if (!read_line(rfd, buf, sizeof(buf))) {
+	memset(buf, '\0', sizeof(buf));
+	if (!ircgets(server, buf, sizeof(buf))) {
 		if (buf[0] == EOF || buf[0] == 3 || buf[0] == 4) {
 			serv_disconnect(server, 1, "EOF");
 			hist_format(server->history, Activity_error, HIST_SHOW,

@@ -152,6 +152,7 @@ struct Server {
 #ifdef TLS
 	int tls;
 	struct tls *tls_ctx;
+	struct tls_config *tls_conf;
 #endif /* TLS */
 	struct Server *next;
 };

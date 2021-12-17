@@ -53,8 +53,12 @@ serv_free(struct Server *server) {
 		free(p->value);
 	}
 #ifdef TLS
-	if (server->tls)
-		tls_free(server->tls_ctx);
+	if (server->tls) {
+		if (server->tls_ctx)
+			tls_free(server->tls_ctx);
+		if (server->tls_conf)
+			tls_config_free(server->tls_conf);
+	}
 #endif /* TLS */
 	free(p);
 }
@@ -63,7 +67,6 @@ struct Server *
 serv_create(char *name, char *host, char *port, char *nick,
 		char *username, char *realname, int tls, int tls_verify) {
 	struct Server *server;
-	struct tls_config *conf;
 	int i;
 
 	if (!name || !host || !port || !nick)
@@ -103,14 +106,15 @@ serv_create(char *name, char *host, char *port, char *nick,
 #ifdef TLS
 	server->tls = tls;
 	server->tls_ctx = NULL;
-	if (server->tls && (conf = tls_config_new()) == NULL) {
-		ui_tls_config_error(conf, "tls_config_new()");
+	server->tls_conf = NULL;
+	if (server->tls && (server->tls_conf = tls_config_new()) == NULL) {
+		ui_tls_config_error(server->tls_conf, "tls_config_new()");
 		server->tls = 0;
 	}
 
 	if (server->tls && !tls_verify) {
-		tls_config_insecure_noverifycert(conf);
-		tls_config_insecure_noverifyname(conf);
+		tls_config_insecure_noverifycert(server->tls_conf);
+		tls_config_insecure_noverifyname(server->tls_conf);
 	}
 
 	if (server->tls && (server->tls_ctx = tls_client()) == NULL) {
@@ -118,13 +122,10 @@ serv_create(char *name, char *host, char *port, char *nick,
 		server->tls = 0;
 	}
 
-	if (server->tls && tls_configure(server->tls_ctx, conf) == -1) {
+	if (server->tls && tls_configure(server->tls_ctx, server->tls_conf) == -1) {
 		ui_tls_error(server->tls_ctx, "tls_configure()");
 		server->tls = 0;
 	}
-
-	if (tls)
-		tls_config_free(conf);
 #else
 	if (tls)
 		hist_format(server->history, Activity_error, HIST_SHOW,
@@ -256,11 +257,35 @@ serv_connect(struct Server *server) {
 		goto fail;
 	}
 
-	server->connectfail = 0;
+	freeaddrinfo(ai);
 	server->rfd = server->wfd = fd;
+	server->connectfail = 0;
 	hist_format(server->history, Activity_status, HIST_SHOW|HIST_MAIN,
 			"SELF_CONNECTED %s %s %s", server->name, server->host, server->port);
-	freeaddrinfo(ai);
+
+#ifdef TLS
+	if (server->tls) {
+		if (tls_connect_socket(server->tls_ctx, fd, server->host) == -1) {
+			hist_format(server->history, Activity_error, HIST_SHOW,
+					"SELF_CONNECTLOST %s %s %s :%s",
+					server->name, server->host, server->port, tls_error(server->tls_ctx));
+			goto fail;
+		}
+
+		if (tls_peer_cert_provided(server->tls_ctx)) {
+			hist_format(server->history, Activity_status, HIST_SHOW,
+					"SELF_TLS_VERSION %s %s %s %s",
+					server->name, tls_conn_version(server->tls_ctx),
+					tls_conn_cipher_strength(server->tls_ctx),
+					tls_conn_cipher(server->tls_ctx));
+			hist_format(server->history, Activity_status, HIST_SHOW,
+					"SELF_TLS_NAMES %s %s %s %s",
+					server->name, tls_conn_servername(server->tls_ctx),
+					tls_peer_cert_issuer(server->tls_ctx),
+					tls_peer_cert_subject(server->tls_ctx));
+		}
+	}
+#endif /* TLS */
 
 	ircprintf(server, "NICK %s\r\n", server->self->nick);
 	ircprintf(server, "USER %s * * :%s\r\n",
@@ -318,6 +343,8 @@ serv_disconnect(struct Server *server, int reconnect, char *msg) {
 
 	if (msg)
 		ircprintf(server, "QUIT %s\r\n", msg);
+	if (server->tls)
+		tls_close(server->tls_ctx);
 	shutdown(server->rfd, SHUT_RDWR);
 	shutdown(server->wfd, SHUT_RDWR);
 	close(server->rfd);

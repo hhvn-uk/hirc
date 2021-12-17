@@ -42,6 +42,7 @@ void		param_free(char **params);
 int		param_len(char **params);
 char **		param_create(char *msg);
 int		read_line(int fd, char *buf, size_t buf_len);
+int		ircgets(struct Server *server, char *buf, size_t buf_len);
 int		ircprintf(struct Server *server, char *format, ...);
 char *		homepath(char *path);
 char		chrcmp(char c, char *s);
@@ -109,7 +110,7 @@ void		schedule_push(struct Server *server, char *tmsg, char *msg);
 char *		schedule_pull(struct Server *server, char *tmsg);
 
 /* handle.c */
-void		handle(int rfd, struct Server *server);
+void		handle(struct Server *server);
 void		handle_expect(struct Server *server, enum Expect cmd, char *about);
 char *		handle_expect_get(struct Server *server, enum Expect cmd);
 

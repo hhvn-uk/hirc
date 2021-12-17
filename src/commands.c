@@ -419,7 +419,10 @@ command_connect(struct Server *server, char *str) {
 		nick = user ? user->pw_name : "null";
 	}
 
-	port      = port    ? port     : "6667";
+	if (!port) {
+		port = tls  ? "6697" : "6667";
+	}
+
 	username = username ? username : nick;
 	realname = realname ? realname : nick;
 	network  = network  ? network  : host;
