@@ -1074,6 +1074,16 @@ struct Config config[] = {
 		"Format of ERR_USERSDONTMATCH (502) numeric", NULL}},
 	/* END: misc/rpl-conf-gen.awk */
 	/* Modern numerics */
+	{"format.rpl.localusers", 1, Val_string,
+		.str = "There are ${2} current local users, record of ${3}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_WHOISSPECIAL (320) numeric", NULL}},
+	{"format.rpl.globalusers", 1, Val_string,
+		.str = "There are ${2} current global users, record of ${3}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_WHOISSPECIAL (320) numeric", NULL}},
 	{"format.rpl.whoisspecial", 1, Val_string,
 		.str = " %{b}info    %{b}: ${3}",
 		.strhandle = config_redraws,
