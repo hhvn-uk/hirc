@@ -91,6 +91,7 @@ struct {
 	{"SELF_HELP_END",	"format.ui.help.end"},
 	/* Real commands/numerics from server */
 	{"PRIVMSG", 		"format.privmsg"},
+	{"NOTICE",		"format.notice"},
 	{"JOIN",		"format.join"},
 	{"PART",		"format.part"},
 	{"KICK",		"format.kick"},
@@ -230,6 +231,8 @@ struct {
 	{"003",			"format.rpl.created"},
 	{"004",			"format.rpl.myinfo"},
 	{"005",			"format.rpl.isupport"},
+	{"265",			"format.rpl.localusers"},
+	{"266",			"format.rpl.globalusers"},
 	{"320",			"format.rpl.whoisspecial"},
 	{"330",			"format.rpl.whoisaccount"},
 	{"338",			"format.rpl.whoisactually"},

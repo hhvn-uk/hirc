@@ -29,6 +29,7 @@
 #include "hirc.h"
 
 static void command_msg(struct Server *server, char *str);
+static void command_notice(struct Server *server, char *str);
 static void command_query(struct Server *server, char *str);
 static void command_quit(struct Server *server, char *str);
 static void command_join(struct Server *server, char *str);
@@ -67,6 +68,10 @@ struct Command commands[] = {
 	{"msg", command_msg, 1, {
 		"usage: /msg <nick|channel> message..",
 		"Send a message to a nick or channel.",
+		"Will appear in buffers if already open.", NULL}},
+	{"notice", command_notice, 1, {
+		"usage: /notice <nick|channel> message..",
+		"Send a notice to a nick or channel.",
 		"Will appear in buffers if already open.", NULL}},
 	{"query", command_query, 1, {
 		"usage: /query <nick>",
@@ -190,6 +195,30 @@ command_msg(struct Server *server, char *str) {
 	if (chan) {
 		hist_format(chan->history, Activity_self,
 				HIST_SHOW|HIST_LOG|HIST_SELF, "PRIVMSG %s :%s", target, message);
+	}
+}
+
+static void
+command_notice(struct Server *server, char *str) {
+	struct Channel *chan = NULL;
+	char *target, *message;
+
+	if (!str) {
+		ui_error("/notice requires argument", NULL);
+		return;
+	}
+
+	target = strtok_r(str, " ", &message);
+
+	if (serv_ischannel(server, target))
+		chan = chan_get(&server->channels, target, -1);
+	else
+		chan = chan_get(&server->privs, target, -1);
+
+	ircprintf(selected.server, "NOTICE %s :%s\r\n", target, message);
+	if (chan) {
+		hist_format(chan->history, Activity_self,
+				HIST_SHOW|HIST_LOG|HIST_SELF, "NOTICE %s :%s", target, message);
 	}
 }
 

@@ -380,6 +380,11 @@ struct Config config[] = {
 		.strhandle = config_redraws,
 		.description = {
 		"Format of messages", NULL}},
+	{"format.notice", 1, Val_string,
+		.str = "%{nick:${nick}}-${nick}-%{o}%{=}${2}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of notices", NULL}},
 	{"format.join", 1, Val_string,
 		.str = "%{b}%{c:44}+%{o}%{=}%{nick:${nick}}${nick}%{o} (${ident}@${host})",
 		.strhandle = config_redraws,
