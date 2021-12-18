@@ -34,6 +34,7 @@ static void command_join(struct Server *server, char *str);
 static void command_part(struct Server *server, char *str);
 static void command_kick(struct Server *server, char *str);
 static void command_mode(struct Server *server, char *str);
+static void command_whois(struct Server *server, char *str);
 static void command_ping(struct Server *server, char *str);
 static void command_quote(struct Server *server, char *str);
 static void command_connect(struct Server *server, char *str);
@@ -82,6 +83,9 @@ struct Command commands[] = {
 	{"mode", command_mode, 1, {
 		"usage: /mode <channel> modes...",
 		"Set/unset channel modes", NULL}},
+	{"whois", command_whois, 1, {
+		"usage: /whois [server] [nick]",
+		"Request information on a nick or oneself", NULL}},
 	{"ping", command_ping, 1, {
 		"usage: /ping message...",
 		"Send a PING to server.",
@@ -297,6 +301,27 @@ command_mode(struct Server *server, char *str) {
 		handle_expect(server, Expect_channelmodeis, channel);
 		ircprintf(server, "MODE %s\r\n", channel);
 	}
+}
+
+static void
+command_whois(struct Server *server, char *str) {
+	char *tserver, *nick;
+
+	if (!str) {
+		nick = server->self->nick;
+		tserver = NULL;
+	} else {
+		tserver = strtok_r(str, " ", &nick);
+		if (!nick || !*nick) {
+			nick = tserver;
+			tserver = NULL;
+		}
+	}
+
+	if (tserver)
+		ircprintf(server, "WHOIS %s %s\r\n", tserver, nick);
+	else
+		ircprintf(server, "WHOIS %s\r\n", nick);
 }
 
 static void

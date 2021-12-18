@@ -95,11 +95,6 @@ struct {
 	{"PART",		"format.part"},
 	{"KICK",		"format.kick"},
 	{"QUIT",		"format.quit"},
-	{"001",			"format.rpl.welcome"},
-	{"002",			"format.rpl.yourhost"},
-	{"003",			"format.rpl.created"},
-	{"004",			"format.rpl.myinfo"},
-	{"005",			"format.rpl.isupport"},
 	/* START: misc/rpl-ui-gen.awk */
 	{"200",			"format.rpl.tracelink"},
 	{"201",			"format.rpl.traceconnecting"},
@@ -229,6 +224,18 @@ struct {
 	{"501",			"format.err.umodeunknownflag"},
 	{"502",			"format.err.usersdontmatch"},
 	/* END: misc/rpl-ui-gen.awk */
+	/* Modern stuff */
+	{"001",			"format.rpl.welcome"},
+	{"002",			"format.rpl.yourhost"},
+	{"003",			"format.rpl.created"},
+	{"004",			"format.rpl.myinfo"},
+	{"005",			"format.rpl.isupport"},
+	{"320",			"format.rpl.whoisspecial"},
+	{"330",			"format.rpl.whoisaccount"},
+	{"338",			"format.rpl.whoisactually"},
+	{"378",			"format.rpl.whoishost"},
+	{"379",			"format.rpl.whoismodes"},
+	{"671",			"format.rpl.whoissecure"},
 	/* Pseudo commands for specific formatting */
 	{"MODE-NICK-SELF",	"format.mode.nick.self"},
 	{"MODE-NICK",		"format.mode.nick"},

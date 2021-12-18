@@ -648,17 +648,17 @@ struct Config config[] = {
 		.description = {
 		"Format of RPL_NOWAWAY (306) numeric", NULL}},
 	{"format.rpl.whoisuser", 1, Val_string,
-		.str = "${2-}",
+		.str = "%{b}${2}!${3}@${4}%{b} (${6}):",
 		.strhandle = config_redraws,
 		.description = {
 		"Format of RPL_WHOISUSER (311) numeric", NULL}},
 	{"format.rpl.whoisserver", 1, Val_string,
-		.str = "${2-}",
+		.str = " %{b}server  %{b}: ${3} (${4})",
 		.strhandle = config_redraws,
 		.description = {
 		"Format of RPL_WHOISSERVER (312) numeric", NULL}},
 	{"format.rpl.whoisoperator", 1, Val_string,
-		.str = "${2-}",
+		.str = " %{b}oper    %{b}: ${3}",
 		.strhandle = config_redraws,
 		.description = {
 		"Format of RPL_WHOISOPERATOR (313) numeric", NULL}},
@@ -672,23 +672,18 @@ struct Config config[] = {
 		.strhandle = config_redraws,
 		.description = {
 		"Format of RPL_ENDOFWHO (315) numeric", NULL}},
-	{"format.rpl.whoischanop", 1, Val_string,
-		.str = "${2-}",
-		.strhandle = config_redraws,
-		.description = {
-		"Format of RPL_WHOISCHANOP (316) numeric", NULL}},
 	{"format.rpl.whoisidle", 1, Val_string,
-		.str = "${2-}",
+		.str = " %{b}idle    %{b}: ${3} seconds",
 		.strhandle = config_redraws,
 		.description = {
 		"Format of RPL_WHOISIDLE (317) numeric", NULL}},
 	{"format.rpl.endofwhois", 1, Val_string,
-		.str = "${2-}",
+		.str = "",
 		.strhandle = config_redraws,
 		.description = {
 		"Format of RPL_ENDOFWHOIS (318) numeric", NULL}},
 	{"format.rpl.whoischannels", 1, Val_string,
-		.str = "${2-}",
+		.str = " %{b}channels%{b}: ${3}",
 		.strhandle = config_redraws,
 		.description = {
 		"Format of RPL_WHOISCHANNELS (319) numeric", NULL}},
@@ -1078,6 +1073,38 @@ struct Config config[] = {
 		.description = {
 		"Format of ERR_USERSDONTMATCH (502) numeric", NULL}},
 	/* END: misc/rpl-conf-gen.awk */
+	/* Modern numerics */
+	{"format.rpl.whoisspecial", 1, Val_string,
+		.str = " %{b}info    %{b}: ${3}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_WHOISSPECIAL (320) numeric", NULL}},
+	{"format.rpl.whoisaccount", 1, Val_string,
+		.str = " %{b}account %{b}: ${3}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_WHOISACCOUNT (330) numeric", NULL}},
+	{"format.rpl.whoisactually", 1, Val_string,
+		.str = " %{b}actually%{b}: ${3-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_WHOISACTUALLY (338) numeric", NULL}},
+	{"format.rpl.whoishost", 1, Val_string,
+		.str = " %{b}info    %{b}: ${3}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_WHOISHOST (378) numeric", NULL}},
+	{"format.rpl.whoismodes", 1, Val_string,
+		.str = " %{b}modes   %{b}: ${3}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_WHOISMODES (379) numeric", NULL}},
+	{"format.rpl.whoissecure", 1, Val_string,
+		.str = " %{b}secure  %{b}: ${3}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_WHOISSECURE (671) numeric", NULL}},
+	/* Default formats */
 	{"format.rpl.other", 1, Val_string,
 		.str = "${cmd} ${2-}",
 		.strhandle = config_redraws,
