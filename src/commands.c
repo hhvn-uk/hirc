@@ -173,7 +173,7 @@ command_query(struct Server *server, char *str) {
 		return;
 	}
 
-	if (strchr(support_get(server, "CHANTYPES"), *str)) {
+	if (serv_ischannel(server, str)) {
 		ui_error("can't query a channel", NULL);
 		return;
 	}
@@ -193,18 +193,17 @@ command_quit(struct Server *server, char *str) {
 
 static void
 command_join(struct Server *server, char *str) {
-	char *chantypes, msg[512];
+	char msg[512];
 
 	if (!str) {
 		ui_error("/join requires argument", NULL);
 		return;
 	}
 
-	chantypes = support_get(server, "CHANTYPES");
-	if (strchr(chantypes, *str))
+	if (serv_ischannel(server, str))
 		snprintf(msg, sizeof(msg), "JOIN %s\r\n", str);
 	else
-		snprintf(msg, sizeof(msg), "JOIN %c%s\r\n", chantypes ? *chantypes : '#', str);
+		snprintf(msg, sizeof(msg), "JOIN %c%s\r\n", '#', str);
 
 	if (server->status == ConnStatus_connected)
 		ircprintf(server, "%s", msg);
@@ -220,12 +219,10 @@ command_join(struct Server *server, char *str) {
 static void
 command_part(struct Server *server, char *str) {
 	char *channel = NULL, *reason = NULL;
-	char *chantypes, msg[512];
-
-	chantypes = support_get(server, "CHANTYPES");
+	char msg[512];
 
 	if (str) {
-		if (strchr(chantypes, *str))
+		if (serv_ischannel(server, str))
 			channel = strtok_r(str, " ", &reason);
 		else
 			reason = str;
@@ -258,7 +255,7 @@ command_kick(struct Server *server, char *str) {
 
 	s = strtok_r(str,  " ", &reason);
 
-	if (s && strchr(support_get(server, "CHANTYPES"), *s)) {
+	if (serv_ischannel(server, s)) {
 		channel = s;
 		nick = strtok_r(NULL, " ", &reason);
 	} else {
@@ -285,7 +282,7 @@ command_mode(struct Server *server, char *str) {
 	if (str)
 		s = strtok_r(str,  " ", &modes);
 
-	if (s && strchr(support_get(server, "CHANTYPES"), *s)) {
+	if (serv_ischannel(server, s)) {
 		channel = s;
 	} else {
 		if (selected.channel == NULL) {
@@ -690,7 +687,7 @@ command_topic(struct Server *server, char *str) {
 	else
 		channel = topic = NULL;
 
-	if (channel && !strchr(support_get(server, "CHANTYPES"), *channel)) {
+	if (channel && !serv_ischannel(server, channel)) {
 		topic = channel;
 		channel = NULL;
 	}

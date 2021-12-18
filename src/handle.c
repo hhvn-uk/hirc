@@ -242,7 +242,7 @@ handle_MODE(char *msg, char **params, struct Server *server, time_t timestamp) {
 	if (**params != ':' || param_len(params) < 4)
 		return;
 
-	if (strchr(support_get(server, "CHANTYPES"), **(params+2))) {
+	if (serv_ischannel(server, *(params+2))) {
 		if ((chan = chan_get(&server->channels, *(params+2), -1)) == NULL)
 			chan = chan_add(server, &server->channels, *(params+2), 0);
 

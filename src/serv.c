@@ -20,6 +20,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <assert.h>
 #include <errno.h>
 #include <netdb.h>
 #include <sys/types.h>
@@ -408,6 +409,21 @@ support_set(struct Server *server, char *key, char *value) {
 	p->next->next = NULL;
 	p->next->key = key ? strdup(key) : NULL;
 	p->next->value = value ? strdup(value) : NULL;
+}
+
+int
+serv_ischannel(struct Server *server, char *str) {
+	char *chantypes;
+
+	if (!str || !server)
+		return 0;
+
+	chantypes = support_get(server, "CHANTYPES");
+	if (!chantypes)
+		chantypes = config_gets("def.chantypes");
+	assert(chantypes != NULL);
+
+	return strchr(chantypes, *str) != NULL;
 }
 
 void
