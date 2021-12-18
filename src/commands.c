@@ -28,6 +28,7 @@
 #include <sys/types.h>
 #include "hirc.h"
 
+static void command_msg(struct Server *server, char *str);
 static void command_query(struct Server *server, char *str);
 static void command_quit(struct Server *server, char *str);
 static void command_join(struct Server *server, char *str);
@@ -63,6 +64,10 @@ enum {
 };
 
 struct Command commands[] = {
+	{"msg", command_msg, 1, {
+		"usage: /msg <nick|channel> message..",
+		"Send a message to a nick or channel.",
+		"Will appear in buffers if already open.", NULL}},
 	{"query", command_query, 1, {
 		"usage: /query <nick>",
 		"Open a buffer for communication with a nick", NULL}},
@@ -163,6 +168,30 @@ struct Command commands[] = {
 };
 
 struct Alias *aliases = NULL;
+
+static void
+command_msg(struct Server *server, char *str) {
+	struct Channel *chan = NULL;
+	char *target, *message;
+
+	if (!str) {
+		ui_error("/msg requires argument", NULL);
+		return;
+	}
+
+	target = strtok_r(str, " ", &message);
+
+	if (serv_ischannel(server, target))
+		chan = chan_get(&server->channels, target, -1);
+	else
+		chan = chan_get(&server->privs, target, -1);
+
+	ircprintf(selected.server, "PRIVMSG %s :%s\r\n", target, message);
+	if (chan) {
+		hist_format(chan->history, Activity_self,
+				HIST_SHOW|HIST_LOG|HIST_SELF, "PRIVMSG %s :%s", target, message);
+	}
+}
 
 static void
 command_query(struct Server *server, char *str) {
@@ -1157,7 +1186,7 @@ command_eval(char *str) {
 			// TODO: message splitting
 			snprintf(msg, sizeof(msg), "PRIVMSG %s :%s", selected.channel->name, s);
 			ircprintf(selected.server, "%s\r\n", msg);
-			hist_format(selected.channel->history, Activity_self, HIST_SHOW|HIST_LOG|HIST_SELF, msg);
+			hist_format(selected.channel->history, Activity_self, HIST_SHOW|HIST_LOG|HIST_SELF, "%s", msg);
 		} else {
 			ui_error("channel not selected, message ignored", NULL);
 		}
