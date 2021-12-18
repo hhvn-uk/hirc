@@ -663,7 +663,7 @@ struct Config config[] = {
 		.description = {
 		"Format of RPL_WHOISOPERATOR (313) numeric", NULL}},
 	{"format.rpl.whowasuser", 1, Val_string,
-		.str = "${2-}",
+		.str = "%{b}${2}!${3}@${4}%{b} (${6}) was on:",
 		.strhandle = config_redraws,
 		.description = {
 		"Format of RPL_WHOWASUSER (314) numeric", NULL}},
@@ -773,7 +773,7 @@ struct Config config[] = {
 		.description = {
 		"Format of RPL_ENDOFBANLIST (368) numeric", NULL}},
 	{"format.rpl.endofwhowas", 1, Val_string,
-		.str = "${2-}",
+		.str = "",
 		.strhandle = config_redraws,
 		.description = {
 		"Format of RPL_ENDOFWHOWAS (369) numeric", NULL}},

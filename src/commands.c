@@ -35,6 +35,7 @@ static void command_part(struct Server *server, char *str);
 static void command_kick(struct Server *server, char *str);
 static void command_mode(struct Server *server, char *str);
 static void command_whois(struct Server *server, char *str);
+static void command_whowas(struct Server *server, char *str);
 static void command_ping(struct Server *server, char *str);
 static void command_quote(struct Server *server, char *str);
 static void command_connect(struct Server *server, char *str);
@@ -86,6 +87,10 @@ struct Command commands[] = {
 	{"whois", command_whois, 1, {
 		"usage: /whois [server] [nick]",
 		"Request information on a nick or oneself", NULL}},
+	{"whowas", command_whowas, 1, {
+		"usage: /whowas [nick [count [server]]]",
+		"Request information on old nicks",
+		"Count defaults to 5", NULL}},
 	{"ping", command_ping, 1, {
 		"usage: /ping message...",
 		"Send a PING to server.",
@@ -319,9 +324,29 @@ command_whois(struct Server *server, char *str) {
 	}
 
 	if (tserver)
-		ircprintf(server, "WHOIS %s %s\r\n", tserver, nick);
+		ircprintf(server, "WHOIS %s :%s\r\n", tserver, nick);
 	else
 		ircprintf(server, "WHOIS %s\r\n", nick);
+}
+
+static void
+command_whowas(struct Server *server, char *str) {
+	char *nick, *count, *tserver;
+
+	if (!str) {
+		nick = server->self->nick;
+		count = tserver = NULL;
+	} else {
+		nick = strtok_r(str, " ", &tserver);
+		count = strtok_r(NULL, " ", &tserver);
+	}
+
+	if (tserver)
+		ircprintf(server, "WHOWAS %s %s :%s\r\n", nick, count, tserver);
+	else if (count)
+		ircprintf(server, "WHOWAS %s %s\r\n", nick, count);
+	else
+		ircprintf(server, "WHOWAS %s 5\r\n", nick);
 }
 
 static void
