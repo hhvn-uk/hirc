@@ -124,35 +124,6 @@ param_create(char *msg) {
 }
 
 int
-ircgets(struct Server *server, char *buf, size_t buf_len) {
-	size_t i = 0;
-	char c = 0;
-
-	do {
-#ifdef TLS
-		if (server->tls) {
-			switch (tls_read(server->tls_ctx, &c, sizeof(char))) {
-			case -1:
-				return 0;
-			case TLS_WANT_POLLIN:
-			case TLS_WANT_POLLOUT:
-				continue;
-			}
-		} else {
-#endif /* TLS */
-			if (read(server->rfd, &c, sizeof(char)) != sizeof(char))
-				return 0;
-#ifdef TLS
-		}
-#endif /* TLS */
-		if (c != '\r')
-			buf[i++] = c;
-	} while (c != '\n' && i < buf_len);
-	buf[i - 1] = '\0';
-	return 1;
-}
-
-int
 read_line(int fd, char *buf, size_t buf_len) {
 	size_t  i = 0;
 	char    c = 0;
@@ -165,6 +136,65 @@ read_line(int fd, char *buf, size_t buf_len) {
 	} while (c != '\n' && i < buf_len);
 	buf[i - 1] = '\0';
 	return 1;
+}
+
+void
+ircread(struct Server *sp) {
+	char *line, *end;
+	int ret;
+
+	if (!sp)
+		return;
+
+#ifdef TLS
+	if (sp->tls) {
+		switch (ret = tls_read(sp->tls_ctx, &sp->inputbuf[sp->inputlen], SERVER_INPUT_SIZE - sp->inputlen - 1)) {
+		case 0:
+			serv_disconnect(sp, 1, "EOF");
+			hist_format(sp->history, Activity_error, HIST_SHOW,
+					"SELF_CONNECTLOST %s %s %s :connection closed",
+					sp->name, sp->host, sp->port);
+			return;
+		case -1:
+			ui_tls_error(sp->tls_ctx, "tls_read()");
+			return;
+		case TLS_WANT_POLLIN:
+		case TLS_WANT_POLLOUT:
+			return;
+		default:
+			sp->inputlen += ret;
+			break;
+		}
+	} else {
+#endif /* TLS */
+		switch (ret = read(sp->rfd, &sp->inputbuf[sp->inputlen], SERVER_INPUT_SIZE - sp->inputlen - 1)) {
+		case 0:
+			serv_disconnect(sp, 1, "EOF");
+			hist_format(sp->history, Activity_error, HIST_SHOW,
+					"SELF_CONNECTLOST %s %s %s :connection closed",
+					sp->name, sp->host, sp->port);
+			return;
+		case -1:
+			ui_perror("read()");
+			return;
+		default:
+			sp->inputlen += ret;
+			break;
+		}
+#ifdef TLS
+	}
+#endif /* TLS */
+
+	sp->inputbuf[SERVER_INPUT_SIZE - 1] = '\0';
+	line = sp->inputbuf;
+	while (end = strstr(line, "\r\n")) {
+		*end = '\0';
+		handle(sp, line);
+		line = end + 2;
+	}
+
+	sp->inputlen -= line - sp->inputbuf;
+	memmove(sp->inputbuf, line, sp->inputlen);
 }
 
 int
@@ -330,7 +360,7 @@ main(int argc, char *argv[]) {
 				sp->pingsent = 0;
 				sp->lastrecv = time(NULL);
 				sp->rpollfd->revents = 0;
-				handle(sp);
+				ircread(sp);
 			} else if (!sp->pingsent && sp->lastrecv && (time(NULL) - sp->lastrecv) >= pinginact) {
 				/* haven't heard from server in pinginact seconds, sending a ping */
 				ircprintf(sp, "PING :ground control to Major Tom\r\n");

@@ -125,10 +125,13 @@ struct Schedule {
 	struct Schedule *next;
 };
 
+#define SERVER_INPUT_SIZE 1024
 struct Server {
 	struct Server *prev;
 	int wfd;
 	int rfd;
+	char inputbuf[SERVER_INPUT_SIZE];
+	int inputlen;
 	struct pollfd *rpollfd;
 	int logfd;
 	enum ConnStatus status;

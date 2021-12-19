@@ -76,6 +76,7 @@ serv_create(char *name, char *host, char *port, char *nick,
 	server = emalloc(sizeof(struct Server));
 	server->prev = server->next = NULL;
 	server->wfd = server->rfd = server->logfd = -1;
+	server->inputlen = 0;
 	server->rpollfd = emalloc(sizeof(struct pollfd));
 	server->rpollfd->fd = -1;
 	server->rpollfd->events = POLLIN;

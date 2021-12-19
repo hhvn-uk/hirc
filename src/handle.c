@@ -588,30 +588,12 @@ handle_logonly(char *msg, char **params, struct Server *server, time_t timestamp
 }
 
 void
-handle(struct Server *server) {
+handle(struct Server *server, char *msg) {
 	time_t timestamp;
 	char **params;
 	char *cmd;
 	char *schmsg;
-	char *msg;
-	char buf[511];
-	/* using a buffer size of 511:
-	 * - RFC1459 defines the maximum size of a message to be 512
-	 * - read_line() doesn't copy the \r\n so this is reduced to 510
-	 * - a \0 is needed at the end, so 510 + 1 = 511 */
 	int i;
-
-	memset(buf, '\0', sizeof(buf));
-	if (!ircgets(server, buf, sizeof(buf))) {
-		if (buf[0] == EOF || buf[0] == 3 || buf[0] == 4) {
-			serv_disconnect(server, 1, "EOF");
-			hist_format(server->history, Activity_error, HIST_SHOW,
-					"SELF_CONNECTLOST %s %s %s :EOF received",
-					server->name, server->host, server->port);
-		}
-		return;
-	}
-	msg = buf;
 
 	if (*msg == '!' && strchr(msg, ' ') && *(strchr(msg, ' ')+1) && *(msg+1) != ' ') {
 		msg++;

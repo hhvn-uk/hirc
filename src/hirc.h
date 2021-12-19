@@ -111,7 +111,7 @@ char *		schedule_pull(struct Server *server, char *tmsg);
 int		serv_ischannel(struct Server *server, char *str);
 
 /* handle.c */
-void		handle(struct Server *server);
+void		handle(struct Server *server, char *msg);
 void		handle_expect(struct Server *server, enum Expect cmd, char *about);
 char *		handle_expect_get(struct Server *server, enum Expect cmd);
 
