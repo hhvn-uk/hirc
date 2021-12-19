@@ -131,8 +131,13 @@ ircgets(struct Server *server, char *buf, size_t buf_len) {
 	do {
 #ifdef TLS
 		if (server->tls) {
-			if (tls_read(server->tls_ctx, &c, sizeof(char)) != sizeof(char))
+			switch (tls_read(server->tls_ctx, &c, sizeof(char))) {
+			case -1:
 				return 0;
+			case TLS_WANT_POLLIN:
+			case TLS_WANT_POLLOUT:
+				continue;
+			}
 		} else {
 #endif /* TLS */
 			if (read(server->rfd, &c, sizeof(char)) != sizeof(char))
@@ -181,7 +186,9 @@ ircprintf(struct Server *server, char *format, ...) {
 
 #ifdef TLS
 	if (server->tls)
-		ret = tls_write(server->tls_ctx, msg, strlen(msg));
+		do {
+			ret = tls_write(server->tls_ctx, msg, strlen(msg));
+		} while (ret == TLS_WANT_POLLIN || ret == TLS_WANT_POLLOUT);
 	else
 		ret = write(server->wfd, msg, strlen(msg));
 #endif /* TLS */
