@@ -257,7 +257,7 @@ command_ctcp(struct Server *server, char *str) {
 
 	target = strtok_r(str, " ", &ctcp);
 
-	if ((!target || !*target) && !selected.channel) {
+	if (!ctcp && !selected.channel) {
 		ui_error("no channel or query selected", NULL);
 		return;
 	} else if (!ctcp) {
