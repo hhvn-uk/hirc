@@ -104,6 +104,10 @@ hello world
 
 If a variable does not exist, it will be printed verbatim.
 If a variable does exist, but is empty, nothing is printed.
+.Ss CTCP
+CTCP control characters are automatically stripped when using ${n} and ${n-} formats.
+
+ACTION ctcps will be stripped further, such that "ACTION " is stripped along with the control characters.
 .Ss The divider
 The divider is inspired by weechat's feature where it creates a bar seperating two elements of a line.
 If divider.toggle is set to 1, the divider will appear in all messages in channels.
