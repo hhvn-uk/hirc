@@ -31,6 +31,7 @@
 static void command_msg(struct Server *server, char *str);
 static void command_notice(struct Server *server, char *str);
 static void command_me(struct Server *server, char *str);
+static void command_ctcp(struct Server *server, char *str);
 static void command_query(struct Server *server, char *str);
 static void command_quit(struct Server *server, char *str);
 static void command_join(struct Server *server, char *str);
@@ -77,6 +78,9 @@ struct Command commands[] = {
 	{"me", command_me, 1, {
 		"usage: /me message..",
 		"Send a CTCP ACTION to the selected channel/query", NULL}},
+	{"ctcp", command_ctcp, 1, {
+		"usage: /ctcp [channel|nick] <TYPE>",
+		"Send a CTCP request to a channel or nick", NULL}},
 	{"query", command_query, 1, {
 		"usage: /query <nick>",
 		"Open a buffer for communication with a nick", NULL}},
@@ -239,6 +243,40 @@ command_me(struct Server *server, char *str) {
 	ircprintf(selected.server, "PRIVMSG %s :%cACTION %s%c\r\n", selected.channel->name, 1, str, 1);
 	hist_format(selected.channel->history, Activity_self,
 			HIST_SHOW|HIST_LOG|HIST_SELF, "PRIVMSG %s :%cACTION %s%c", selected.channel->name, 1, str, 1);
+}
+
+static void
+command_ctcp(struct Server *server, char *str) {
+	struct Channel *chan;
+	char *target, *ctcp;
+
+	if (!str) {
+		ui_error("/ctcp requires argument", NULL);
+		return;
+	}
+
+	target = strtok_r(str, " ", &ctcp);
+
+	if ((!target || !*target) && !selected.channel) {
+		ui_error("no channel or query selected", NULL);
+		return;
+	} else if (!ctcp) {
+		ctcp = target;
+		target = selected.channel->name;
+	}
+
+	if ((chan = chan_get(&server->channels, target, -1)) == NULL)
+		chan = chan_get(&server->privs, target, -1);
+
+	/* XXX: if we CTCP a channel, responses should go to that channel.
+	 * This requires more than just handle_expect, so might never be
+	 * implemented. */
+	ircprintf(server, "PRIVMSG %s :%c%s%c\r\n", target, 1, ctcp, 1);
+	if (chan) {
+		hist_format(selected.channel->history, Activity_self,
+				HIST_SHOW|HIST_LOG|HIST_SELF, "PRIVMSG %s :%c%s%c",
+				target, 1, ctcp, 1);
+	}
 }
 
 static void
