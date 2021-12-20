@@ -38,6 +38,7 @@ static void command_join(struct Server *server, char *str);
 static void command_part(struct Server *server, char *str);
 static void command_kick(struct Server *server, char *str);
 static void command_mode(struct Server *server, char *str);
+static void command_nick(struct Server *server, char *str);
 static void command_whois(struct Server *server, char *str);
 static void command_whowas(struct Server *server, char *str);
 static void command_ping(struct Server *server, char *str);
@@ -102,6 +103,9 @@ struct Command commands[] = {
 	{"mode", command_mode, 1, {
 		"usage: /mode <channel> modes...",
 		"Set/unset channel modes", NULL}},
+	{"nick", command_nick, 1, {
+		"usage: /nick <nick>",
+		"Get a new nick", NULL}},
 	{"whois", command_whois, 1, {
 		"usage: /whois [server] [nick]",
 		"Request information on a nick or oneself", NULL}},
@@ -418,6 +422,17 @@ command_mode(struct Server *server, char *str) {
 		handle_expect(server, Expect_channelmodeis, channel);
 		ircprintf(server, "MODE %s\r\n", channel);
 	}
+}
+
+static void
+command_nick(struct Server *server, char *str) {
+	if (!str || strchr(str, ' ')) {
+		ui_error("/nick takes 1 argument", NULL);
+		return;
+	}
+
+	ircprintf(server, "NICK %s\r\n", str);
+	handle_expect(server, Expect_nicknameinuse, str);
 }
 
 static void

@@ -425,11 +425,16 @@ handle_ERR_NICKNAMEINUSE(char *msg, char **params, struct Server *server, time_t
 	char nick[64]; /* should be limited to 9 chars, but newer servers *shrug*/
 
 	hist_add(server->history, NULL, msg, params, Activity_status, timestamp, HIST_DFL);
-	snprintf(nick, sizeof(nick), "%s_", server->self->nick);
-	nick_free(server->self);
-	server->self = nick_create(nick, ' ', server);
-	server->self->self = 1;
-	ircprintf(server, "NICK %s\r\n", nick);
+
+	if (handle_expect_get(server, Expect_nicknameinuse) == NULL) {
+		snprintf(nick, sizeof(nick), "%s_", server->self->nick);
+		nick_free(server->self);
+		server->self = nick_create(nick, ' ', server);
+		server->self->self = 1;
+		ircprintf(server, "NICK %s\r\n", nick);
+	} else {
+		handle_expect(server, Expect_nicknameinuse, NULL);
+	}
 }
 
 static void
@@ -438,6 +443,7 @@ handle_NICK(char *msg, char **params, struct Server *server, time_t timestamp) {
 	struct Channel *chan;
 	char prefix[128];
 	char *newnick;
+	char priv;
 
 	if (**params != ':' || !*(params+1) || !*(params+2))
 		return;
@@ -453,14 +459,17 @@ handle_NICK(char *msg, char **params, struct Server *server, time_t timestamp) {
 		nick_free(server->self);
 		server->self = nick_create(newnick, ' ', server);
 		server->self->self = 1;
+		handle_expect(server, Expect_nicknameinuse, NULL);
 	}
 
 	for (chan = server->channels; chan; chan = chan->next) {
 		if ((chnick = nick_get(&chan->nicks, nick->nick)) != NULL) {
 			snprintf(prefix, sizeof(prefix), ":%s!%s@%s",
 					newnick, chnick->ident, chnick->host);
+			priv = chnick->priv;
 			nick_remove(&chan->nicks, nick->nick);
-			nick_add(&chan->nicks, prefix, chnick->priv, server);
+			nick_add(&chan->nicks, prefix, priv, server);
+			hist_add(chan->history, nick, msg, params, Activity_status, timestamp, HIST_SHOW);
 			if (selected.channel == chan)
 				windows[Win_nicklist].refresh = 1;
 		}

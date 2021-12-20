@@ -96,6 +96,7 @@ struct {
 	{"PART",		"format.part"},
 	{"KICK",		"format.kick"},
 	{"QUIT",		"format.quit"},
+	{"NICK",		"format.nick"},
 	/* START: misc/rpl-ui-gen.awk */
 	{"200",			"format.rpl.tracelink"},
 	{"201",			"format.rpl.traceconnecting"},

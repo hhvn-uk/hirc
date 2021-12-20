@@ -400,6 +400,11 @@ struct Config config[] = {
 		.strhandle = config_redraws,
 		.description = {
 		"Format of notices", NULL}},
+	{"format.nick",	1, Val_string,
+		.str = "%{nick:${nick}}${nick}%{o}%{=}is now known as %{nick:${1}}${1}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of NICK messages", NULL}},
 	{"format.join", 1, Val_string,
 		.str = "%{b}%{c:44}+%{o}%{=}%{nick:${nick}}${nick}%{o} (${ident}@${host})",
 		.strhandle = config_redraws,
@@ -948,12 +953,12 @@ struct Config config[] = {
 		.description = {
 		"Format of ERR_NONICKNAMEGIVEN (431) numeric", NULL}},
 	{"format.err.erroneusnickname", 1, Val_string,
-		.str = "${2-}",
+		.str = "Erroneous nickname: ${2}",
 		.strhandle = config_redraws,
 		.description = {
 		"Format of ERR_ERRONEUSNICKNAME (432) numeric", NULL}},
 	{"format.err.nicknameinuse", 1, Val_string,
-		.str = "${2-}",
+		.str = "Nickname already in use: ${2}",
 		.strhandle = config_redraws,
 		.description = {
 		"Format of ERR_NICKNAMEINUSE (433) numeric", NULL}},
