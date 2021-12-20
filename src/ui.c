@@ -243,6 +243,9 @@ struct {
 	{"MODE-NICK-SELF",	"format.mode.nick.self"},
 	{"MODE-NICK",		"format.mode.nick"},
 	{"MODE-CHANNEL",	"format.mode.channel"},
+	{"PRIVMSG-ACTION",	"format.action"},
+	{"PRIVMSG-CTCP",	"format.ctcp.request"},
+	{"NOTICE-CTCP",		"format.ctcp.answer"},
 	{NULL,			NULL},
 };
 
@@ -1062,9 +1065,46 @@ ui_wclear(struct Window *window) {
 	wmove(window->window, 0, 0);
 }
 
+static char *
+ui_get_pseudocmd(struct History *hist) {
+	char *cmd, *p1, *p2;
+
+	if (**(hist->params) == ':') {
+		cmd = *(hist->params+1);
+		p1 = *(hist->params+2);
+		p2 = *(hist->params+3);
+	} else {
+		cmd = *(hist->params);
+		p1 = *(hist->params+1);
+		p2 = *(hist->params+2);
+	}
+
+	if (strcmp_n(cmd, "MODE") == 0) {
+		if (p1 && serv_ischannel(hist->origin->server, p1))
+			return "MODE-CHANNEL";
+		else if (hist->from && nick_isself(hist->from) && strcmp_n(hist->from->nick, p1) == 0)
+			return "MODE-NICK-SELF";
+		else
+			return "MODE-NICK";
+	}
+
+	if (strcmp_n(cmd, "PRIVMSG") == 0) {
+		/* ascii 1 is ^A */
+		if (*p2 == 1 && strncmp(p2 + 1, "ACTION", strlen("ACTION")) == 0)
+			return "PRIVMSG-ACTION";
+		else if (*p2 == 1)
+			return "PRIVMSG-CTCP";
+	}
+
+	if (strcmp_n(cmd, "NOTICE") == 0 && *p2 == 1)
+		return "NOTICE-CTCP";
+
+	return cmd;
+}
+
 int
 ui_hist_print(struct Window *window, int lines, struct History *hist) {
-	char *cmd, *p1, *chantypes;
+	char *cmd, *p1, *p2;
 	int i;
 
 	if (!hist)
@@ -1073,27 +1113,7 @@ ui_hist_print(struct Window *window, int lines, struct History *hist) {
 	if (!hist->params || !*(hist->params+1))
 		goto raw;
 
-	if (**(hist->params) == ':') {
-		cmd = *(hist->params+1);
-		p1 = *(hist->params+2);
-	} else {
-		cmd = *(hist->params);
-		p1 = *(hist->params+1);
-	}
-
-	if (strcmp_n(cmd, "MODE") == 0) {
-		if (hist->origin && hist->origin->server)
-			chantypes = support_get(hist->origin->server, "CHANTYPES");
-		else
-			chantypes = config_gets("def.chantypes");
-
-		if (p1 && strchr(chantypes, *p1))
-			cmd = "MODE-CHANNEL";
-		else if (hist->from && nick_isself(hist->from) && strcmp_n(hist->from->nick, p1) == 0)
-			cmd = "MODE-NICK-SELF";
-		else
-			cmd = "MODE-NICK";
-	}
+	cmd = ui_get_pseudocmd(hist);
 
 	for (i=0; formatmap[i].cmd; i++)
 		if (formatmap[i].format && strcmp_n(formatmap[i].cmd, cmd) == 0)
@@ -1117,10 +1137,7 @@ ui_hist_len(struct Window *window, struct History *hist, int *lines) {
 	if (!hist->params || !*(hist->params+2))
 		goto raw;
 
-	if (**(hist->params) == ':')
-		cmd = *(hist->params+2);
-	else
-		cmd = *(hist->params);
+	cmd = ui_get_pseudocmd(hist);
 
 	for (i=0; formatmap[i].cmd; i++)
 		if (formatmap[i].format && strcmp_n(formatmap[i].cmd, cmd) == 0)
@@ -1309,7 +1326,12 @@ ui_format(char *format, struct History *hist) {
 			if (!*p && hist) {
 				pn = strtol(content, NULL, 10) - 1;
 				if (pn >= 0 && param_len(params) >= pn) {
-					rc += snprintf(&ret[rc], sizeof(ret) - rc, "%s", *(params+pn));
+					if (**(params+pn) == 1 && strncmp((*(params+pn))+1, "ACTION", strlen("ACTION")) == 0 && strchr(*(params+pn), ' '))
+						rc += snprintf(&ret[rc], sizeof(ret) - rc, "%s", struntil(strchr(*(params+pn), ' ') + 1, 1));
+					else if (**(params+pn) == 1)
+						rc += snprintf(&ret[rc], sizeof(ret) - rc, "%s", struntil((*(params+pn)) + 1, 1));
+					else
+						rc += snprintf(&ret[rc], sizeof(ret) - rc, "%s", *(params+pn));
 					format = strchr(format, '}') + 1;
 					continue;
 				}
@@ -1318,8 +1340,20 @@ ui_format(char *format, struct History *hist) {
 			if (*p == '-' && *(p+1) == '\0' && hist) {
 				pn = strtol(content, NULL, 10) - 1;
 				if (pn >= 0 && param_len(params) >= pn) {
-					for (; *(params+pn) != NULL; pn++)
-						rc += snprintf(&ret[rc], sizeof(ret) - rc, "%s%s", *(params+pn), *(params+pn+1) ? " " : "");
+					for (; *(params+pn) != NULL; pn++) {
+						if (**(params+pn) == 1 && strncmp((*(params+pn))+1, "ACTION", strlen("ACTION")) == 0 && strchr(*(params+pn), ' ')) {
+							rc += snprintf(&ret[rc], sizeof(ret) - rc, "%s%s",
+									struntil(strchr(*(params+pn), ' ') + 1, 1),
+									*(params+pn+1) ? " " : "");
+						} else if (**(params+pn) == 1) {
+							rc += snprintf(&ret[rc], sizeof(ret) - rc, "%s%s",
+									struntil((*(params+pn)) + 1, 1),
+									*(params+pn+1) ? " " : "");
+						} else {
+							rc += snprintf(&ret[rc], sizeof(ret) - rc, "%s%s",
+									*(params+pn), *(params+pn+1) ? " " : "");
+						}
+					}
 					format = strchr(format, '}') + 1;
 					continue;
 				}

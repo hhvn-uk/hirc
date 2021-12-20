@@ -380,6 +380,21 @@ struct Config config[] = {
 		.strhandle = config_redraws,
 		.description = {
 		"Format of messages", NULL}},
+	{"format.action", 1, Val_string,
+		.str = "%{nick:${nick}}*%{b}${nick}%{b}%{=}${2}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of actions", NULL}},
+	{"format.ctcp.request", 1, Val_string,
+		.str = "%{nick:${nick}}${nick}%{o} %{c:94}%{b}q%{o}%{=}${2}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of CTCP requests", NULL}},
+	{"format.ctcp.answer", 1, Val_string,
+		.str = "%{nick:${nick}}${nick}%{o} %{c:94}%{b}a%{o}%{=}${2}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of CTCP answers", NULL}},
 	{"format.notice", 1, Val_string,
 		.str = "%{nick:${nick}}-${nick}-%{o}%{=}${2}",
 		.strhandle = config_redraws,
