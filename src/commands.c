@@ -30,6 +30,7 @@
 
 static void command_msg(struct Server *server, char *str);
 static void command_notice(struct Server *server, char *str);
+static void command_me(struct Server *server, char *str);
 static void command_query(struct Server *server, char *str);
 static void command_quit(struct Server *server, char *str);
 static void command_join(struct Server *server, char *str);
@@ -73,6 +74,9 @@ struct Command commands[] = {
 		"usage: /notice <nick|channel> message..",
 		"Send a notice to a nick or channel.",
 		"Will appear in buffers if already open.", NULL}},
+	{"me", command_me, 1, {
+		"usage: /me message..",
+		"Send a CTCP ACTION to the selected channel/query", NULL}},
 	{"query", command_query, 1, {
 		"usage: /query <nick>",
 		"Open a buffer for communication with a nick", NULL}},
@@ -220,6 +224,21 @@ command_notice(struct Server *server, char *str) {
 		hist_format(chan->history, Activity_self,
 				HIST_SHOW|HIST_LOG|HIST_SELF, "NOTICE %s :%s", target, message);
 	}
+}
+
+static void
+command_me(struct Server *server, char *str) {
+	if (!selected.channel) {
+		ui_error("no channel or query selected", NULL);
+		return;
+	}
+
+	if (!str)
+		str = "";
+
+	ircprintf(selected.server, "PRIVMSG %s :%cACTION %s%c\r\n", selected.channel->name, 1, str, 1);
+	hist_format(selected.channel->history, Activity_self,
+			HIST_SHOW|HIST_LOG|HIST_SELF, "PRIVMSG %s :%cACTION %s%c", selected.channel->name, 1, str, 1);
 }
 
 static void
