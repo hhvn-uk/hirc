@@ -459,8 +459,8 @@ handle_NICK(char *msg, char **params, struct Server *server, time_t timestamp) {
 		if ((chnick = nick_get(&chan->nicks, nick->nick)) != NULL) {
 			snprintf(prefix, sizeof(prefix), ":%s!%s@%s",
 					newnick, chnick->ident, chnick->host);
-			nick_add(&chan->nicks, prefix, chnick->priv, server);
 			nick_remove(&chan->nicks, nick->nick);
+			nick_add(&chan->nicks, prefix, chnick->priv, server);
 			if (selected.channel == chan)
 				windows[Win_nicklist].refresh = 1;
 		}
