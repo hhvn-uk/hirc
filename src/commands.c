@@ -28,6 +28,10 @@
 #include <sys/types.h>
 #include "hirc.h"
 
+#define command_toofew(cmd) ui_error("/%s: too few arguments", cmd)
+#define command_toomany(cmd) ui_error("/%s: too many arguments", cmd)
+#define command_needselected(cmd, type) ui_error("/%s: no %s selected", cmd, type)
+
 static void command_msg(struct Server *server, char *str);
 static void command_notice(struct Server *server, char *str);
 static void command_me(struct Server *server, char *str);
@@ -192,7 +196,7 @@ command_msg(struct Server *server, char *str) {
 	char *target, *message;
 
 	if (!str) {
-		ui_error("/msg requires argument", NULL);
+		command_toofew("msg");
 		return;
 	}
 
@@ -216,7 +220,7 @@ command_notice(struct Server *server, char *str) {
 	char *target, *message;
 
 	if (!str) {
-		ui_error("/notice requires argument", NULL);
+		command_toofew("notice");
 		return;
 	}
 
@@ -237,7 +241,7 @@ command_notice(struct Server *server, char *str) {
 static void
 command_me(struct Server *server, char *str) {
 	if (!selected.channel) {
-		ui_error("no channel or query selected", NULL);
+		command_needselected("me", "channel or query");
 		return;
 	}
 
@@ -255,14 +259,14 @@ command_ctcp(struct Server *server, char *str) {
 	char *target, *ctcp;
 
 	if (!str) {
-		ui_error("/ctcp requires argument", NULL);
+		command_toofew("ctcp");
 		return;
 	}
 
 	target = strtok_r(str, " ", &ctcp);
 
 	if (!ctcp && !selected.channel) {
-		ui_error("no channel or query selected", NULL);
+		command_needselected("ctcp", "channel or query");
 		return;
 	} else if (!ctcp) {
 		ctcp = target;
@@ -287,8 +291,13 @@ static void
 command_query(struct Server *server, char *str) {
 	struct Channel *priv;
 
-	if (!str || strchr(str, ' ')) {
-		ui_error("/query takes 1 argument", NULL);
+	if (!str) {
+		command_toofew("query");
+		return;
+	}
+
+	if (strchr(str, ' ')) {
+		command_toomany("query");
 		return;
 	}
 
@@ -315,7 +324,7 @@ command_join(struct Server *server, char *str) {
 	char msg[512];
 
 	if (!str) {
-		ui_error("/join requires argument", NULL);
+		command_toofew("join");
 		return;
 	}
 
@@ -351,7 +360,7 @@ command_part(struct Server *server, char *str) {
 		if (selected.channel) {
 			channel = selected.channel->name;
 		} else {
-			ui_error("/part requires argument", NULL);
+			command_toofew("part");
 			return;
 		}
 	}
@@ -368,7 +377,7 @@ command_kick(struct Server *server, char *str) {
 	char *s;
 
 	if (!str) {
-		ui_error("/kick requires argument", NULL);
+		command_toofew("kick");
 		return;
 	}
 
@@ -379,7 +388,7 @@ command_kick(struct Server *server, char *str) {
 		nick = strtok_r(NULL, " ", &reason);
 	} else {
 		if (selected.channel == NULL) {
-			ui_error("no channel selected", NULL);
+			command_needselected("kick", "channel");
 			return;
 		}
 
@@ -405,7 +414,7 @@ command_mode(struct Server *server, char *str) {
 		channel = s;
 	} else {
 		if (selected.channel == NULL) {
-			ui_error("no channel selected", NULL);
+			command_needselected("mode", "channel");
 			return;
 		}
 
@@ -426,8 +435,13 @@ command_mode(struct Server *server, char *str) {
 
 static void
 command_nick(struct Server *server, char *str) {
-	if (!str || strchr(str, ' ')) {
-		ui_error("/nick takes 1 argument", NULL);
+	if (!str) {
+		command_toofew("nick");
+		return;
+	}
+
+	if (strchr(str, ' ')) {
+		command_toomany("nick");
 		return;
 	}
 
@@ -479,7 +493,7 @@ command_whowas(struct Server *server, char *str) {
 static void
 command_ping(struct Server *server, char *str) {
 	if (!str) {
-		ui_error("/ping requires argument", NULL);
+		command_toofew("ping");
 		return;
 	}
 
@@ -492,12 +506,7 @@ command_quote(struct Server *server, char *str) {
 	char msg[512];
 
 	if (!str) {
-		ui_error("/quote requires argument", NULL);
-		return;
-	}
-
-	if (!server) {
-		ui_error("no server selected", NULL);
+		command_toofew("quote");
 		return;
 	}
 
@@ -708,7 +717,9 @@ command_select(struct Server *server, char *str) {
 		if (!buf)
 			ui_error("invalid buffer index: '%s'", str);
 		ui_buflist_select(buf);
-	} else ui_error("/select requires argument", NULL);
+	} else {
+		command_toofew("select");
+	}
 }
 
 static void
@@ -716,7 +727,7 @@ command_set(struct Server *server, char *str) {
 	char *name, *val;
 
 	if (!str) {
-		ui_error("/set requires argument", NULL);
+		command_toofew("set");
 		return;
 	}
 	name = strtok_r(str, " ", &val);
@@ -729,7 +740,7 @@ command_format(struct Server *server, char *str) {
 	int len;
 
 	if (!str) {
-		ui_error("/format requires argument", NULL);
+		command_toofew("format");
 		return;
 	}
 
@@ -750,7 +761,7 @@ command_server(struct Server *server, char *str) {
 	cmd     = strtok_r(NULL, " ", &arg);
 
 	if (!tserver || !cmd) {
-		ui_error("/server requires 2 arguments", NULL);
+		command_toofew("server");
 		return;
 	}
 
@@ -781,12 +792,14 @@ command_names(struct Server *server, char *str) {
 		channel = selected.channel ? selected.channel->name : NULL;
 
 	if (!channel) {
-		ui_error("no channel selected or specified", NULL);
+		command_needselected("names", "channel");
 		return;
 	}
 
-	if (save && *save)
-		ui_error("ignoring extra argument", NULL);
+	if (save && *save) {
+		command_toomany("names");
+		return;
+	}
 
 	ircprintf(server, "NAMES %s\r\n", channel);
 	handle_expect(server, Expect_names, channel);
@@ -825,13 +838,15 @@ command_topic(struct Server *server, char *str) {
 	if (!channel && selected.channel) {
 		channel = selected.channel->name;
 	} else if (!channel) {
-		ui_error("no channel selected", NULL);
+		command_needselected("topic", "channel");
 		return;
 	}
 
 	if (clear) {
-		if (topic)
-			ui_error("ignoring argument as -clear passed", NULL);
+		if (topic) {
+			command_toomany("topic");
+			return;
+		}
 		ircprintf(server, "TOPIC %s :\r\n", channel);
 		return;
 	}
@@ -1091,8 +1106,10 @@ command_clear(struct Server *server, char *str) {
 			}
 		}
 
-		if (*str)
-			ui_error("ignoring remaining args to /clear", NULL);
+		if (*str) {
+			command_toomany("clear");
+			return;
+		}
 	}
 
 	hist_purgeopt(selected.history, tmp ? HIST_TMP : HIST_ALL);
@@ -1144,7 +1161,7 @@ command_scroll(struct Server *server, char *str) {
 	return;
 
 narg:
-	ui_error("/scroll requires argument", NULL);
+	command_toofew("scroll");
 }
 
 int
