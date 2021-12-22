@@ -1328,7 +1328,7 @@ ui_format(char *format, struct History *hist) {
 			/* If all are digits, *p == '\0' */
 			if (!*p && hist) {
 				pn = strtol(content, NULL, 10) - 1;
-				if (pn >= 0 && param_len(params) >= pn) {
+				if (pn >= 0 && param_len(params) > pn) {
 					if (**(params+pn) == 1 && strncmp((*(params+pn))+1, "ACTION", strlen("ACTION")) == 0 && strchr(*(params+pn), ' '))
 						rc += snprintf(&ret[rc], sizeof(ret) - rc, "%s", struntil(strchr(*(params+pn), ' ') + 1, 1));
 					else if (**(params+pn) == 1)
@@ -1342,7 +1342,7 @@ ui_format(char *format, struct History *hist) {
 			/* All are digits except a trailing '-' */
 			if (*p == '-' && *(p+1) == '\0' && hist) {
 				pn = strtol(content, NULL, 10) - 1;
-				if (pn >= 0 && param_len(params) >= pn) {
+				if (pn >= 0 && param_len(params) > pn) {
 					for (; *(params+pn) != NULL; pn++) {
 						if (**(params+pn) == 1 && strncmp((*(params+pn))+1, "ACTION", strlen("ACTION")) == 0 && strchr(*(params+pn), ' ')) {
 							rc += snprintf(&ret[rc], sizeof(ret) - rc, "%s%s",
