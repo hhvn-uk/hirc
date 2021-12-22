@@ -440,6 +440,11 @@ struct Config config[] = {
 		.strhandle = config_redraws,
 		.description = {
 		"Format of modes being set on channels", NULL}},
+	{"format.topic", 1, Val_string,
+		.str = "topic%{=}\"${2}\" set by %{nick:${nick}}${nick}%{o} now",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of topic being set", NULL}},
 	/* Generic numerics (bit boring) */
 	{"format.rpl.welcome", 1, Val_string,
 		.str = "${2-}",
@@ -733,12 +738,12 @@ struct Config config[] = {
 		.description = {
 		"Format of RPL_CHANNELMODEIS (324) numeric", NULL}},
 	{"format.rpl.notopic", 1, Val_string,
-		.str = "${2-}",
+		.str = "topic%{=}no topic set",
 		.strhandle = config_redraws,
 		.description = {
 		"Format of RPL_NOTOPIC (331) numeric", NULL}},
 	{"format.rpl.topic", 1, Val_string,
-		.str = "${2-}",
+		.str = "topic%{=}\"${3}\"",
 		.strhandle = config_redraws,
 		.description = {
 		"Format of RPL_TOPIC (332) numeric", NULL}},
@@ -1119,6 +1124,11 @@ struct Config config[] = {
 		.strhandle = config_redraws,
 		.description = {
 		"Format of RPL_WHOISACCOUNT (330) numeric", NULL}},
+	{"format.rpl.topicwhotime", 1, Val_string,
+		.str = "set by %{nick:${3}}${3}%{o} on ${4}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_TOPICWHOTIME (333) numeric", NULL}},
 	{"format.rpl.whoisactually", 1, Val_string,
 		.str = " %{b}actually%{b}: ${3-}",
 		.strhandle = config_redraws,

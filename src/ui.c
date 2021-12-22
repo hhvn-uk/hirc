@@ -97,6 +97,7 @@ struct {
 	{"KICK",		"format.kick"},
 	{"QUIT",		"format.quit"},
 	{"NICK",		"format.nick"},
+	{"TOPIC",		"format.topic"},
 	/* START: misc/rpl-ui-gen.awk */
 	{"200",			"format.rpl.tracelink"},
 	{"201",			"format.rpl.traceconnecting"},
@@ -236,6 +237,7 @@ struct {
 	{"266",			"format.rpl.globalusers"},
 	{"320",			"format.rpl.whoisspecial"},
 	{"330",			"format.rpl.whoisaccount"},
+	{"333",			"format.rpl.topicwhotime"},
 	{"338",			"format.rpl.whoisactually"},
 	{"378",			"format.rpl.whoishost"},
 	{"379",			"format.rpl.whoismodes"},
