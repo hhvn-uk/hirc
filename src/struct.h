@@ -126,7 +126,7 @@ struct Schedule {
 	struct Schedule *next;
 };
 
-#define SERVER_INPUT_SIZE 1024
+#define SERVER_INPUT_SIZE 16384
 struct Server {
 	struct Server *prev;
 	int wfd;
