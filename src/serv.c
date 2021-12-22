@@ -475,8 +475,8 @@ schedule_pull(struct Server *server, char *tmsg) {
 			if (p->prev) p->prev->next = p->next;
 			if (p->next) p->next->prev = p->prev;
 
-			if (!p->prev && !p->next)
-				server->schedule = NULL;
+			if (!p->prev)
+				server->schedule = p->next;
 
 			free(p);
 			return ret;
