@@ -62,6 +62,7 @@ static void command_grep(struct Server *server, char *str);
 static void command_clear(struct Server *server, char *str);
 static void command_alias(struct Server *server, char *str);
 static void command_scroll(struct Server *server, char *str);
+static void command_source(struct Server *server, char *str);
 
 static char *command_optarg;
 enum {
@@ -185,6 +186,9 @@ struct Command commands[] = {
 		"Scroll a window (main by default).",
 		"Positive scrolls up, negative down, 0 resets and tracks",
 		"Probably most useful with /bind", NULL}},
+	{"source", command_source, 0, {
+		"usage: /source <file>",
+		"Read a config file. Can be used inside config files.", NULL}},
 	{NULL, NULL},
 };
 
@@ -1162,6 +1166,16 @@ command_scroll(struct Server *server, char *str) {
 
 narg:
 	command_toofew("scroll");
+}
+
+static void
+command_source(struct Server *server, char *str) {
+	if (!str) {
+		command_toofew("source");
+		return;
+	}
+
+	config_read(str);
 }
 
 int

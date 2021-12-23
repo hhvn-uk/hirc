@@ -21,6 +21,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <assert.h>
+#include <limits.h>
 #include "hirc.h"
 
 int readingconf = 0;
@@ -1329,19 +1331,63 @@ config_set(char *name, char *val) {
 
 void
 config_read(char *filename) {
+	static char **bt;
+	static int btoffset = 0;
 	char buf[8192];
+	char *path;
 	FILE *file;
+	int save, i;
 
-	if ((file = fopen(filename, "rb")) == NULL) {
-		ui_error("cannot open file '%s': %s", filename, strerror(errno));
+	if (!filename)
 		return;
+
+	path = realpath(filename, NULL);
+
+	/* Check if file is already being read */
+	if (bt) {
+		for (i = 0; i < btoffset; i++) {
+			if (strcmp(path, *(bt + i)) == 0) {
+				ui_error("recursive read of '%s' is not allowed", filename);
+				free(path);
+				return;
+			}
+		}
 	}
 
+	/* Expand bt and add real path */
+	if (!bt)
+		bt = calloc(sizeof(char *), btoffset + 1);
+	else
+		bt = reallocarray(bt, sizeof(char *), btoffset + 1);
+	assert(bt != NULL);
+
+	*(bt + btoffset) = path;
+	btoffset++;
+
+	/* Read and execute */
+	if ((file = fopen(filename, "rb")) == NULL) {
+		ui_error("cannot open file '%s': %s", filename, strerror(errno));
+		goto shrink;
+	}
+
+	save = readingconf;
 	readingconf = 1;
 	while (read_line(fileno(file), buf, sizeof(buf)))
 		if (*buf == '/')
 			command_eval(buf);
-	readingconf = 0;
+	readingconf = save;
+
+shrink:
+	/* Remove path from bt and shrink */
+	free(path);
+	btoffset--;
+	if (btoffset == 0) {
+		free(bt);
+		bt = NULL;
+	} else {
+		bt = reallocarray(bt, sizeof(char *), btoffset);
+		assert(bt != NULL);
+	}
 }
 
 static int
