@@ -202,8 +202,9 @@ struct Command commands[] = {
 		" -servers  dump /server commands",
 		" -channels dump /join commands for respective servers",
 		" -queries  dump /query commands for respective servers",
-		" -all      dump all of the above",
-		" -default  dump default settings (dump non-default otherwise)", NULL}},
+		" -default  dump default settings (dump non-default otherwise)",
+		"If none (excluding -default) of the above are selected, it is",
+		"treated as though all are selected.", NULL}},
 	{NULL, NULL},
 };
 
@@ -1211,7 +1212,6 @@ command_dump(struct Server *server, char *str) {
 		opt_servers = 16,
 		opt_channels = 32,
 		opt_queries = 64,
-		opt_all = 127,
 		opt_default = 128,
 	};
 	static struct CommandOpts opts[] = {
@@ -1222,7 +1222,6 @@ command_dump(struct Server *server, char *str) {
 		{"servers", CMD_NARG, opt_servers},
 		{"channels", CMD_NARG, opt_channels},
 		{"queries", CMD_NARG, opt_queries},
-		{"all", CMD_NARG, opt_all},
 		{"default", CMD_NARG, opt_default},
 		{NULL, 0, 0},
 	};
@@ -1237,7 +1236,6 @@ command_dump(struct Server *server, char *str) {
 		case opt_config:
 		case opt_servers:
 		case opt_channels:
-		case opt_all:
 			selected |= ret;
 			break;
 		case opt_default:
@@ -1245,6 +1243,9 @@ command_dump(struct Server *server, char *str) {
 			break;
 		}
 	}
+
+	if (!selected)
+		selected = 127;
 
 	if (!str || !*str) {
 		command_toofew("dump");
