@@ -1375,6 +1375,7 @@ config_read(char *filename) {
 	while (read_line(fileno(file), buf, sizeof(buf)))
 		if (*buf == '/')
 			command_eval(buf);
+	fclose(file);
 	readingconf = save;
 
 shrink:
