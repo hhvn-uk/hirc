@@ -24,6 +24,7 @@
 #include <limits.h>
 #include <ctype.h>
 #include <regex.h>
+#include <errno.h>
 #include <pwd.h>
 #include <sys/types.h>
 #include "hirc.h"
@@ -63,6 +64,7 @@ static void command_clear(struct Server *server, char *str);
 static void command_alias(struct Server *server, char *str);
 static void command_scroll(struct Server *server, char *str);
 static void command_source(struct Server *server, char *str);
+static void command_dump(struct Server *server, char *str);
 
 static char *command_optarg;
 enum {
@@ -189,6 +191,19 @@ struct Command commands[] = {
 	{"source", command_source, 0, {
 		"usage: /source <file>",
 		"Read a config file. Can be used inside config files.", NULL}},
+	{"dump", command_dump, 0, {
+		"usage: /dump [-all] [-aliases] [-bindings] [-formats] [-config]",
+		"             [-default] [-servers] [-channels] [-queries] <file>",
+		"Dumps configuration details into a file.",
+		" -aliases  dump /alias commands",
+		" -bindings dump /bind commands",
+		" -formats  dump /format commands beginning with filter.",
+		" -config   dump /format options excluding filters",
+		" -servers  dump /server commands",
+		" -channels dump /join commands for respective servers",
+		" -queries  dump /query commands for respective servers",
+		" -all      dump all of the above",
+		" -default  dump default settings (dump non-default otherwise)", NULL}},
 	{NULL, NULL},
 };
 
@@ -1176,6 +1191,136 @@ command_source(struct Server *server, char *str) {
 	}
 
 	config_read(str);
+}
+
+static void
+command_dump(struct Server *server, char *str) {
+	FILE *file;
+	int selected = 0;
+	int def = 0, ret;
+	int i;
+	struct Server *sp;
+	struct Channel *chp;
+	struct Alias *ap;
+	struct Keybind *kp;
+	enum {
+		opt_aliases = 1,
+		opt_bindings = 2,
+		opt_formats = 4,
+		opt_config = 8,
+		opt_servers = 16,
+		opt_channels = 32,
+		opt_queries = 64,
+		opt_all = 127,
+		opt_default = 128,
+	};
+	static struct CommandOpts opts[] = {
+		{"aliases", CMD_NARG, opt_aliases},
+		{"bindings", CMD_NARG, opt_bindings},
+		{"formats", CMD_NARG, opt_formats},
+		{"config", CMD_NARG, opt_config},
+		{"servers", CMD_NARG, opt_servers},
+		{"channels", CMD_NARG, opt_channels},
+		{"queries", CMD_NARG, opt_queries},
+		{"all", CMD_NARG, opt_all},
+		{"default", CMD_NARG, opt_default},
+		{NULL, 0, 0},
+	};
+
+	while ((ret = command_getopt(&str, opts)) != opt_done) {
+		switch (ret) {
+		case opt_error:
+			return;
+		case opt_aliases:
+		case opt_bindings:
+		case opt_formats:
+		case opt_config:
+		case opt_servers:
+		case opt_channels:
+		case opt_all:
+			selected |= ret;
+			break;
+		case opt_default:
+			def = 1;
+			break;
+		}
+	}
+
+	if (!str || !*str) {
+		command_toofew("dump");
+		return;
+	}
+
+	if ((file = fopen(str, "wb")) == NULL) {
+		ui_error("cannot open file '%s': %s", str, strerror(errno));
+		return;
+	}
+
+	if (selected & opt_servers || selected & opt_channels || selected & opt_queries) {
+		if (selected & opt_servers)
+			fprintf(file, "Network connections\n");
+
+		for (sp = servers; sp; sp = sp->next) {
+			if (selected & opt_servers) {
+				fprintf(file, "/connect -network %s -nick %s -user %s -real %s %s%s %s\n",
+						sp->name,
+						sp->self->nick,
+						sp->username,
+						sp->realname,
+#ifdef TLS
+						sp->tls ? "-tls " : "",
+#else
+						"",
+#endif /* TLS */
+						sp->host,
+						sp->port);
+			}
+			if (selected & opt_channels) {
+				for (chp = sp->channels; chp; chp = chp->next)
+					fprintf(file, "/server %s /join %s\n", sp->name, chp->name);
+			}
+			if (selected & opt_queries) {
+				for (chp = sp->privs; chp; chp = chp->next)
+					fprintf(file, "/server %s /query %s\n", sp->name, chp->name);
+			}
+			fprintf(file, "\n");
+		}
+	}
+
+	if (selected & opt_aliases) {
+		fprintf(file, "ALiases\n");
+		for (ap = aliases; ap; ap = ap->next)
+			fprintf(file, "/alias %s %s\n", ap->alias, ap->cmd);
+		fprintf(file, "\n");
+	}
+
+	if (selected & opt_bindings) {
+		fprintf(file, "Keybindings\n");
+		for (kp = keybinds; kp; kp = kp->next)
+			fprintf(file, "/bind %s %s\n", ui_unctrl(kp->binding), kp->cmd);
+		fprintf(file, "\n");
+	}
+
+	if (selected & opt_formats || selected & opt_config) {
+		fprintf(file, "Configuration variables\n");
+		for (i = 0; config[i].name; i++) {
+			if (!config[i].isdef || def) {
+				if (selected & opt_formats && strncmp(config[i].name, "format.", strlen("format.")) == 0) {
+					fprintf(file, "/format %s %s\n", config[i].name + strlen("format."), config[i].str);
+				} else if (selected & opt_config && strncmp(config[i].name, "format.", strlen("format.")) != 0) {
+					if (config[i].valtype == Val_string)
+						fprintf(file, "/set %s %s\n", config[i].name, config[i].str);
+					else if (config[i].valtype == Val_pair || config[i].valtype == Val_colourpair)
+						fprintf(file, "/set %s %ld %ld\n", config[i].name, config[i].pair[0], config[i].pair[1]);
+					else
+						fprintf(file, "/set %s %ld\n", config[i].name, config[i].num);
+				}
+			}
+		}
+		fprintf(file, "\n");
+	}
+
+	fclose(file);
 }
 
 int
