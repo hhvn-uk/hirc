@@ -87,7 +87,8 @@ hist_add(struct HistInfo *histinfo, struct Nick *from,
 	if (options & HIST_MAIN) {
 		if (options & HIST_TMP && histinfo == main_buf) {
 			hist_add(main_buf, from, msg, params, activity, timestamp, HIST_SHOW);
-			return NULL;
+			new = NULL;
+			goto ui;
 		} else if (histinfo != main_buf) {
 			hist_add(main_buf, from, msg, params, activity, timestamp, HIST_SHOW);
 		} else {
@@ -109,7 +110,7 @@ hist_add(struct HistInfo *histinfo, struct Nick *from,
 
 	if (!histinfo->history) {
 		histinfo->history = new;
-		return new;
+		goto ui;
 	}
 
 	for (i=0, p = histinfo->history; p && p->next; p = p->next, i++);
@@ -122,6 +123,14 @@ hist_add(struct HistInfo *histinfo, struct Nick *from,
 	new->next->prev = new;
 	histinfo->history = new;
 
+	if (options & HIST_LOG) {
+		if (histinfo->server)
+			hist_log(new->raw, new->from, new->timestamp, histinfo->server);
+		else
+			ui_error("HIST_LOG specified, but server is NULL", NULL);
+	}
+
+ui:
 	/* TODO: this triggers way too often, need to have some sort of delay */
 	if (selected.history == histinfo) {
 		if (options & HIST_SELF)
@@ -129,13 +138,6 @@ hist_add(struct HistInfo *histinfo, struct Nick *from,
 		else if (windows[Win_main].scroll >= 0)
 			windows[Win_main].scroll += 1;
 		windows[Win_main].refresh = 1;
-	}
-
-	if (options & HIST_LOG) {
-		if (histinfo->server)
-			hist_log(new->raw, new->from, new->timestamp, histinfo->server);
-		else
-			ui_error("HIST_LOG specified, but server is NULL", NULL);
 	}
 
 	return new;
