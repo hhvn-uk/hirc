@@ -822,7 +822,7 @@ ui_draw_buflist(void) {
 					indicator = ui_format_activity(chp->history->activity);
 
 				ui_wprintc(&windows[Win_buflist], 1, "%02d: %s  %s─ %s%s\n", i,
-						sp->next ? "│" : " ", chp->next ? "├" : "└", indicator, chp->name);
+						sp->next ? "│" : " ", chp->next || sp->privs ? "├" : "└", indicator, chp->name);
 				wattrset(windows[Win_buflist].window, A_NORMAL);
 			}
 			i++;
