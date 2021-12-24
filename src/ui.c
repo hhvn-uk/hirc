@@ -766,7 +766,7 @@ ui_format_activity(int activity) {
 		return ui_format(config_gets("format.ui.buflist.activity.none"), NULL);
 	}
 
-	return NULL; /* should be possible *shrug*/
+	return NULL; /* shouldn't be possible *shrug*/
 }
 
 void
