@@ -986,7 +986,7 @@ ui_wprintc(struct Window *window, int lines, char *format, ...) {
 					cc++;
 				}
 			}
-			if (cc == window->w) {
+			if (cc == window->w || *s == '\n') {
 				lc++;
 				cc = 0;
 			}
@@ -1035,7 +1035,7 @@ ui_strlenc(struct Window *window, char *s, int *lines) {
 			if ((*s & 0xC0) != 0x80)
 				cc++;
 			ret++;
-			if (window && cc == window->w) {
+			if (window && cc == window->w || *s == '\n') {
 				lc++;
 				cc = 0;
 			}
@@ -1498,6 +1498,16 @@ ui_format(char *format, struct History *hist) {
 			}
 		}
 
+		if (escape && *format == 'n') {
+			ret[rc++] = '\n';
+			snprintf(printformat, sizeof(printformat), "%%%lds%%s",
+					ui_strlenc(NULL, ts, NULL) + config_getl("divider.margin"));
+			rc += snprintf(&ret[rc], sizeof(ret) - rc, printformat, "", config_gets("divider.string"));
+			escape = 0;
+			format++;
+			continue;
+		}
+
 		if (escape) {
 			ret[rc++] = '\\';
 			escape = 0;
@@ -1505,6 +1515,7 @@ ui_format(char *format, struct History *hist) {
 
 		if (*format == '\\') {
 			escape = 1;
+			format++;
 		} else {
 			ret[rc++] = *format;
 			format++;

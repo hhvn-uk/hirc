@@ -257,7 +257,7 @@ struct Config config[] = {
 		.description = {
 		"TLS version information", NULL}},
 	{"format.ui.tls.names", 1, Val_string,
-		.str = "SNI name: %{b}${2}%{b}\nCert subject: %{b}${3}%{b}\nCert issuer: %{b}${3}%{b}",
+		.str = "SNI name: %{b}${2}%{b}\\nCert subject: %{b}${3}%{b}\\nCert issuer: %{b}${3}%{b}",
 		.strhandle = config_redraws,
 		.description = {
 		"TLS identification", NULL}},
@@ -443,7 +443,7 @@ struct Config config[] = {
 		.description = {
 		"Format of modes being set on channels", NULL}},
 	{"format.topic", 1, Val_string,
-		.str = "topic%{=}\"${2}\" set by %{nick:${nick}}${nick}%{o} now",
+		.str = "topic%{=}${2}\\nset by %{nick:${nick}}${nick}%{o} now",
 		.strhandle = config_redraws,
 		.description = {
 		"Format of topic being set", NULL}},
@@ -745,7 +745,7 @@ struct Config config[] = {
 		.description = {
 		"Format of RPL_NOTOPIC (331) numeric", NULL}},
 	{"format.rpl.topic", 1, Val_string,
-		.str = "topic%{=}\"${3}\"",
+		.str = "topic%{=}${3}",
 		.strhandle = config_redraws,
 		.description = {
 		"Format of RPL_TOPIC (332) numeric", NULL}},
