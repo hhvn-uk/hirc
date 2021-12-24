@@ -1192,8 +1192,6 @@ ui_draw_main(void) {
 
 void
 ui_select(struct Server *server, struct Channel *channel) {
-	int oldhasnicks = selected.hasnicks;
-
 	selected.channel  = channel;
 	selected.server   = server;
 	selected.history  = channel ? channel->history : server ? server->history : main_buf;
