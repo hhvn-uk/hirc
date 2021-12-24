@@ -1254,7 +1254,6 @@ ui_format(struct Window *window, char *format, struct History *hist) {
 	int divider = 0;
 	char **params;
 	char *content, *p;
-	char *start;
 	char *ts, *save;
 	char colourbuf[2][3];
 	char printformat[64];
@@ -1537,7 +1536,7 @@ ui_format(struct Window *window, char *format, struct History *hist) {
 	free(save);
 
 	if (!recursive && window) {
-		for (p = ret, start = ret, pc = 0; p && p <= (ret + sizeof(ret)); p++) {
+		for (p = ret, pc = 0; p && p <= (ret + sizeof(ret)); p++) {
 			/* lifted from ui_strlenc */
 			switch (*p) {
 			case 2:  /* ^B */
@@ -1566,7 +1565,6 @@ ui_format(struct Window *window, char *format, struct History *hist) {
 
 				if (*p == '\n') {
 					p++;
-					start = p;
 					pc = 0;
 				}
 
@@ -1582,7 +1580,6 @@ ui_format(struct Window *window, char *format, struct History *hist) {
 					}
 
 					free(save);
-					start = p;
 					pc = 0;
 				}
 			}
