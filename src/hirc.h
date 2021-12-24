@@ -136,7 +136,7 @@ int		ui_strlenc(struct Window *window, char *s, int *lines);
 void		ui_select(struct Server *server, struct Channel *channel);
 void		ui_filltoeol(struct Window *window, char c);
 void		ui_wclear(struct Window *window);
-char *		ui_format(char *format, struct History *hist);
+char *		ui_format(struct Window *window, char *format, struct History *hist);
 char *		ui_rectrl(char *str);
 char *		ui_unctrl(char *str);
 int		ui_bind(char *binding, char *cmd);

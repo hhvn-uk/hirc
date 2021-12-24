@@ -580,32 +580,32 @@ ui_redraw(void) {
 	windows[Win_dummy].h = LINES;
 	windows[Win_dummy].w = COLS;
 
-	format = ui_format(config_gets("format.ui.separator.horizontal"), NULL);
+	format = ui_format(NULL, config_gets("format.ui.separator.horizontal"), NULL);
 	for (i = x; i <= COLS - rx; i++) {
 		wmove(windows[Win_dummy].window, LINES - 2, i);
 		ui_wprintc(&windows[Win_dummy], 1, "%s", format);
 	}
 
 	if (x) {
-		format = ui_format(config_gets("format.ui.separator.vertical"), NULL);
+		format = ui_format(NULL, config_gets("format.ui.separator.vertical"), NULL);
 		for (i = 0; i <= LINES; i++) {
 			wmove(windows[Win_dummy].window, i, x - 1);
 			ui_wprintc(&windows[Win_dummy], 1, "%s", format);
 		}
 
-		format = ui_format(config_gets("format.ui.separator.split.left"), NULL);
+		format = ui_format(NULL, config_gets("format.ui.separator.split.left"), NULL);
 		wmove(windows[Win_dummy].window, LINES - 2, x - 1);
 		ui_wprintc(&windows[Win_dummy], 1, "%s", format);
 	}
 
 	if (rx) {
-		format = ui_format(config_gets("format.ui.separator.vertical"), NULL);
+		format = ui_format(NULL, config_gets("format.ui.separator.vertical"), NULL);
 		for (i = 0; i <= LINES; i++) {
 			wmove(windows[Win_dummy].window, i, COLS - rx);
 			ui_wprintc(&windows[Win_dummy], 1, "%s", format);
 		}
 
-		format = ui_format(config_gets("format.ui.separator.split.right"), NULL);
+		format = ui_format(NULL, config_gets("format.ui.separator.split.right"), NULL);
 		wmove(windows[Win_dummy].window, LINES - 2, COLS - rx);
 		ui_wprintc(&windows[Win_dummy], 1, "%s", format);
 	}
@@ -671,7 +671,7 @@ ui_draw_nicklist(void) {
 	for (i=0, p = selected.channel->nicks; p && p->next && p->next->next && i < windows[Win_nicklist].scroll; i++)
 		p = p->next;
 	if (i != 0) {
-		ui_wprintc(&windows[Win_nicklist], 1, "%s\n", ui_format(config_gets("format.ui.nicklist.more"), NULL));
+		ui_wprintc(&windows[Win_nicklist], 1, "%s\n", ui_format(NULL, config_gets("format.ui.nicklist.more"), NULL));
 		y++;
 		p = p->next;
 		windows[Win_nicklist].scroll = i;
@@ -683,7 +683,7 @@ ui_draw_nicklist(void) {
 	}
 
 	if (p)
-		ui_wprintc(&windows[Win_nicklist], 1, "%s\n", ui_format(config_gets("format.ui.nicklist.more"), NULL));
+		ui_wprintc(&windows[Win_nicklist], 1, "%s\n", ui_format(NULL, config_gets("format.ui.nicklist.more"), NULL));
 }
 
 int
@@ -751,19 +751,19 @@ ui_buflist_select(int num) {
 	ui_error("couldn't select buffer with index %d", num);
 }
 
-char *
+static char *
 ui_format_activity(int activity) {
 	switch (activity) {
 	case Activity_status:
-		return ui_format(config_gets("format.ui.buflist.activity.status"), NULL);
+		return ui_format(NULL, config_gets("format.ui.buflist.activity.status"), NULL);
 	case Activity_error:
-		return ui_format(config_gets("format.ui.buflist.activity.error"), NULL);
+		return ui_format(NULL, config_gets("format.ui.buflist.activity.error"), NULL);
 	case Activity_message:
-		return ui_format(config_gets("format.ui.buflist.activity.message"), NULL);
+		return ui_format(NULL, config_gets("format.ui.buflist.activity.message"), NULL);
 	case Activity_hilight:
-		return ui_format(config_gets("format.ui.buflist.activity.hilight"), NULL);
+		return ui_format(NULL, config_gets("format.ui.buflist.activity.hilight"), NULL);
 	default:
-		return ui_format(config_gets("format.ui.buflist.activity.none"), NULL);
+		return ui_format(NULL, config_gets("format.ui.buflist.activity.none"), NULL);
 	}
 
 	return NULL; /* shouldn't be possible *shrug*/
@@ -787,7 +787,7 @@ ui_draw_buflist(void) {
 		return;
 
 	if (scroll > 0) {
-		ui_wprintc(&windows[Win_buflist], 1, "%s\n", ui_format(config_gets("format.ui.buflist.more"), NULL));
+		ui_wprintc(&windows[Win_buflist], 1, "%s\n", ui_format(NULL, config_gets("format.ui.buflist.more"), NULL));
 	} else if (scroll < i) {
 		if (selected.history == main_buf)
 			wattron(windows[Win_buflist].window, A_BOLD);
@@ -802,7 +802,7 @@ ui_draw_buflist(void) {
 				wattron(windows[Win_buflist].window, A_BOLD);
 
 			if (sp->status == ConnStatus_notconnected)
-				indicator = ui_format(config_gets("format.ui.buflist.old"), NULL);
+				indicator = ui_format(NULL, config_gets("format.ui.buflist.old"), NULL);
 			else
 				indicator = ui_format_activity(sp->history->activity);
 
@@ -817,7 +817,7 @@ ui_draw_buflist(void) {
 					wattron(windows[Win_buflist].window, A_BOLD);
 
 				if (chp->old)
-					indicator = ui_format(config_gets("format.ui.buflist.old"), NULL);
+					indicator = ui_format(NULL, config_gets("format.ui.buflist.old"), NULL);
 				else
 					indicator = ui_format_activity(chp->history->activity);
 
@@ -834,7 +834,7 @@ ui_draw_buflist(void) {
 					wattron(windows[Win_buflist].window, A_BOLD);
 
 				if (prp->old)
-					indicator = ui_format(config_gets("format.ui.buflist.old"), NULL);
+					indicator = ui_format(NULL, config_gets("format.ui.buflist.old"), NULL);
 				else
 					indicator = ui_format_activity(prp->history->activity);
 
@@ -848,7 +848,7 @@ ui_draw_buflist(void) {
 
 	if (i <= ui_buflist_count(NULL, NULL, NULL)) {
 		wmove(windows[Win_buflist].window, windows[Win_buflist].h - 1, 0);
-		ui_wprintc(&windows[Win_buflist], 1, "%s\n", ui_format(config_gets("format.ui.buflist.more"), NULL));
+		ui_wprintc(&windows[Win_buflist], 1, "%s\n", ui_format(NULL, config_gets("format.ui.buflist.more"), NULL));
 		ui_filltoeol(&windows[Win_buflist], ' ');
 	}
 }
@@ -1120,13 +1120,13 @@ ui_hist_print(struct Window *window, int lines, struct History *hist) {
 
 	for (i=0; formatmap[i].cmd; i++)
 		if (formatmap[i].format && strcmp_n(formatmap[i].cmd, cmd) == 0)
-			return ui_wprintc(window, lines, "%s\n", ui_format(config_gets(formatmap[i].format), hist));
+			return ui_wprintc(window, lines, "%s\n", ui_format(window, config_gets(formatmap[i].format), hist));
 
 	if (isdigit(*cmd) && isdigit(*(cmd+1)) && isdigit(*(cmd+2)) && !*(cmd+3))
-		return ui_wprintc(window, lines, "%s\n", ui_format(config_gets("format.rpl.other"), hist));
+		return ui_wprintc(window, lines, "%s\n", ui_format(window, config_gets("format.rpl.other"), hist));
 
 raw:
-	return ui_wprintc(window, lines, "%s\n", ui_format(config_gets("format.other"), hist));
+	return ui_wprintc(window, lines, "%s\n", ui_format(window, config_gets("format.other"), hist));
 }
 
 int
@@ -1144,13 +1144,13 @@ ui_hist_len(struct Window *window, struct History *hist, int *lines) {
 
 	for (i=0; formatmap[i].cmd; i++)
 		if (formatmap[i].format && strcmp_n(formatmap[i].cmd, cmd) == 0)
-			return ui_strlenc(window, ui_format(config_gets(formatmap[i].format), hist), lines);
+			return ui_strlenc(window, ui_format(window, config_gets(formatmap[i].format), hist), lines);
 
 	if (isdigit(*cmd) && isdigit(*(cmd+1)) && isdigit(*(cmd+2)) && !*(cmd+3))
-		return ui_strlenc(window, ui_format(config_gets("format.rpl.other"), hist), lines);
+		return ui_strlenc(window, ui_format(window, config_gets("format.rpl.other"), hist), lines);
 
 raw:
-	return ui_strlenc(window, ui_format(config_gets("format.other"), hist), lines);
+	return ui_strlenc(window, ui_format(window, config_gets("format.other"), hist), lines);
 }
 
 void
@@ -1186,7 +1186,7 @@ ui_draw_main(void) {
 
 	if (selected.channel && selected.channel->topic) {
 		wmove(windows[Win_main].window, 0, 0);
-		ui_wprintc(&windows[Win_main], 0, "%s\n", ui_format(config_gets("format.ui.topic"), NULL));
+		ui_wprintc(&windows[Win_main], 0, "%s\n", ui_format(&windows[Win_main], config_gets("format.ui.topic"), NULL));
 	}
 }
 
@@ -1244,15 +1244,17 @@ end:
 }
 
 char *
-ui_format(char *format, struct History *hist) {
+ui_format(struct Window *window, char *format, struct History *hist) {
 	static char ret[8192];
 	static int recursive = 0;
 	struct Nick *nick;
-	int rc, escape, pn, i;
+	size_t rc, pc;
+	int escape, pn, i;
 	int rhs = 0;
 	int divider = 0;
 	char **params;
 	char *content, *p;
+	char *start;
 	char *ts, *save;
 	char colourbuf[2][3];
 	char printformat[64];
@@ -1313,7 +1315,7 @@ ui_format(char *format, struct History *hist) {
 
 	if (!recursive && hist && config_getl("timestamp.toggle")) {
 		recursive = 1;
-		ts = strdup(ui_format(config_gets("format.ui.timestamp"), hist));
+		ts = strdup(ui_format(NULL, config_gets("format.ui.timestamp"), hist));
 		recursive = 0;
 	} else {
 		ts = "";
@@ -1458,11 +1460,11 @@ ui_format(char *format, struct History *hist) {
 				if (*(content+1) == '\0' && divider) {
 					rhs = 1;
 					ret[rc] = '\0';
-					/* strlen(ret) - ui_strlenc(NULL, ret, NULL) should get
+					/* strlen(ret) - ui_strlenc(window, ret, NULL) should get
 					 * the length of hidden characters. Add this onto the
 					 * margin to pad out properly. */
 					snprintf(printformat, sizeof(printformat), "%%%lds%%s",
-							config_getl("divider.margin") + (strlen(ret) - ui_strlenc(NULL, ret, NULL)));
+							config_getl("divider.margin") + (strlen(ret) - ui_strlenc(window, ret, NULL)));
 					/* Save ret for use in snprintf */
 					save = strdup(ret);
 					rc = snprintf(ret, sizeof(ret), printformat, save, config_gets("divider.string"));
@@ -1482,7 +1484,7 @@ ui_format(char *format, struct History *hist) {
 				content = strdup(ui_format_get_content(format+2+strlen("nick:"), 1));
 				save = strdup(ret); /* save ret, as this will be modified by recursing */
 				recursive = 1;
-				p = strdup(ui_format(content, hist));
+				p = strdup(ui_format(NULL, content, hist));
 				recursive = 0;
 				memcpy(ret, save, rc); /* copy saved value back into ret, we don't 
 							  need strlcpy as we don't use null byte */
@@ -1533,6 +1535,59 @@ ui_format(char *format, struct History *hist) {
 	save = strdup(ret);
 	rc = snprintf(ret, sizeof(ret), "%s%s", ts, save);
 	free(save);
+
+	if (!recursive && window) {
+		for (p = ret, start = ret, pc = 0; p && p <= (ret + sizeof(ret)); p++) {
+			/* lifted from ui_strlenc */
+			switch (*p) {
+			case 2:  /* ^B */
+			case 9:  /* ^I */
+			case 15: /* ^O */
+			case 18: /* ^R */
+			case 21: /* ^U */
+				break;
+			case 3:  /* ^C */
+				if (*p && isdigit(*(p+1)))
+					p += 1;
+				if (*p && isdigit(*(p+1)))
+					p += 1;
+				if (*p && *(p+1) == ',' && isdigit(*(p+2)))
+					p += 2;
+				if (*p && *(p-1) == ',' && isdigit(*(p+1)))
+					p += 1;
+				break;
+			default:
+				/* naive utf-8 handling:
+				 * the 2-nth byte always
+				 * follows 10xxxxxxx, so
+				 * don't count it. */
+				if ((*p & 0xC0) != 0x80)
+					pc++;
+
+				if (*p == '\n') {
+					p++;
+					start = p;
+					pc = 0;
+				}
+
+				if (pc == window->w) {
+					save = strdup(p);
+
+					if (divider) {
+						snprintf(printformat, sizeof(printformat), "%%%lds %%s%%s", config_getl("divider.margin") + ui_strlenc(NULL, ts, NULL));
+						p += snprintf(p, sizeof(ret) - ((size_t)(p - ret)), printformat, "", config_gets("divider.string"), save);
+					} else {
+						snprintf(printformat, sizeof(printformat), "%%%lds %%s", ui_strlenc(NULL, ts, NULL));
+						p += snprintf(p, sizeof(ret) - ((size_t)(p - ret)), printformat, "", save);
+					}
+
+					free(save);
+					start = p;
+					pc = 0;
+				}
+			}
+		}
+	}
 
 	if (ts[0] != '\0')
 		free(ts);
