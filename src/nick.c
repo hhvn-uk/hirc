@@ -236,7 +236,7 @@ nick_strprefix(struct Nick *nick) {
 	return ret;
 }
 
-static void
+static inline void
 nick_swap(struct Nick **head, struct Nick *first, struct Nick *second) {
 	struct Nick *next[2];
 	struct Nick *prev[2];
