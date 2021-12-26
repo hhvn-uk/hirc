@@ -720,17 +720,17 @@ struct Config config[] = {
 		.description = {
 		"Format of RPL_WHOISCHANNELS (319) numeric", NULL}},
 	{"format.rpl.liststart", 1, Val_string,
-		.str = "${2-}",
+		.str = "%{pad:-15,Channel} %{pad:-5,Nicks} Topic",
 		.strhandle = config_redraws,
 		.description = {
 		"Format of RPL_LISTSTART (321) numeric", NULL}},
 	{"format.rpl.list", 1, Val_string,
-		.str = "${2-}",
+		.str = "%{pad:-15,${2}} %{pad:-5,${3}} ${4}",
 		.strhandle = config_redraws,
 		.description = {
 		"Format of RPL_LIST (322) numeric", NULL}},
 	{"format.rpl.listend", 1, Val_string,
-		.str = "${2-}",
+		.str = "",
 		.strhandle = config_redraws,
 		.description = {
 		"Format of RPL_LISTEND (323) numeric", NULL}},

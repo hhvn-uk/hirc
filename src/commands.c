@@ -44,6 +44,7 @@ static void command_part(struct Server *server, char *str);
 static void command_kick(struct Server *server, char *str);
 static void command_mode(struct Server *server, char *str);
 static void command_nick(struct Server *server, char *str);
+static void command_list(struct Server *server, char *str);
 static void command_whois(struct Server *server, char *str);
 static void command_whowas(struct Server *server, char *str);
 static void command_ping(struct Server *server, char *str);
@@ -113,6 +114,9 @@ struct Command commands[] = {
 	{"nick", command_nick, 1, {
 		"usage: /nick <nick>",
 		"Get a new nick", NULL}},
+	{"list", command_list, 1, {
+		"usage: /list",
+		"Get list of channels.", NULL}},
 	{"whois", command_whois, 1, {
 		"usage: /whois [server] [nick]",
 		"Request information on a nick or oneself", NULL}},
@@ -467,6 +471,16 @@ command_nick(struct Server *server, char *str) {
 
 	ircprintf(server, "NICK %s\r\n", str);
 	handle_expect(server, Expect_nicknameinuse, str);
+}
+
+static void
+command_list(struct Server *server, char *str) {
+	if (str) {
+		command_toomany("list");
+		return;
+	}
+
+	ircprintf(server, "LIST\r\n", str);
 }
 
 static void
