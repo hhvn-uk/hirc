@@ -1247,7 +1247,8 @@ ui_format(struct Window *window, char *format, struct History *hist) {
 	static int recursive = 0;
 	struct Nick *nick;
 	size_t rc, pc;
-	int escape, pn, i;
+	int escape, i;
+	long pn;
 	int rhs = 0;
 	int divider = 0;
 	char **params;
@@ -1476,7 +1477,25 @@ ui_format(struct Window *window, char *format, struct History *hist) {
 				break;
 			}
 
-			/* This bit must come last as it modifies content */
+			/* pad: and nick: must come last as it modifies content */
+			if (strncmp(content, "pad:", strlen("pad:")) == 0 && strchr(content, ',')) {
+				pn = strtol(content + strlen("pad:"), NULL, 10);
+				content = strdup(ui_format_get_content(strchr(format+2+strlen("pad:"), ',') + 1, 1));
+				save = strdup(ret);
+				recursive = 1;
+				p = strdup(ui_format(NULL, content, hist));
+				recursive = 0;
+				memcpy(ret, save, rc);
+				snprintf(printformat, sizeof(printformat), "%%%lds", pn);
+				rc += snprintf(&ret[rc], sizeof(ret) - rc, printformat, p);
+				format = strchr(format+2+strlen("pad:"), ',') + strlen(content) + 2;
+
+				free(content);
+				free(save);
+				free(p);
+				continue;
+			}
+
 			if (hist && !recursive && strncmp(content, "nick:", strlen("nick:")) == 0) {
 				content = strdup(ui_format_get_content(format+2+strlen("nick:"), 1));
 				save = strdup(ret); /* save ret, as this will be modified by recursing */

@@ -51,6 +51,8 @@ Reverse foreground/background.
 Set/reset underline.
 .It %{=}
 Place divider here. If disabled, acts like space.
+.It %{pad:n,...}
+Pad string to n length. Positive pads to the left, negative to the right.
 .El
 
 Certain variables may also be used in formats:
