@@ -142,15 +142,15 @@ char *		ui_unctrl(char *str);
 int		ui_bind(char *binding, char *cmd);
 int		ui_unbind(char *binding);
 void		ui_error_(char *file, int line, char *format, ...);
-#define		ui_error(format, ...) ui_error_(__FILE__, __LINE__, format, __VA_ARGS__);
+#define		ui_error(format, ...) ui_error_(__FILE__, __LINE__, format, __VA_ARGS__)
 void		ui_perror_(char *file, int line, char *str);
-#define		ui_perror(str) ui_perror_(__FILE__, __LINE__, str);
+#define		ui_perror(str) ui_perror_(__FILE__, __LINE__, str)
 #ifdef TLS
 #include <tls.h>
 void		ui_tls_config_error_(char *file, int line, struct tls_config *config, char *str);
-#define		ui_tls_config_error(config, str) ui_tls_config_error_(__FILE__, __LINE__, config, str);
+#define		ui_tls_config_error(config, str) ui_tls_config_error_(__FILE__, __LINE__, config, str)
 void		ui_tls_error_(char *file, int line, struct tls *ctx, char *str);
-#define		ui_tls_error(ctx, str) ui_tls_error_(__FILE__, __LINE__, ctx, str);
+#define		ui_tls_error(ctx, str) ui_tls_error_(__FILE__, __LINE__, ctx, str)
 #endif /* TLS */
 
 /* commands.c */
