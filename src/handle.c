@@ -150,7 +150,7 @@ handle_PART(char *msg, char **params, struct Server *server, time_t timestamp) {
 
 	target = *(params+2);
 	if ((chan = chan_get(&server->channels, target, -1)) == NULL)
-		chan = chan_add(server, &server->channels, target, 0);
+		return;
 
 	nick = nick_create(*params, ' ', server);
 	if (nick_isself(nick)) {
