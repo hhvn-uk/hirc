@@ -750,7 +750,8 @@ command_select(struct Server *server, char *str) {
 		buf = atoi(str);
 		if (!buf)
 			ui_error("invalid buffer index: '%s'", str);
-		ui_buflist_select(buf);
+		if (ui_buflist_get(buf, &sp, &chp) != -1)
+			ui_select(sp, chp);
 	} else {
 		command_toofew("select");
 	}

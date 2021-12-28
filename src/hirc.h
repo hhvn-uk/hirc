@@ -129,7 +129,7 @@ int		ui_hist_print(struct Window *window, int lines, struct History *hist);
 int		ui_hist_len(struct Window *window, struct History *hist, int *lines);
 void		ui_draw_main(void);
 int		ui_buflist_count(int *ret_servers, int *ret_channels, int *ret_privs);
-void		ui_buflist_select(int num);
+int		ui_buflist_get(int num, struct Server **server, struct Channel **chan);
 int		ui_get_pair(short fg, short bg);
 int		ui_wprintc(struct Window *window, int lines, char *format, ...);
 int		ui_strlenc(struct Window *window, char *s, int *lines);

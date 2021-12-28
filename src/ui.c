@@ -709,26 +709,28 @@ ui_buflist_count(int *ret_servers, int *ret_channels, int *ret_privs) {
 	return sc + cc + pc + 1;
 }
 
-void
-ui_buflist_select(int num) {
+int
+ui_buflist_get(int num, struct Server **server, struct Channel **chan) {
 	struct Server *sp;
 	struct Channel *chp;
 	int i;
 
 	if (num <= 0) {
 		ui_error("buffer index greater than 0 expected", NULL);
-		return;
+		return -1;
 	}
 
 	if (num == 1) {
-		ui_select(NULL, NULL);
-		return;
+		*server = NULL;
+		*chan = NULL;
+		return 0;
 	}
 
 	for (i = 2, sp = servers; sp; sp = sp->next) {
 		if (i == num) {
-			ui_select(sp, NULL);
-			return;
+			*server = sp;
+			*chan = NULL;
+			return 0;
 		}
 		i++; /* increment before moving
 			to channel section, not
@@ -736,19 +738,22 @@ ui_buflist_select(int num) {
 
 		for (chp = sp->channels; chp; chp = chp->next, i++) {
 			if (i == num) {
-				ui_select(sp, chp);
-				return;
+				*server = sp;
+				*chan = chp;
+				return 0;
 			}
 		}
 		for (chp = sp->privs; chp; chp = chp->next, i++) {
 			if (i == num) {
-				ui_select(sp, chp);
-				return;
+				*server = sp;
+				*chan = chp;
+				return 0;
 			}
 		}
 	}
 
-	ui_error("couldn't select buffer with index %d", num);
+	ui_error("couldn't find buffer with index %d", num);
+	return -1;
 }
 
 static char *
