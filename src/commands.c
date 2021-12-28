@@ -66,6 +66,7 @@ static void command_alias(struct Server *server, char *str);
 static void command_scroll(struct Server *server, char *str);
 static void command_source(struct Server *server, char *str);
 static void command_dump(struct Server *server, char *str);
+static void command_close(struct Server *server, char *str);
 
 static char *command_optarg;
 enum {
@@ -209,6 +210,9 @@ struct Command commands[] = {
 		" -default  dump default settings (dump non-default otherwise)",
 		"If none (excluding -default) of the above are selected, it is",
 		"treated as though all are selected.", NULL}},
+	{"close", command_close, 0, {
+		"usage: /close [id]",
+		"Forget about selected buffer, or a buffer by id.", NULL}},
 	{NULL, NULL},
 };
 
@@ -1337,6 +1341,47 @@ command_dump(struct Server *server, char *str) {
 	}
 
 	fclose(file);
+}
+
+static void
+command_close(struct Server *server, char *str) {
+	struct Server *sp;
+	struct Channel *chp;
+	int buf;
+
+	if (str) {
+		buf = atoi(str);
+		if (!buf)
+			ui_error("invalid buffer index: '%s'", str);
+		if (ui_buflist_get(buf, &sp, &chp) == -1)
+			return;
+	} else {
+		sp = selected.server;
+		chp = selected.channel;
+	}
+
+	if (!sp) {
+		ui_error("cannot close main buffer", NULL);
+		return;
+	}
+
+	if (chp) {
+		if (serv_ischannel(sp, chp->name)) {
+			ircprintf(sp, "PART %s\r\n", chp->name);
+			chan_remove(&sp->channels, chp->name);
+		} else {
+			chan_remove(&sp->privs, chp->name);
+		}
+		ui_select(sp, NULL);
+	} else {
+		if (sp->status != ConnStatus_notconnected) {
+			ui_error("can't close connected server", NULL);
+			return;
+		} else {
+			serv_remove(&servers, sp->name);
+		}
+		ui_select(NULL, NULL);
+	}
 }
 
 int
