@@ -262,7 +262,7 @@ struct Selected selected;
 struct Keybind *keybinds = NULL;
 
 void
-ui_error_(char *file, int line, char *format, ...) {
+ui_error_(char *file, int line, const char *func, char *format, ...) {
 	char msg[1024];
 	va_list ap;
 
@@ -271,30 +271,30 @@ ui_error_(char *file, int line, char *format, ...) {
 	va_end(ap);
 
 	hist_format(selected.history, Activity_error, HIST_SHOW|HIST_TMP|HIST_MAIN,
-			"SELF_ERROR %s %d :%s",
-			file, line, msg);
+			"SELF_ERROR %s %d %s :%s",
+			file, line, func, msg);
 }
 
 void
-ui_perror_(char *file, int line, char *str) {
+ui_perror_(char *file, int line, const char *func, char *str) {
 	hist_format(selected.history, Activity_error, HIST_SHOW|HIST_TMP|HIST_MAIN,
-			"SELF_ERROR %s %d :%s: %s",
-			file, line, str, strerror(errno));
+			"SELF_ERROR %s %d %s :%s: %s",
+			file, line, func, str, strerror(errno));
 }
 
 #ifdef TLS
 void
-ui_tls_config_error_(char *file, int line, struct tls_config *config, char *str) {
+ui_tls_config_error_(char *file, int line, const char *func, struct tls_config *config, char *str) {
 	hist_format(selected.history, Activity_error, HIST_SHOW|HIST_TMP|HIST_MAIN,
-			"SELF_ERROR %s %d :%s: %s",
-			file, line, str, tls_config_error(config));
+			"SELF_ERROR %s %d %s :%s: %s",
+			file, line, func, str, tls_config_error(config));
 }
 
 void
-ui_tls_error_(char *file, int line, struct tls *ctx, char *str) {
+ui_tls_error_(char *file, int line, const char *func, struct tls *ctx, char *str) {
 	hist_format(selected.history, Activity_error, HIST_SHOW|HIST_TMP|HIST_MAIN,
-			"SELF_ERROR %s %d :%s: %s",
-			file, line, str, tls_error(ctx));
+			"SELF_ERROR %s %d %s :%s: %s",
+			file, line, func, str, tls_error(ctx));
 }
 #endif /* TLS */
 

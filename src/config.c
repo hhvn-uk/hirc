@@ -210,7 +210,7 @@ struct Config config[] = {
 		.description = {
 		"Format of topic at top of main window", NULL}},
 	{"format.ui.error", 1, Val_string,
-		.str = "%{c:28}%{b}${3} %{b}(at ${1}:${2})",
+		.str = "%{c:28}%{b}${4} %{b}(${3} at ${1}:${2})",
 		.strhandle = config_redraws,
 		.description = {
 		"Format of SELF_ERROR messages", NULL}},
