@@ -75,7 +75,6 @@ struct Nick *	nick_dup(struct Nick *nick, struct Server *server);
 int		nick_isself(struct Nick *nick);
 int		nick_isself_server(struct Nick *nick, struct Server *server);
 int		nick_remove(struct Nick **head, char *nick);
-char *		nick_strprefix(struct Nick *nick);
 void		nick_sort(struct Nick **head, struct Server *server);
 
 /* hist.c */

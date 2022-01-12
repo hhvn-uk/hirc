@@ -67,34 +67,42 @@ nick_getcolour(struct Nick *nick) {
 void
 prefix_tokenize(char *prefix, char **nick, char **ident, char **host) {
 	enum { ISNICK, ISIDENT, ISHOST } segment = ISNICK;
+	char *p = tstrdup(prefix);
 
-	if (*prefix == ':')
-		prefix++;
+	if (*p == ':')
+		p++;
 
-	if (nick)	*nick = prefix;
+	if (nick)	*nick = p;
 	if (ident)	*ident = NULL;
 	if (host)	*host = NULL;
 
-	for (; prefix && *prefix && segment != ISHOST; prefix++) {
-		if (segment == ISNICK && *prefix == '!') {
-			*prefix = '\0';
+	for (; p && *p && segment != ISHOST; p++) {
+		if (segment == ISNICK && *p == '!') {
+			*p = '\0';
 			if (ident)
-				*ident = prefix + 1;
+				*ident = p + 1;
 			segment = ISIDENT;
 		}
-		if (segment == ISIDENT && *prefix == '@') {
-			*prefix = '\0';
+		if (segment == ISIDENT && *p == '@') {
+			*p = '\0';
 			if (host)
-				*host = prefix + 1;
+				*host = p + 1;
 			segment = ISHOST;
 		}
 	}
+
+	if (nick && *nick)	*nick = strdup(*nick);
+	if (ident && *ident)	*ident = strdup(*ident);
+	if (host && *host)	*host = strdup(*host);
 }
 
 void
 nick_free(struct Nick *nick) {
 	if (nick) {
 		free(nick->prefix);
+		free(nick->nick);
+		free(nick->ident);
+		free(nick->host);
 		free(nick);
 	}
 }
@@ -172,12 +180,7 @@ nick_add(struct Nick **head, char *prefix, char priv, struct Server *server) {
 
 struct Nick *
 nick_dup(struct Nick *nick, struct Server *server) {
-	/* Use strprefix to recreate the prefix.
-	 * This is an example of trying to be clever
-	 * backfiring - I should've just strdup'd
-	 * the nick, ident and host instead of
-	 * splitting prefix and pointing to it. */
-	return nick_create(nick_strprefix(nick), nick->priv, server);
+	return nick_create(nick->prefix, nick->priv, server);
 }
 
 struct Nick *
@@ -215,25 +218,6 @@ nick_remove(struct Nick **head, char *nick) {
 	nick_free(p);
 
 	return 1;
-}
-
-char *
-nick_strprefix(struct Nick *nick) {
-	static char ret[1024];
-
-	if (!nick)
-		return NULL;
-
-	if (nick->nick && nick->ident && nick->host)
-		snprintf(ret, sizeof(ret), "%s!%s@%s", nick->nick, nick->ident, nick->host);
-	else if (nick->nick && nick->ident)
-		snprintf(ret, sizeof(ret), "%s!%s", nick->nick, nick->ident);
-	else if (nick->nick)
-		snprintf(ret, sizeof(ret), "%s", nick->nick);
-	else
-		snprintf(ret, sizeof(ret), "");
-
-	return ret;
 }
 
 static inline void
