@@ -784,10 +784,9 @@ command_format(struct Server *server, char *str) {
 	}
 
 	len = strlen(str) + strlen("format.") + 1;
-	newstr = malloc(len);
+	newstr = talloc(len);
 	snprintf(newstr, len, "format.%s", str);
 	command_set(server, newstr);
-	free(newstr);
 }
 
 static void
@@ -1512,7 +1511,7 @@ command_eval(char *str) {
 	char *cmd;
 	char *s;
 
-	s = strdup(alias_eval(str));
+	s = tstrdup(alias_eval(str));
 
 	if (*s != '/' || strncmp(s, "/ /", sizeof("/ /")) == 0) {
 		/* Provide a way to escape commands
@@ -1553,6 +1552,4 @@ command_eval(char *str) {
 
 		ui_error("no such command: '%s'", cmd);
 	}
-
-	free(s);
 }

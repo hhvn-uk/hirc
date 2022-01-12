@@ -26,6 +26,7 @@
 #include <unistd.h>
 #include <stdarg.h>
 #include <signal.h>
+#include <assert.h>
 #include <poll.h>
 #include "hirc.h"
 
@@ -52,6 +53,48 @@ estrdup(const char *str) {
 		perror("strdup()");
 		exit(EXIT_FAILURE);
 	}
+
+	return ret;
+}
+
+/* Assign memory and store in array for freeing by main loop */
+void *
+talloc(size_t size) {
+	static void **mema = NULL;
+	static size_t mems = 0;
+	void *mem = NULL;
+	size_t i;
+
+	if (size) {
+		mem = emalloc(size);
+		if (!mems)
+			mema = calloc(sizeof(char *), mems + 1);
+		else
+			mema = reallocarray(mema, sizeof(char *), mems + 1);
+		assert(mema != NULL);
+
+		*(mema + mems) = mem;
+		mems++;
+	} else if (mema && mems) {
+		for (i = 0; i < mems; i++)
+			free(*(mema + i));
+		free(mema);
+		mems = 0;
+		mema = NULL;
+	}
+
+	return mem;
+}
+
+/* strdup using talloc */
+char *
+tstrdup(const char *str) {
+	size_t size;
+	char *ret;
+
+	size = strlen(str) + 1;
+	ret = talloc(size);
+	memcpy(ret, str, size);
 
 	return ret;
 }
@@ -422,6 +465,9 @@ main(int argc, char *argv[]) {
 			wrefresh(windows[Win_input].window);
 
 		ui_read();
+
+		/* free temporary mem */
+		talloc(0);
 	}
 
 	return 0;
