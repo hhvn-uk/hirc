@@ -1118,7 +1118,7 @@ command_grep(struct Server *server, char *str) {
 		/* TODO: matching ui_format result by default,
 		 *       option for matching raw */
 		if (regexec(&re, p->raw, 0, NULL, 0) == 0)
-			hist_add(selected.history, p->from, p->raw, p->params, p->activity, p->timestamp, p->options | HIST_GREP | HIST_TMP);
+			hist_addp(selected.history, p, p->activity, p->options | HIST_GREP | HIST_TMP);
 	}
 
 	hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_GREP, "SELF_GREP_END :end of /grep command");

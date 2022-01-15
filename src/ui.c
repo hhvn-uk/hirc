@@ -1077,15 +1077,9 @@ static char *
 ui_get_pseudocmd(struct History *hist) {
 	char *cmd, *p1, *p2;
 
-	if (**(hist->params) == ':') {
-		cmd = *(hist->params+1);
-		p1 = *(hist->params+2);
-		p2 = *(hist->params+3);
-	} else {
-		cmd = *(hist->params);
-		p1 = *(hist->params+1);
-		p2 = *(hist->params+2);
-	}
+	cmd = *(hist->params);
+	p1 = *(hist->params+1);
+	p2 = *(hist->params+2);
 
 	if (strcmp_n(cmd, "MODE") == 0) {
 		if (p1 && serv_ischannel(hist->origin->server, p1))
@@ -1118,7 +1112,7 @@ ui_hist_print(struct Window *window, int lines, struct History *hist) {
 	if (!hist)
 		return -1;
 
-	if (!hist->params || !*(hist->params+1))
+	if (!hist->params)
 		goto raw;
 
 	cmd = ui_get_pseudocmd(hist);
@@ -1142,7 +1136,7 @@ ui_hist_len(struct Window *window, struct History *hist, int *lines) {
 	if (!hist)
 		return -1;
 
-	if (!hist->params || !*(hist->params+2))
+	if (!hist->params)
 		goto raw;
 
 	cmd = ui_get_pseudocmd(hist);
@@ -1309,9 +1303,7 @@ ui_format(struct Window *window, char *format, struct History *hist) {
 			}
 		}
 
-		if (**(params = hist->params) == ':')
-			params++;
-
+		params = hist->params;
 		subs[sub_cmd].val = *params;
 		params++;
 	}

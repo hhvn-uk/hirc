@@ -65,7 +65,8 @@ struct History {
 	enum Activity activity;
 	enum HistOpt options;
 	char *raw;
-	char **params;
+	char **_params; /* contains all params, free from here */
+	char **params;  /* contains params without perfix, don't free */
 	struct HistInfo *origin;
 	struct Nick *from;
 	struct History *next;
@@ -164,7 +165,7 @@ struct Server {
 /* messages received from server */
 struct Handler {
 	char *cmd; /* or numeric */
-	void (*func)(char *msg, char **params, struct Server *server, time_t timestamp);
+	void (*func)(struct Server *server, struct History *msg);
 };
 
 /* commands received from user */

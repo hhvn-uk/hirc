@@ -30,7 +30,7 @@
 
 void
 hist_free(struct History *history) {
-	param_free(history->params);
+	param_free(history->_params);
 	if (history->from) {
 		free(history->from->prefix);
 		free(history->from);
@@ -53,8 +53,7 @@ hist_free_list(struct HistInfo *histinfo) {
 
 struct History *
 hist_create(struct HistInfo *histinfo, struct Nick *from, char *msg,
-		char **params, enum Activity activity,
-		time_t timestamp, enum HistOpt options) {
+		enum Activity activity, time_t timestamp, enum HistOpt options) {
 	struct History *new;
 
 	new = emalloc(sizeof(struct History));
@@ -62,35 +61,42 @@ hist_create(struct HistInfo *histinfo, struct Nick *from, char *msg,
 	new->timestamp = timestamp ? timestamp : time(NULL);
 	new->activity = activity;
 	new->raw = estrdup(msg);
-	new->params = params;
+	new->_params = new->params = param_create(msg);
 	new->options = options;
 	new->origin = histinfo;
 
-	if (from) {
+	if (from)
 		new->from = nick_dup(from, histinfo->server);
-	} else if (**params == ':') {
-		new->from = nick_create(*params, ' ', histinfo->server);
-	} else {
+	else if (**new->_params == ':')
+		new->from = nick_create(*new->_params, ' ', histinfo->server);
+	else
 		new->from = NULL;
-	}
+
+	if (**new->_params == ':')
+		new->params++;
 
 	return new;
 }
 
 struct History *
+hist_addp(struct HistInfo *histinfo, struct History *p, enum Activity activity, enum HistOpt options) {
+	return hist_add(histinfo, p->from, p->raw, activity, p->timestamp, options);
+}
+
+struct History *
 hist_add(struct HistInfo *histinfo, struct Nick *from,
-		char *msg, char **params, enum Activity activity,
+		char *msg,  enum Activity activity,
 		time_t timestamp, enum HistOpt options) {
 	struct History *new, *p;
 	int i;
 
 	if (options & HIST_MAIN) {
 		if (options & HIST_TMP && histinfo == main_buf) {
-			hist_add(main_buf, from, msg, params, activity, timestamp, HIST_SHOW);
+			hist_add(main_buf, from, msg, activity, timestamp, HIST_SHOW);
 			new = NULL;
 			goto ui;
 		} else if (histinfo != main_buf) {
-			hist_add(main_buf, from, msg, params, activity, timestamp, HIST_SHOW);
+			hist_add(main_buf, from, msg, activity, timestamp, HIST_SHOW);
 		} else {
 			ui_error("HIST_MAIN specified, but history is &main_buf", NULL);
 		}
@@ -99,7 +105,7 @@ hist_add(struct HistInfo *histinfo, struct Nick *from,
 	if (options & HIST_SELF && histinfo->server)
 		from = histinfo->server->self;
 
-	new = hist_create(histinfo, from, msg, params, activity, timestamp, options);
+	new = hist_create(histinfo, from, msg, activity, timestamp, options);
 
 	if (histinfo && options & HIST_SHOW && activity > histinfo->activity && histinfo != selected.history) {
 		histinfo->activity = activity;
@@ -181,7 +187,7 @@ hist_format(struct HistInfo *histinfo, enum Activity activity, enum HistOpt opti
 
 	params = param_create(msg);
 
-	return hist_add(histinfo, NULL, msg, params, Activity_status, 0, options);
+	return hist_add(histinfo, NULL, msg, Activity_status, 0, options);
 }
 
 int

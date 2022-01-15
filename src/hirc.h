@@ -43,6 +43,7 @@ void		cleanup(char *quitmsg);
 void		param_free(char **params);
 int		param_len(char **params);
 char **		param_create(char *msg);
+char **		param_dup(char **p);
 int		read_line(int fd, char *buf, size_t buf_len);
 int		ircgets(struct Server *server, char *buf, size_t buf_len);
 int		ircprintf(struct Server *server, char *format, ...);
@@ -81,9 +82,11 @@ void		nick_sort(struct Nick **head, struct Server *server);
 void		hist_free(struct History *history);
 void		hist_free_list(struct HistInfo *histinfo);
 struct History *hist_create(struct HistInfo *histinfo, struct Nick *from, char *msg,
-		char **params, enum Activity activity, time_t timestamp, enum HistOpt options);
+		enum Activity activity, time_t timestamp, enum HistOpt options);
+struct History *hist_addp(struct HistInfo *histinfo, struct History *p,
+		enum Activity activity, enum HistOpt options);
 struct History *hist_add(struct HistInfo *histinfo,
-		struct Nick *from, char *msg, char **params, enum Activity activity,
+		struct Nick *from, char *msg, enum Activity activity,
 		time_t timestamp, enum HistOpt options);
 struct History *hist_format(struct HistInfo *history, enum Activity activity,
 		enum HistOpt options, char *format, ...);
