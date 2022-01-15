@@ -1,7 +1,7 @@
 /*
  * src/nick.c from hirc
  *
- * Copyright (c) 2021 hhvn <dev@hhvn.uk>
+ * Copyright (c) 2021-2022 hhvn <dev@hhvn.uk>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
