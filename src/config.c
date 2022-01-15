@@ -1356,9 +1356,9 @@ config_read(char *filename) {
 
 	/* Expand bt and add real path */
 	if (!bt)
-		bt = calloc(sizeof(char *), btoffset + 1);
+		bt = emalloc((sizeof(char *)) * (btoffset + 1));
 	else
-		bt = reallocarray(bt, sizeof(char *), btoffset + 1);
+		bt = realloc(bt, (sizeof(char *)) * (btoffset + 1));
 	assert(bt != NULL);
 
 	*(bt + btoffset) = path;
@@ -1386,7 +1386,7 @@ shrink:
 		free(bt);
 		bt = NULL;
 	} else {
-		bt = reallocarray(bt, sizeof(char *), btoffset);
+		bt = realloc(bt, (sizeof(char *)) * btoffset);
 		assert(bt != NULL);
 	}
 }

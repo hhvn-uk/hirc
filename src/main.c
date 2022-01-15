@@ -68,9 +68,9 @@ talloc(size_t size) {
 	if (size) {
 		mem = emalloc(size);
 		if (!mems)
-			mema = calloc(sizeof(char *), mems + 1);
+			mema = malloc((sizeof(char *)) * (mems + 1));
 		else
-			mema = reallocarray(mema, sizeof(char *), mems + 1);
+			mema = realloc(mema, (sizeof(char *)) * (mems + 1));
 		assert(mema != NULL);
 
 		*(mema + mems) = mem;
