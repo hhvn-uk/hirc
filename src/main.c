@@ -263,8 +263,8 @@ ircprintf(struct Server *server, char *format, ...) {
 			ret = tls_write(server->tls_ctx, msg, strlen(msg));
 		} while (ret == TLS_WANT_POLLIN || ret == TLS_WANT_POLLOUT);
 	else
-		ret = write(server->wfd, msg, strlen(msg));
 #endif /* TLS */
+		ret = write(server->wfd, msg, strlen(msg));
 
 	if (ret == -1 && server->status == ConnStatus_connected) {
 		serv_disconnect(server, 1, NULL);

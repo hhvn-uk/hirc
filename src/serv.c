@@ -345,8 +345,10 @@ serv_disconnect(struct Server *server, int reconnect, char *msg) {
 
 	if (msg)
 		ircprintf(server, "QUIT %s\r\n", msg);
+#ifdef TLS
 	if (server->tls)
 		tls_close(server->tls_ctx);
+#endif /* TLS */
 	shutdown(server->rfd, SHUT_RDWR);
 	shutdown(server->wfd, SHUT_RDWR);
 	close(server->rfd);
