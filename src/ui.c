@@ -1254,7 +1254,6 @@ ui_format(struct Window *window, char *format, struct History *hist) {
 	char *content, *p;
 	char *ts, *save;
 	char colourbuf[2][3];
-	char printformat[64];
 	enum {
 		sub_raw,
 		sub_cmd,
@@ -1458,11 +1457,10 @@ ui_format(struct Window *window, char *format, struct History *hist) {
 					/* strlen(ret) - ui_strlenc(window, ret, NULL) should get
 					 * the length of hidden characters. Add this onto the
 					 * margin to pad out properly. */
-					snprintf(printformat, sizeof(printformat), "%%%lds%%s",
-							config_getl("divider.margin") + (strlen(ret) - ui_strlenc(window, ret, NULL)));
 					/* Save ret for use in snprintf */
 					save = strdup(ret);
-					rc = snprintf(ret, sizeof(ret), printformat, save, config_gets("divider.string"));
+					rc = snprintf(ret, sizeof(ret), "%1$*3$s%2$s", save, config_gets("divider.string"),
+							config_getl("divider.margin") + (strlen(ret) - ui_strlenc(window, ret, NULL)));
 					free(save);
 					format = strchr(format, '}') + 1;
 					continue;
@@ -1483,8 +1481,7 @@ ui_format(struct Window *window, char *format, struct History *hist) {
 				p = strdup(ui_format(NULL, content, hist));
 				recursive = 0;
 				memcpy(ret, save, rc);
-				snprintf(printformat, sizeof(printformat), "%%%lds", pn);
-				rc += snprintf(&ret[rc], sizeof(ret) - rc, printformat, p);
+				rc += snprintf(&ret[rc], sizeof(ret) - rc, "%1$*2$s", p, pn);
 				format = strchr(format+2+strlen("pad:"), ',') + strlen(content) + 2;
 
 				free(content);
@@ -1539,9 +1536,8 @@ ui_format(struct Window *window, char *format, struct History *hist) {
 
 	ret[rc] = '\0';
 	if (!recursive && divider && !rhs) {
-		snprintf(printformat, sizeof(printformat), "%%%lds%%s%%s", config_getl("divider.margin"));
 		save = strdup(ret);
-		rc = snprintf(ret, sizeof(ret), printformat, "", config_gets("divider.string"), save);
+		rc = snprintf(ret, sizeof(ret), "%1$*4$s%2$s%3$s", "", config_gets("divider.string"), save, config_getl("divider.margin"));
 		free(save);
 	}
 
@@ -1586,11 +1582,11 @@ ui_format(struct Window *window, char *format, struct History *hist) {
 					save = strdup(p);
 
 					if (divider) {
-						snprintf(printformat, sizeof(printformat), "%%%lds %%s%%s", config_getl("divider.margin") + ui_strlenc(NULL, ts, NULL));
-						p += snprintf(p, sizeof(ret) - ((size_t)(p - ret)), printformat, "", config_gets("divider.string"), save);
+						p += snprintf(p, sizeof(ret) - ((size_t)(p - ret)), "%1$*4$s %2$s%3$s",
+								"", config_gets("divider.string"), save,
+								config_getl("divider.margin") + ui_strlenc(NULL, ts, NULL));
 					} else {
-						snprintf(printformat, sizeof(printformat), "%%%lds %%s", ui_strlenc(NULL, ts, NULL));
-						p += snprintf(p, sizeof(ret) - ((size_t)(p - ret)), printformat, "", save);
+						p += snprintf(p, sizeof(ret) - ((size_t)(p - ret)), "%1$*3$s %2$s", "", save, ui_strlenc(NULL, ts, NULL));
 					}
 
 					free(save);
