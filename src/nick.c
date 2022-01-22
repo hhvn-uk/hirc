@@ -91,9 +91,9 @@ prefix_tokenize(char *prefix, char **nick, char **ident, char **host) {
 		}
 	}
 
-	if (nick && *nick)	*nick = strdup(*nick);
-	if (ident && *ident)	*ident = strdup(*ident);
-	if (host && *host)	*host = strdup(*host);
+	if (nick && *nick)	*nick = estrdup(*nick);
+	if (ident && *ident)	*ident = estrdup(*ident);
+	if (host && *host)	*host = estrdup(*host);
 }
 
 void

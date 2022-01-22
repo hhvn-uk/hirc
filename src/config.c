@@ -1310,7 +1310,7 @@ config_setr(char *name, long a, long b) {
 
 void
 config_set(char *name, char *val) {
-	char *str = val ? strdup(val) : NULL;
+	char *str = val ? estrdup(val) : NULL;
 	char *tok[3], *save, *p;
 
 	tok[0] = strtok_r(val,  " ", &save);

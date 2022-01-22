@@ -427,7 +427,7 @@ ui_read(void) {
 		case KEY_UP:
 			if (histindex < INPUT_HIST_MAX && input.history[histindex + 1]) {
 				if (histindex == -1)
-					backup = strdup(input.string);
+					backup = estrdup(input.string);
 				histindex++;
 				strlcpy(input.string, input.history[histindex], sizeof(input.string));
 				input.counter = strlen(input.string);
@@ -461,7 +461,7 @@ ui_read(void) {
 			/* free checks for null */
 			free(input.history[INPUT_HIST_MAX - 1]);
 			memmove(input.history + 1, input.history, (sizeof(input.history) / INPUT_HIST_MAX) * (INPUT_HIST_MAX - 1));
-			input.history[0] = strdup(input.string);
+			input.history[0] = estrdup(input.string);
 			input.string[0] = '\0';
 			input.counter = 0;
 			break;
@@ -1309,7 +1309,7 @@ ui_format(struct Window *window, char *format, struct History *hist) {
 
 	if (!recursive && hist && config_getl("timestamp.toggle")) {
 		recursive = 1;
-		ts = strdup(ui_format(NULL, config_gets("format.ui.timestamp"), hist));
+		ts = estrdup(ui_format(NULL, config_gets("format.ui.timestamp"), hist));
 		recursive = 0;
 	} else {
 		ts = "";
@@ -1458,7 +1458,7 @@ ui_format(struct Window *window, char *format, struct History *hist) {
 					 * the length of hidden characters. Add this onto the
 					 * margin to pad out properly. */
 					/* Save ret for use in snprintf */
-					save = strdup(ret);
+					save = estrdup(ret);
 					rc = snprintf(ret, sizeof(ret), "%1$*3$s%2$s", save, config_gets("divider.string"),
 							config_getl("divider.margin") + (strlen(ret) - ui_strlenc(window, ret, NULL)));
 					free(save);
@@ -1475,10 +1475,10 @@ ui_format(struct Window *window, char *format, struct History *hist) {
 			/* pad: and nick: must come last as it modifies content */
 			if (strncmp(content, "pad:", strlen("pad:")) == 0 && strchr(content, ',')) {
 				pn = strtol(content + strlen("pad:"), NULL, 10);
-				content = strdup(ui_format_get_content(strchr(format+2+strlen("pad:"), ',') + 1, 1));
-				save = strdup(ret);
+				content = estrdup(ui_format_get_content(strchr(format+2+strlen("pad:"), ',') + 1, 1));
+				save = estrdup(ret);
 				recursive = 1;
-				p = strdup(ui_format(NULL, content, hist));
+				p = estrdup(ui_format(NULL, content, hist));
 				recursive = 0;
 				memcpy(ret, save, rc);
 				rc += snprintf(&ret[rc], sizeof(ret) - rc, "%1$*2$s", p, pn);
@@ -1491,10 +1491,10 @@ ui_format(struct Window *window, char *format, struct History *hist) {
 			}
 
 			if (hist && !recursive && strncmp(content, "nick:", strlen("nick:")) == 0) {
-				content = strdup(ui_format_get_content(format+2+strlen("nick:"), 1));
-				save = strdup(ret); /* save ret, as this will be modified by recursing */
+				content = estrdup(ui_format_get_content(format+2+strlen("nick:"), 1));
+				save = estrdup(ret); /* save ret, as this will be modified by recursing */
 				recursive = 1;
-				p = strdup(ui_format(NULL, content, hist));
+				p = estrdup(ui_format(NULL, content, hist));
 				recursive = 0;
 				memcpy(ret, save, rc); /* copy saved value back into ret, we don't 
 							  need strlcpy as we don't use null byte */
@@ -1536,12 +1536,12 @@ ui_format(struct Window *window, char *format, struct History *hist) {
 
 	ret[rc] = '\0';
 	if (!recursive && divider && !rhs) {
-		save = strdup(ret);
+		save = estrdup(ret);
 		rc = snprintf(ret, sizeof(ret), "%1$*4$s%2$s%3$s", "", config_gets("divider.string"), save, config_getl("divider.margin"));
 		free(save);
 	}
 
-	save = strdup(ret);
+	save = estrdup(ret);
 	rc = snprintf(ret, sizeof(ret), "%s%s", ts, save);
 	free(save);
 
@@ -1579,7 +1579,7 @@ ui_format(struct Window *window, char *format, struct History *hist) {
 				}
 
 				if (pc == window->w) {
-					save = strdup(p);
+					save = estrdup(p);
 
 					if (divider) {
 						p += snprintf(p, sizeof(ret) - ((size_t)(p - ret)), "%1$*4$s %2$s%3$s",
@@ -1634,7 +1634,7 @@ ui_rectrl(char *str) {
 	if (caret)
 		ret[rc++] = '^';
 	ret[rc] = '\0';
-	rp = strdup(ret);
+	rp = estrdup(ret);
 
 	return rp;
 }
@@ -1660,7 +1660,7 @@ ui_unctrl(char *str) {
 	}
 
 	ret[rc] = '\0';
-	rp = strdup(ret);
+	rp = estrdup(ret);
 
 	return rp;
 }
@@ -1673,14 +1673,14 @@ ui_bind(char *binding, char *cmd) {
 	if (!binding || !cmd)
 		return -1;
 
-	p = malloc(sizeof(struct Keybind));
-	p->binding = strdup(ui_rectrl(binding));
+	p = emalloc(sizeof(struct Keybind));
+	p->binding = estrdup(ui_rectrl(binding));
 	if (*cmd != '/') {
-		tmp = malloc(strlen(cmd) + 2);
+		tmp = emalloc(strlen(cmd) + 2);
 		snprintf(tmp, strlen(cmd) + 2, "/%s", cmd);
 		p->cmd = tmp;
 	} else {
-		p->cmd = strdup(cmd);
+		p->cmd = estrdup(cmd);
 	}
 	p->prev = NULL;
 	p->next = keybinds;

@@ -325,7 +325,7 @@ handle_RPL_CHANNELMODEIS(struct Server *server, struct History *msg) {
 		chan = chan_add(server, &server->channels, *(msg->params+2), 0);
 
 	free(chan->mode);
-	chan->mode = strdup(*(msg->params+3));
+	chan->mode = estrdup(*(msg->params+3));
 
 	if (handle_expect_get(server, Expect_channelmodeis)) {
 		hist_addp(chan->history, msg, Activity_status, HIST_DFL);
@@ -464,7 +464,7 @@ handle_TOPIC(struct Server *server, struct History *msg) {
 	if ((chan = chan_get(&server->channels, *(msg->params+1), -1)) != NULL) {
 		hist_addp(chan->history, msg, Activity_status, HIST_DFL);
 		free(chan->topic);
-		chan->topic = *(msg->params+2) ? strdup(*(msg->params+2)) : NULL;
+		chan->topic = *(msg->params+2) ? estrdup(*(msg->params+2)) : NULL;
 	}
 }
 
@@ -504,7 +504,7 @@ handle_RPL_TOPIC(struct Server *server, struct History *msg) {
 		return;
 
 	free(chan->topic);
-	chan->topic = topic ? strdup(topic) : NULL;
+	chan->topic = topic ? estrdup(topic) : NULL;
 
 	if (strcmp_n(target, handle_expect_get(server, Expect_topic)) == 0) {
 		hist_addp(chan->history, msg, Activity_status, HIST_DFL);
@@ -557,7 +557,7 @@ handle_expect(struct Server *server, enum Expect cmd, char *about) {
 		return;
 
 	free(server->expect[cmd]);
-	server->expect[cmd] = about ? strdup(about) : NULL;
+	server->expect[cmd] = about ? estrdup(about) : NULL;
 }
 
 char *

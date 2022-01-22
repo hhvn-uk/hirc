@@ -1431,17 +1431,17 @@ alias_add(char *alias, char *cmd) {
 	if (!alias || !cmd)
 		return -1;
 
-	p = malloc(sizeof(struct Alias));
+	p = emalloc(sizeof(struct Alias));
 	if (*alias != '/') {
-		tmp = malloc(strlen(alias) + 2);
+		tmp = emalloc(strlen(alias) + 2);
 		snprintf(tmp, strlen(alias) + 2, "/%s", alias);
 		p->alias = tmp;
-	} else p->alias = strdup(alias);
+	} else p->alias = estrdup(alias);
 	if (*cmd != '/') {
-		tmp = malloc(strlen(cmd) + 2);
+		tmp = emalloc(strlen(cmd) + 2);
 		snprintf(tmp, strlen(cmd) + 2, "/%s", cmd);
 		p->cmd = tmp;
-	} else p->cmd = strdup(cmd);
+	} else p->cmd = estrdup(cmd);
 	p->prev = NULL;
 	p->next = aliases;
 	if (aliases)
