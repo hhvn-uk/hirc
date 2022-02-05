@@ -1614,7 +1614,7 @@ ui_rectrl(char *str) {
 		rp = NULL;
 	}
 
-	for (rc = 0; str && *str; str++) {
+	for (rc = 0, caret = 0; str && *str; str++) {
 		if (caret) {
 			c = toupper(*str) - 64;
 			if (c <= 31 && c >= 0) {
