@@ -45,6 +45,7 @@ HANDLER(handle_RPL_NAMREPLY);
 HANDLER(handle_RPL_ENDOFNAMES);
 HANDLER(handle_RPL_ENDOFMOTD);
 HANDLER(handle_ERR_NICKNAMEINUSE);
+HANDLER(handle_RPL_AWAY);
 #undef HANDLER
 
 struct Handler handlers[] = {
@@ -62,6 +63,7 @@ struct Handler handlers[] = {
 	{ "NOTICE",	handle_PRIVMSG	  		},
 	{ "001",	handle_RPL_WELCOME		},
 	{ "005",	handle_RPL_ISUPPORT		},
+	{ "301",	handle_RPL_AWAY			},
 	{ "324",	handle_RPL_CHANNELMODEIS	},
 	{ "331",	handle_RPL_NOTOPIC		},
 	{ "329",	NULL				}, /* ignore this:
@@ -312,6 +314,18 @@ handle_RPL_ISUPPORT(struct Server *server, struct History *msg) {
 
 		support_set(server, key, value);
 	}
+}
+
+static void
+handle_RPL_AWAY(struct Server *server, struct History *msg) {
+	struct Channel *priv;
+	struct HistInfo *history;
+
+	if ((priv = chan_get(&server->privs, *(msg->params+2), -1)) != NULL)
+		history = priv->history;
+	else
+		history = server->history;
+	hist_addp(history, msg, Activity_status, HIST_DFL);
 }
 
 static void

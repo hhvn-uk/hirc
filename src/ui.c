@@ -1512,9 +1512,8 @@ ui_format(struct Window *window, char *format, struct History *hist) {
 
 		if (escape && *format == 'n') {
 			ret[rc++] = '\n';
-			snprintf(printformat, sizeof(printformat), "%%%lds%%s",
+			rc += snprintf(&ret[rc], sizeof(ret) - rc, "%1$*3$s%2$s", "", config_gets("divider.string"),
 					ui_strlenc(NULL, ts, NULL) + config_getl("divider.margin"));
-			rc += snprintf(&ret[rc], sizeof(ret) - rc, printformat, "", config_gets("divider.string"));
 			escape = 0;
 			format++;
 			continue;

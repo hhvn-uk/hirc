@@ -655,7 +655,7 @@ struct Config config[] = {
 		.description = {
 		"Format of RPL_NONE (300) numeric", NULL}},
 	{"format.rpl.away", 1, Val_string,
-		.str = "${2-}",
+		.str = "away%{=}%{nick:${2}}${2}%{o}: ${3}",
 		.strhandle = config_redraws,
 		.description = {
 		"Format of RPL_AWAY (301) numeric", NULL}},
@@ -670,12 +670,12 @@ struct Config config[] = {
 		.description = {
 		"Format of RPL_ISON (303) numeric", NULL}},
 	{"format.rpl.unaway", 1, Val_string,
-		.str = "${2-}",
+		.str = "%{c:40}<--%{o}%{=}No longer %{b}away%{b}",
 		.strhandle = config_redraws,
 		.description = {
 		"Format of RPL_UNAWAY (305) numeric", NULL}},
 	{"format.rpl.nowaway", 1, Val_string,
-		.str = "${2-}",
+		.str = "%{c:32}-->%{o}%{=}Set %{b}away%{b}",
 		.strhandle = config_redraws,
 		.description = {
 		"Format of RPL_NOWAWAY (306) numeric", NULL}},

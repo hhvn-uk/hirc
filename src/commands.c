@@ -33,6 +33,7 @@
 #define command_toomany(cmd) ui_error("/%s: too many arguments", cmd)
 #define command_needselected(cmd, type) ui_error("/%s: no %s selected", cmd, type)
 
+static void command_away(struct Server *server, char *str);
 static void command_msg(struct Server *server, char *str);
 static void command_notice(struct Server *server, char *str);
 static void command_me(struct Server *server, char *str);
@@ -77,6 +78,10 @@ enum {
 };
 
 struct Command commands[] = {
+	{"away", command_away, 0, {
+		"usage: /away [message]",
+		"Set yourself as away on the server.",
+		"An empty message will unset the away.", NULL}},
 	{"msg", command_msg, 1, {
 		"usage: /msg <nick|channel> message..",
 		"Send a message to a nick or channel.",
@@ -219,6 +224,42 @@ struct Command commands[] = {
 struct Alias *aliases = NULL;
 
 static void
+command_away(struct Server *server, char *str) {
+	struct Server *sp;
+	char *format;
+	int all = 1, ret;
+	enum { opt_one };
+	static struct CommandOpts opts[] = {
+		{"one", CMD_NARG, opt_one},
+		{"NULL", 0, 0},
+	};
+
+	while ((ret = command_getopt(&str, opts)) != opt_done) {
+		switch (ret) {
+		case opt_error:
+			return;
+		case opt_one:
+			all = 0;
+			break;
+		}
+	}
+
+	if (str)
+		format = "AWAY :%s\r\n";
+	else
+		format = "AWAY\r\n";
+
+	if (all) {
+		for (sp = servers; sp; sp = sp->next)
+			ircprintf(sp, format, str);
+	} else if (server) {
+		ircprintf(server, format, str);
+	} else {
+		ui_error("-one specified, but no server selected", NULL);
+	}
+}
+
+static void
 command_msg(struct Server *server, char *str) {
 	struct Channel *chan = NULL;
 	char *target, *message;
@@ -235,7 +276,7 @@ command_msg(struct Server *server, char *str) {
 	else
 		chan = chan_get(&server->privs, target, -1);
 
-	ircprintf(selected.server, "PRIVMSG %s :%s\r\n", target, message);
+	ircprintf(server, "PRIVMSG %s :%s\r\n", target, message);
 	if (chan) {
 		hist_format(chan->history, Activity_self,
 				HIST_SHOW|HIST_LOG|HIST_SELF, "PRIVMSG %s :%s", target, message);
@@ -259,7 +300,7 @@ command_notice(struct Server *server, char *str) {
 	else
 		chan = chan_get(&server->privs, target, -1);
 
-	ircprintf(selected.server, "NOTICE %s :%s\r\n", target, message);
+	ircprintf(server, "NOTICE %s :%s\r\n", target, message);
 	if (chan) {
 		hist_format(chan->history, Activity_self,
 				HIST_SHOW|HIST_LOG|HIST_SELF, "NOTICE %s :%s", target, message);
@@ -276,7 +317,7 @@ command_me(struct Server *server, char *str) {
 	if (!str)
 		str = "";
 
-	ircprintf(selected.server, "PRIVMSG %s :%cACTION %s%c\r\n", selected.channel->name, 1, str, 1);
+	ircprintf(server, "PRIVMSG %s :%cACTION %s%c\r\n", selected.channel->name, 1, str, 1);
 	hist_format(selected.channel->history, Activity_self,
 			HIST_SHOW|HIST_LOG|HIST_SELF, "PRIVMSG %s :%cACTION %s%c", selected.channel->name, 1, str, 1);
 }
