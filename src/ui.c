@@ -628,7 +628,7 @@ ui_draw_input(void) {
 	int offset;
 	int x;
 
-	ui_wclear(&windows[Win_input]);
+	werase(windows[Win_input].window);
 
 	/* Round input.counter down to the nearest windows[Win_input].w.
 	 * This gives "pages" that are each as long as the width of the input window */
@@ -659,7 +659,7 @@ ui_draw_nicklist(void) {
 	struct Nick *p;
 	int y = 0, i;
 
-	ui_wclear(&windows[Win_nicklist]);
+	werase(windows[Win_nicklist].window);
 
 	if (!selected.channel || !windows[Win_nicklist].location)
 		return;
@@ -781,7 +781,7 @@ ui_draw_buflist(void) {
 	int i = 1, scroll;
 	char *indicator;
 
-	ui_wclear(&windows[Win_buflist]);
+	werase(windows[Win_buflist].window);
 
 	if (windows[Win_buflist].scroll < 0)
 		scroll = 0;
@@ -854,7 +854,7 @@ ui_draw_buflist(void) {
 	if (i <= ui_buflist_count(NULL, NULL, NULL)) {
 		wmove(windows[Win_buflist].window, windows[Win_buflist].h - 1, 0);
 		ui_wprintc(&windows[Win_buflist], 1, "%s\n", ui_format(NULL, config_gets("format.ui.buflist.more"), NULL));
-		ui_filltoeol(&windows[Win_buflist], ' ');
+		wclrtoeol(windows[Win_buflist].window);
 	}
 }
 
@@ -1053,26 +1053,6 @@ ui_strlenc(struct Window *window, char *s, int *lines) {
 	return ret;
 }
 
-void
-ui_filltoeol(struct Window *window, char c) {
-	int y, x;
-
-	getyx(window->window, y, x);
-	for (; x < window->w; x++)
-		waddch(window->window, c);
-}
-
-void
-ui_wclear(struct Window *window) {
-	int y;
-
-	for (y = 0; y <= window->h; y++) {
-		wmove(window->window, y, 0);
-		ui_filltoeol(window, ' ');
-	}
-	wmove(window->window, 0, 0);
-}
-
 static char *
 ui_get_pseudocmd(struct History *hist) {
 	char *cmd, *p1, *p2;
@@ -1158,7 +1138,7 @@ ui_draw_main(void) {
 	int y, lines;
 	int i;
 
-	ui_wclear(&windows[Win_main]);
+	werase(windows[Win_main].window);
 
 	for (i=0, p = selected.history->history; p && p->next && i < windows[Win_main].scroll; i++)
 		p = p->next;

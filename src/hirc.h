@@ -138,8 +138,6 @@ int		ui_get_pair(short fg, short bg);
 int		ui_wprintc(struct Window *window, int lines, char *format, ...);
 int		ui_strlenc(struct Window *window, char *s, int *lines);
 void		ui_select(struct Server *server, struct Channel *channel);
-void		ui_filltoeol(struct Window *window, char c);
-void		ui_wclear(struct Window *window);
 char *		ui_format(struct Window *window, char *format, struct History *hist);
 char *		ui_rectrl(char *str);
 char *		ui_unctrl(char *str);
