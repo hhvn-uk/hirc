@@ -108,16 +108,16 @@ int		serv_poll(struct Server **head, int timeout);
 int		serv_remove(struct Server **head, char *name);
 int		serv_selected(struct Server *server);
 void		serv_disconnect(struct Server *server, int reconnect, char *msg);
+int		serv_ischannel(struct Server *server, char *str);
 char *		support_get(struct Server *server, char *key);
 void		support_set(struct Server *server, char *key, char *value);
 void		schedule_push(struct Server *server, char *tmsg, char *msg);
 char *		schedule_pull(struct Server *server, char *tmsg);
-int		serv_ischannel(struct Server *server, char *str);
+void		expect_set(struct Server *server, enum Expect cmd, char *about);
+char *		expect_get(struct Server *server, enum Expect cmd);
 
 /* handle.c */
 void		handle(struct Server *server, char *msg);
-void		handle_expect(struct Server *server, enum Expect cmd, char *about);
-char *		handle_expect_get(struct Server *server, enum Expect cmd);
 
 /* ui.c */
 void		ui_init(void);

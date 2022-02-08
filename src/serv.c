@@ -489,3 +489,20 @@ schedule_pull(struct Server *server, char *tmsg) {
 	ret = NULL;
 	return NULL;
 }
+
+void
+expect_set(struct Server *server, enum Expect cmd, char *about) {
+	if (cmd >= Expect_last || cmd < 0 || readingconf)
+		return;
+
+	free(server->expect[cmd]);
+	server->expect[cmd] = about ? estrdup(about) : NULL;
+}
+
+char *
+expect_get(struct Server *server, enum Expect cmd) {
+	if (cmd >= Expect_last || cmd < 0)
+		return NULL;
+	else
+		return server->expect[cmd];
+}

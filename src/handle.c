@@ -97,9 +97,9 @@ handle_PONG(struct Server *server, struct History *msg) {
 	/* RFC1459 says that PONG should have a list of daemons,
 	 * but that's not how PONG seems to work in modern IRC. 
 	 * Therefore, consider the last parameter as the "message" */
-	if (strcmp_n(*(msg->params + len - 1), handle_expect_get(server, Expect_pong)) == 0) {
+	if (strcmp_n(*(msg->params + len - 1), expect_get(server, Expect_pong)) == 0) {
 		hist_addp(server->history, msg, Activity_status, HIST_DFL);
-		handle_expect(server, Expect_pong, NULL);
+		expect_set(server, Expect_pong, NULL);
 	}
 }
 
@@ -125,11 +125,11 @@ handle_JOIN(struct Server *server, struct History *msg) {
 	hist_addp(chan->history, msg, Activity_status, HIST_SHOW);
 
 	if (nick_isself(nick)) {
-		if (strcmp_n(target, handle_expect_get(server, Expect_join)) == 0)
+		if (strcmp_n(target, expect_get(server, Expect_join)) == 0)
 			ui_select(server, chan);
 		else
 			windows[Win_buflist].refresh = 1;
-		handle_expect(server, Expect_join, NULL);
+		expect_set(server, Expect_join, NULL);
 	} else if (selected.channel == chan) {
 		windows[Win_nicklist].refresh = 1;
 	}
@@ -152,9 +152,9 @@ handle_PART(struct Server *server, struct History *msg) {
 	if (nick_isself(nick)) {
 		chan_setold(chan, 1);
 		nick_free_list(&chan->nicks);
-		if (chan == selected.channel && strcmp_n(target, handle_expect_get(server, Expect_part)) == 0) {
+		if (chan == selected.channel && strcmp_n(target, expect_get(server, Expect_part)) == 0) {
 			ui_select(selected.server, NULL);
-			handle_expect(server, Expect_part, NULL);
+			expect_set(server, Expect_part, NULL);
 		}
 		windows[Win_buflist].refresh = 1;
 	} else {
@@ -341,9 +341,9 @@ handle_RPL_CHANNELMODEIS(struct Server *server, struct History *msg) {
 	free(chan->mode);
 	chan->mode = estrdup(*(msg->params+3));
 
-	if (handle_expect_get(server, Expect_channelmodeis)) {
+	if (expect_get(server, Expect_channelmodeis)) {
 		hist_addp(chan->history, msg, Activity_status, HIST_DFL);
-		handle_expect(server, Expect_channelmodeis, NULL);
+		expect_set(server, Expect_channelmodeis, NULL);
 	} else {
 		hist_addp(chan->history, msg, Activity_status, HIST_LOG);
 	}
@@ -367,7 +367,7 @@ handle_RPL_NAMREPLY(struct Server *server, struct History *msg) {
 	if ((chan = chan_get(&server->channels, target, -1)) == NULL)
 		chan = chan_add(server, &server->channels, target, 0);
 
-	if (strcmp_n(target, handle_expect_get(server, Expect_names)) == 0)
+	if (strcmp_n(target, expect_get(server, Expect_names)) == 0)
 		hist_addp(chan->history, msg, Activity_status, HIST_DFL);
 	else
 		hist_addp(chan->history, msg, Activity_status, HIST_LOG);
@@ -408,8 +408,8 @@ handle_RPL_ENDOFNAMES(struct Server *server, struct History *msg) {
 		return;
 
 	target = *(msg->params+2);
-	if (strcmp_n(target, handle_expect_get(server, Expect_names)) == 0)
-		handle_expect(server, Expect_names, NULL);
+	if (strcmp_n(target, expect_get(server, Expect_names)) == 0)
+		expect_set(server, Expect_names, NULL);
 }
 
 static void
@@ -418,14 +418,14 @@ handle_ERR_NICKNAMEINUSE(struct Server *server, struct History *msg) {
 
 	hist_addp(server->history, msg, Activity_status, HIST_DFL);
 
-	if (handle_expect_get(server, Expect_nicknameinuse) == NULL) {
+	if (expect_get(server, Expect_nicknameinuse) == NULL) {
 		snprintf(nick, sizeof(nick), "%s_", server->self->nick);
 		nick_free(server->self);
 		server->self = nick_create(nick, ' ', server);
 		server->self->self = 1;
 		ircprintf(server, "NICK %s\r\n", nick);
 	} else {
-		handle_expect(server, Expect_nicknameinuse, NULL);
+		expect_set(server, Expect_nicknameinuse, NULL);
 	}
 }
 
@@ -451,7 +451,7 @@ handle_NICK(struct Server *server, struct History *msg) {
 		nick_free(server->self);
 		server->self = nick_create(newnick, ' ', server);
 		server->self->self = 1;
-		handle_expect(server, Expect_nicknameinuse, NULL);
+		expect_set(server, Expect_nicknameinuse, NULL);
 	}
 
 	for (chan = server->channels; chan; chan = chan->next) {
@@ -495,9 +495,9 @@ handle_RPL_NOTOPIC(struct Server *server, struct History *msg) {
 	if ((chan = chan_get(&server->channels, target, -1)) == NULL)
 		return;
 
-	if (strcmp_n(target, handle_expect_get(server, Expect_topic)) == 0) {
+	if (strcmp_n(target, expect_get(server, Expect_topic)) == 0) {
 		hist_addp(chan->history, msg, Activity_status, HIST_DFL);
-		handle_expect(server, Expect_topic, NULL);
+		expect_set(server, Expect_topic, NULL);
 	} else {
 		hist_addp(chan->history, msg, Activity_status, HIST_LOG);
 	}
@@ -520,10 +520,10 @@ handle_RPL_TOPIC(struct Server *server, struct History *msg) {
 	free(chan->topic);
 	chan->topic = topic ? estrdup(topic) : NULL;
 
-	if (strcmp_n(target, handle_expect_get(server, Expect_topic)) == 0) {
+	if (strcmp_n(target, expect_get(server, Expect_topic)) == 0) {
 		hist_addp(chan->history, msg, Activity_status, HIST_DFL);
-		handle_expect(server, Expect_topic, NULL);
-		handle_expect(server, Expect_topicwhotime, target);
+		expect_set(server, Expect_topic, NULL);
+		expect_set(server, Expect_topicwhotime, target);
 	} else {
 		hist_addp(chan->history, msg, Activity_status, HIST_LOG);
 	}
@@ -542,9 +542,9 @@ handle_RPL_TOPICWHOTIME(struct Server *server, struct History *msg) {
 	if ((chan = chan_get(&server->channels, target, -1)) == NULL)
 		return;
 
-	if (strcmp_n(target, handle_expect_get(server, Expect_topicwhotime)) == 0) {
+	if (strcmp_n(target, expect_get(server, Expect_topicwhotime)) == 0) {
 		hist_addp(chan->history, msg, Activity_status, HIST_DFL);
-		handle_expect(server, Expect_topicwhotime, NULL);
+		expect_set(server, Expect_topicwhotime, NULL);
 	} else {
 		hist_addp(chan->history, msg, Activity_status, HIST_LOG);
 	}
@@ -561,25 +561,6 @@ handle_RPL_ENDOFMOTD(struct Server *server, struct History *msg) {
 	/* If server doesn't support RPL_WELCOME, use RPL_ENDOFMOTD to set status */
 	server->status = ConnStatus_connected;
 	hist_addp(server->history, msg, Activity_status, HIST_DFL);
-}
-
-/* Expect stuff should probably be moved to serv.c.
- * Also, it might be better to have an enum for all commands and numerics somewhere */
-void
-handle_expect(struct Server *server, enum Expect cmd, char *about) {
-	if (cmd >= Expect_last || cmd < 0 || readingconf)
-		return;
-
-	free(server->expect[cmd]);
-	server->expect[cmd] = about ? estrdup(about) : NULL;
-}
-
-char *
-handle_expect_get(struct Server *server, enum Expect cmd) {
-	if (cmd >= Expect_last || cmd < 0)
-		return NULL;
-	else
-		return server->expect[cmd];
 }
 
 void

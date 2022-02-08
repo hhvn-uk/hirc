@@ -346,7 +346,7 @@ command_ctcp(struct Server *server, char *str) {
 		chan = chan_get(&server->privs, target, -1);
 
 	/* XXX: if we CTCP a channel, responses should go to that channel.
-	 * This requires more than just handle_expect, so might never be
+	 * This requires more than just expect_set, so might never be
 	 * implemented. */
 	ircprintf(server, "PRIVMSG %s :%c%s%c\r\n", target, 1, ctcp, 1);
 	if (chan) {
@@ -410,7 +410,7 @@ command_join(struct Server *server, char *str) {
 	/* Perhaps we should update expect from schedule?
 	 * That'd make more sense if different stuff gets
 	 * scheduled for events that happen at different times */
-	handle_expect(server, Expect_join, str);
+	expect_set(server, Expect_join, str);
 }
 
 static void
@@ -437,7 +437,7 @@ command_part(struct Server *server, char *str) {
 	snprintf(msg, sizeof(msg), "PART %s :%s\r\n", channel, reason ? reason : config_gets("misc.partmessage"));
 
 	ircprintf(server, "%s", msg);
-	handle_expect(server, Expect_part, channel);
+	expect_set(server, Expect_part, channel);
 }
 
 static void
@@ -497,7 +497,7 @@ command_mode(struct Server *server, char *str) {
 	if (modes) {
 		ircprintf(server, "MODE %s %s\r\n", channel, modes);
 	} else {
-		handle_expect(server, Expect_channelmodeis, channel);
+		expect_set(server, Expect_channelmodeis, channel);
 		ircprintf(server, "MODE %s\r\n", channel);
 	}
 }
@@ -515,7 +515,7 @@ command_nick(struct Server *server, char *str) {
 	}
 
 	ircprintf(server, "NICK %s\r\n", str);
-	handle_expect(server, Expect_nicknameinuse, str);
+	expect_set(server, Expect_nicknameinuse, str);
 }
 
 static void
@@ -577,7 +577,7 @@ command_ping(struct Server *server, char *str) {
 	}
 
 	ircprintf(server, "PING :%s\r\n", str);
-	handle_expect(server, Expect_pong, str);
+	expect_set(server, Expect_pong, str);
 }
 
 static void
@@ -881,7 +881,7 @@ command_names(struct Server *server, char *str) {
 	}
 
 	ircprintf(server, "NAMES %s\r\n", channel);
-	handle_expect(server, Expect_names, channel);
+	expect_set(server, Expect_names, channel);
 }
 
 static void
@@ -932,7 +932,7 @@ command_topic(struct Server *server, char *str) {
 
 	if (!topic) {
 		ircprintf(server, "TOPIC %s\r\n", channel);
-		handle_expect(server, Expect_topic, channel);
+		expect_set(server, Expect_topic, channel);
 	} else ircprintf(server, "TOPIC %s :%s\r\n", channel, topic);
 }
 
