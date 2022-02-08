@@ -1,8 +1,8 @@
-" hirc config syntax highlighting
-" Colours comments and formats.
-" I haven't done any autocmd stuff,
-" so you'll likely want to tell vim
-" to use this syntax (:help modeline) */
+" Vim syntax file
+" Language:	hirc configuration
+" Maintainer:	hhvn <dev@hhvn.uk>
+" Last Change:	2022-02-08
+" License:	This file is placed in the public domain.
 
 if exists("b:current_syntax")
 	finish
@@ -14,10 +14,9 @@ syn region hircFormatB start="^/set format." end=/$/ contains=hircStyle,hircVari
 syn match hircStyle "%{[^}]*}" contained
 " hircNickStyle is a bit hacky and should be replaced 
 " by a region, but I don't know syn enough for that
-syn match hircNickStyle "%{nick:\${[^}]*}}" contained contains=hircVariable
+syn region hircNickStyle matchgroup=hircStyle start='%{nick:' end='}' contains=hircStyle,hircVariable
 syn match hircVariable "\${[^}]*}" contained
 
 hi link hircComment comment
 hi link hircStyle preproc
-hi link hircNickStyle hircStyle
 hi link hircVariable variable
