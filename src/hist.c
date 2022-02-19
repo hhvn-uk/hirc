@@ -205,7 +205,7 @@ hist_log(char *msg, struct Nick *from, time_t timestamp, struct Server *server) 
 	if (*msg == ':' && strchr(msg, ' '))
 		msg = strchr(msg, ' ') + 1;
 
-	if (dprintf(server->logfd, "!%lld :%s %s\n", (long long)timestamp, from->prefix, msg) <  0) {
+	if (dprintf(server->logfd, "!%lld :%s %s\n", (long long)timestamp, from ? from->prefix : server->name, msg) <  0) {
 		/* Can't write, try to open the file */
 		snprintf(filename, sizeof(filename), "%s/%s.log", homepath(logdir), server->name);
 		ret = open(filename, O_CREAT|O_APPEND|O_WRONLY);
@@ -225,7 +225,7 @@ hist_log(char *msg, struct Nick *from, time_t timestamp, struct Server *server) 
 	} else return 1;
 
 	/* retry */
-	if (dprintf(server->logfd, "!%lld :%s %s\n", (long long)timestamp, from->prefix, msg) <  0) {
+	if (dprintf(server->logfd, "!%lld :%s %s\n", (long long)timestamp, from ? from->prefix : server->name, msg) <  0) {
 		ui_error("Failed to write to log of server '%s': %s", server->name, strerror(errno));
 		return -1;
 	}
