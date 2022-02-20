@@ -109,6 +109,10 @@ int		serv_remove(struct Server **head, char *name);
 int		serv_selected(struct Server *server);
 void		serv_disconnect(struct Server *server, int reconnect, char *msg);
 int		serv_ischannel(struct Server *server, char *str);
+void		serv_auto_add(struct Server *server, char *cmd);
+void		serv_auto_free(struct Server *server);
+void		serv_auto_send(struct Server *server);
+int		serv_auto_haschannel(struct Server *server, char *chan);
 char *		support_get(struct Server *server, char *key);
 void		support_set(struct Server *server, char *key, char *value);
 void		schedule_push(struct Server *server, char *tmsg, char *msg);
@@ -156,7 +160,7 @@ void		ui_tls_error_(char *file, int line, const char *func, struct tls *ctx, cha
 #endif /* TLS */
 
 /* commands.c */
-void		command_eval(char *str);
+void		command_eval(struct Server *server, char *str);
 int		command_getopt(char **str, struct CommandOpts *opts);
 int		alias_add(char *binding, char *cmd);
 int		alias_remove(char *binding);
@@ -182,10 +186,10 @@ extern struct Selected selected;
 extern struct Keybind *keybinds;
 extern struct Window windows[Win_last];
 extern int uineedredraw;
+extern int nouich;
 
 /* config.c */
 extern struct Config config[];
-extern int readingconf;
 
 /* commands.c */
 extern struct Command commands[];

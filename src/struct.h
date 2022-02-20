@@ -150,6 +150,7 @@ struct Server {
 	struct Schedule *schedule;
 	int reconnect;
 	char *expect[Expect_last];
+	char **autocmds;
 	int connectfail; /* number of failed connections */
 	time_t lastconnected; /* last time a connection was lost */
 	time_t lastrecv; /* last time a message was received from server */

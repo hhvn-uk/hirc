@@ -554,14 +554,20 @@ handle_RPL_TOPICWHOTIME(struct Server *server, struct History *msg) {
 
 static void
 handle_RPL_WELCOME(struct Server *server, struct History *msg) {
-	server->status = ConnStatus_connected;
+	if (server->status != ConnStatus_connected) {
+		server->status = ConnStatus_connected;
+		serv_auto_send(server);
+	}
 	hist_addp(server->history, msg, Activity_status, HIST_DFL);
 }
 
 static void
 handle_RPL_ENDOFMOTD(struct Server *server, struct History *msg) {
 	/* If server doesn't support RPL_WELCOME, use RPL_ENDOFMOTD to set status */
-	server->status = ConnStatus_connected;
+	if (server->status != ConnStatus_connected) {
+		server->status = ConnStatus_connected;
+		serv_auto_send(server);
+	}
 	hist_addp(server->history, msg, Activity_status, HIST_DFL);
 }
 

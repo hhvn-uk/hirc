@@ -30,6 +30,7 @@
 #include "hirc.h"
 
 int uineedredraw = 0;
+int nouich = 0;
 
 #define HIRC_COLOURS 100
 static unsigned short colourmap[HIRC_COLOURS] = {
@@ -89,6 +90,9 @@ struct {
 	{"SELF_HELP_START",	"format.ui.help.start"},
 	{"SELF_HELP",		"format.ui.help"},
 	{"SELF_HELP_END",	"format.ui.help.end"},
+	{"SELF_AUTOCMDS_START",	"format.ui.autocmds.start"},
+	{"SELF_AUTOCMDS_LIST",	"format.ui.autocmds"},
+	{"SELF_AUTOCMDS_END",	"format.ui.autocmds.end"},
 	/* Real commands/numerics from server */
 	{"PRIVMSG", 		"format.privmsg"},
 	{"NOTICE",		"format.notice"},
@@ -394,7 +398,7 @@ ui_read(void) {
 				for (kp = keybinds; kp; kp = kp->next) {
 					if ((input.counter - savecounter) == strlen(kp->binding) &&
 							strncmp(kp->binding, &input.string[savecounter], (input.counter - savecounter)) == 0) {
-						command_eval(kp->cmd);
+						command_eval(selected.server, kp->cmd);
 						memmove(&input.string[savecounter],
 								&input.string[input.counter],
 								strlen(&input.string[input.counter]) + 1);
@@ -457,7 +461,7 @@ ui_read(void) {
 			break;
 		case KEY_ENTER:
 		case '\r':
-			command_eval(input.string);
+			command_eval(selected.server, input.string);
 			/* free checks for null */
 			free(input.history[INPUT_HIST_MAX - 1]);
 			memmove(input.history + 1, input.history, (sizeof(input.history) / INPUT_HIST_MAX) * (INPUT_HIST_MAX - 1));

@@ -155,8 +155,15 @@ struct Command commands[] = {
 		"Set a formatting variable.",
 		"This is equivalent to /set format.<format> string...", NULL}},
 	{"server", command_server, 0, {
-		"usage: /server <server> cmd....",
-		"Run (non-raw) command with server as target.", NULL}},
+		"usage: /server [-auto] <server> [cmd....]",
+		"       /server [-clear] <server>",
+		"Evaluate a cooked command with server as target.",
+		" -auto  if supplied with a command, run that command",
+		"        automatically when the server connects.",
+		"        Otherwise, list autocmds that have been set.",
+		" -clear clear autocmds from server",
+		"To send a raw command to a server, use:",
+		" /server <server> /quote ...", NULL}},
 	{"names", command_names, 1, {
 		"usage: /names <channel>",
 		"List nicks in channel (pretty useless with nicklist.", NULL}},
@@ -205,6 +212,7 @@ struct Command commands[] = {
 		"usage: /dump [-all] [-aliases] [-bindings] [-formats] [-config]",
 		"             [-default] [-servers] [-channels] [-queries] <file>",
 		"Dumps configuration details into a file.",
+		" -autocmds dump commands specified with /server -auto",
 		" -aliases  dump /alias commands",
 		" -bindings dump /bind commands",
 		" -formats  dump /format commands beginning with filter.",
@@ -214,7 +222,9 @@ struct Command commands[] = {
 		" -queries  dump /query commands for respective servers",
 		" -default  dump default settings (dump non-default otherwise)",
 		"If none (excluding -default) of the above are selected, it is",
-		"treated as though all are selected.", NULL}},
+		"treated as though all are selected.",
+		"If -autocmds and -channels are used together, and there exists",
+		"an autocmd to join a channel, then only the autocmd will be dumped.", NULL}},
 	{"close", command_close, 0, {
 		"usage: /close [id]",
 		"Forget about selected buffer, or a buffer by id.", NULL}},
@@ -378,7 +388,7 @@ command_query(struct Server *server, char *str) {
 	if ((priv = chan_get(&server->privs, str, -1)) == NULL)
 		priv = chan_add(server, &server->privs, str, 1);
 
-	if (!readingconf)
+	if (!nouich)
 		ui_select(server, priv);
 }
 
@@ -694,7 +704,7 @@ command_connect(struct Server *server, char *str) {
 
 	tserver = serv_add(&servers, network, host, port, nick, username, realname, tls, tls_verify);
 	serv_connect(tserver);
-	if (!readingconf)
+	if (!nouich)
 		ui_select(tserver, NULL);
 }
 
@@ -834,12 +844,35 @@ static void
 command_server(struct Server *server, char *str) {
 	struct Server *nserver;
 	char *tserver, *cmd, *arg;
-	int i;
+	char **acmds;
+	int i, ret, mode;
+	enum { opt_norm, opt_auto, opt_clear };
+	struct CommandOpts opts[] = {
+		{"auto", CMD_NARG, opt_auto},
+		{"clear", CMD_NARG, opt_clear},
+		{NULL, 0, 0},
+	};
+
+	mode = opt_norm;
+	while ((ret = command_getopt(&str, opts)) != opt_done) {
+		switch (ret) {
+		case opt_error:
+			return;
+		case opt_auto:
+		case opt_clear:
+			if (mode != opt_norm) {
+				ui_error("conflicting flags", NULL);
+				return;
+			}
+			mode = ret;
+		}
+	}
 
 	tserver = strtok_r(str,  " ", &arg);
-	cmd     = strtok_r(NULL, " ", &arg);
+	if (mode == opt_norm)
+		cmd     = strtok_r(NULL, " ", &arg);
 
-	if (!tserver || !cmd) {
+	if (!tserver) {
 		command_toofew("server");
 		return;
 	}
@@ -849,17 +882,53 @@ command_server(struct Server *server, char *str) {
 		return;
 	}
 
-	if (*cmd == '/')
-		cmd++;
-
-	for (i=0; commands[i].name && commands[i].func; i++) {
-		if (strcmp(commands[i].name, cmd) == 0) {
-			commands[i].func(nserver, arg);
+	switch (mode) {
+	case opt_norm:
+		if (!cmd || !*cmd) {
+			command_toofew("server");
 			return;
 		}
-	}
 
-	ui_error("no such commands: '%s'", cmd);
+		if (*cmd == '/')
+			cmd++;
+
+		for (i=0; commands[i].name && commands[i].func; i++) {
+			if (strcmp(commands[i].name, cmd) == 0) {
+				commands[i].func(nserver, arg);
+				return;
+			}
+		}
+		ui_error("no such commands: '%s'", cmd);
+		break;
+	case opt_auto:
+		if (!arg || !*arg) {
+			hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_AUTOCMDS_START %s :Autocmds for %s:",
+					nserver->name, nserver->name);
+			for (acmds = nserver->autocmds; acmds && *acmds; acmds++)
+				hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_AUTOCMDS_LIST %s :%s",
+						nserver->name, *acmds);
+			hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_AUTOCMDS_END %s :End of autocmds for %s",
+					nserver->name, nserver->name);
+		} else {
+			if (*arg == '/') {
+				cmd = arg;
+			} else {
+				cmd = emalloc(strlen(arg) + 2);
+				snprintf(cmd, strlen(arg) + 2, "/%s", arg);
+			}
+
+			serv_auto_add(nserver, cmd);
+		}
+		break;
+	case opt_clear:
+		if (*arg) {
+			command_toomany("server");
+			break;
+		}
+
+		serv_auto_free(nserver);
+		break;
+	}
 }
 
 static void
@@ -1259,6 +1328,7 @@ command_dump(struct Server *server, char *str) {
 	int selected = 0;
 	int def = 0, ret;
 	int i;
+	char **aup;
 	struct Server *sp;
 	struct Channel *chp;
 	struct Alias *ap;
@@ -1271,7 +1341,8 @@ command_dump(struct Server *server, char *str) {
 		opt_servers = 16,
 		opt_channels = 32,
 		opt_queries = 64,
-		opt_default = 128,
+		opt_autocmds = 128,
+		opt_default = 256,
 	};
 	static struct CommandOpts opts[] = {
 		{"aliases", CMD_NARG, opt_aliases},
@@ -1279,6 +1350,7 @@ command_dump(struct Server *server, char *str) {
 		{"formats", CMD_NARG, opt_formats},
 		{"config", CMD_NARG, opt_config},
 		{"servers", CMD_NARG, opt_servers},
+		{"autocmds", CMD_NARG, opt_autocmds},
 		{"channels", CMD_NARG, opt_channels},
 		{"queries", CMD_NARG, opt_queries},
 		{"default", CMD_NARG, opt_default},
@@ -1295,6 +1367,7 @@ command_dump(struct Server *server, char *str) {
 		case opt_config:
 		case opt_servers:
 		case opt_channels:
+		case opt_autocmds:
 			selected |= ret;
 			break;
 		case opt_default:
@@ -1304,7 +1377,7 @@ command_dump(struct Server *server, char *str) {
 	}
 
 	if (!selected)
-		selected = 127;
+		selected = opt_default - 1;
 
 	if (!str || !*str) {
 		command_toofew("dump");
@@ -1316,7 +1389,7 @@ command_dump(struct Server *server, char *str) {
 		return;
 	}
 
-	if (selected & opt_servers || selected & opt_channels || selected & opt_queries) {
+	if (selected & (opt_servers|opt_channels|opt_queries|opt_autocmds)) {
 		if (selected & opt_servers)
 			fprintf(file, "Network connections\n");
 
@@ -1335,9 +1408,14 @@ command_dump(struct Server *server, char *str) {
 						sp->host,
 						sp->port);
 			}
+			if (selected & opt_autocmds) {
+				for (aup = sp->autocmds; *aup; aup++)
+					fprintf(file, "/server -auto %s %s\n", sp->name, *aup);
+			}
 			if (selected & opt_channels) {
 				for (chp = sp->channels; chp; chp = chp->next)
-					fprintf(file, "/server %s /join %s\n", sp->name, chp->name);
+					if (!(selected & opt_autocmds) || !serv_auto_haschannel(sp, chp->name))
+						fprintf(file, "/server %s /join %s\n", sp->name, chp->name);
 			}
 			if (selected & opt_queries) {
 				for (chp = sp->privs; chp; chp = chp->next)
@@ -1546,7 +1624,7 @@ alias_eval(char *cmd) {
 }
 
 void
-command_eval(char *str) {
+command_eval(struct Server *server, char *str) {
 	struct Command *cmdp;
 	char msg[512];
 	char *cmd;
@@ -1582,10 +1660,10 @@ command_eval(char *str) {
 
 		for (cmdp = commands; cmdp->name && cmdp->func; cmdp++) {
 			if (strcmp(cmdp->name, cmd) == 0) {
-				if (cmdp->needserver && !selected.server) {
+				if (cmdp->needserver && !server) {
 					ui_error("/%s requires a server to be selected or provided by /server", cmdp->name);
 				} else {
-					cmdp->func(selected.server, s);
+					cmdp->func(server, s);
 				}
 				return;
 			}

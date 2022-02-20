@@ -102,6 +102,7 @@ serv_create(char *name, char *host, char *port, char *nick,
 	server->reconnect = 0;
 	for (i=0; i < Expect_last; i++)
 		server->expect[i] = NULL;
+	server->autocmds = NULL;
 	server->connectfail = 0;
 	server->lastconnected = server->lastrecv = server->pingsent = 0;
 
@@ -451,6 +452,70 @@ serv_ischannel(struct Server *server, char *str) {
 }
 
 void
+serv_auto_add(struct Server *server, char *cmd) {
+	char **p;
+	size_t len;
+
+	if (!server || !cmd)
+		return;
+
+	if (!server->autocmds) {
+		len = 1;
+		server->autocmds = emalloc(sizeof(char *) * (len + 1));
+	} else {
+		for (p = server->autocmds, len = 1; *p; p++)
+			len++;
+		server->autocmds = erealloc(server->autocmds, sizeof(char *) * (len + 1));
+	}
+
+	*(server->autocmds + len - 1) = estrdup(cmd);
+	*(server->autocmds + len) = NULL;
+}
+
+void
+serv_auto_free(struct Server *server) {
+	char **p;
+
+	if (!server || !server->autocmds)
+		return;
+
+	for (p = server->autocmds; *p; p++)
+		free(*p);
+	free(server->autocmds);
+	server->autocmds = NULL;
+}
+
+void
+serv_auto_send(struct Server *server) {
+	char **p;
+	int save;
+
+	if (!server || !server->autocmds)
+		return;
+
+	save = nouich;
+	nouich = 1;
+	for (p = server->autocmds; *p; p++)
+		command_eval(server, *p);
+	nouich = save;
+}
+
+/* check if autocmds has '/join <chan>' */
+int
+serv_auto_haschannel(struct Server *server, char *chan) {
+	char **p;
+
+	if (!server || !server->autocmds)
+		return 0;
+
+	for (p = server->autocmds; *p; p++)
+		if (strncmp(*p, "/join ", strlen("/join ")) == 0 &&
+				strcmp((*p) + strlen("/join "), chan) == 0)
+			return 1;
+	return 0;
+}
+
+void
 schedule_push(struct Server *server, char *tmsg, char *msg) {
 	struct Schedule *p;
 
@@ -513,7 +578,7 @@ schedule_pull(struct Server *server, char *tmsg) {
 
 void
 expect_set(struct Server *server, enum Expect cmd, char *about) {
-	if (cmd >= Expect_last || cmd < 0 || readingconf)
+	if (cmd >= Expect_last || cmd < 0 || nouich)
 		return;
 
 	free(server->expect[cmd]);

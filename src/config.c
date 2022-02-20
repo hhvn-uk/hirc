@@ -25,8 +25,6 @@
 #include <limits.h>
 #include "hirc.h"
 
-int readingconf = 0;
-
 static int config_nicklist_location(long num);
 static int config_nicklist_width(long num);
 static int config_buflist_location(long num);
@@ -277,6 +275,21 @@ struct Config config[] = {
 		.strhandle = config_redraws,
 		.description = {
 		"Format of footer of /bind output", NULL}},
+	{"format.ui.autocmds", 1, Val_string,
+		.str = " ${2}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of /server -auto output", NULL}},
+	{"format.ui.autocmds.start", 1, Val_string,
+		.str = "Autocmds for ${1}:",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of header of /server -auto output", NULL}},
+	{"format.ui.autocmds.end", 1, Val_string,
+		.str = "",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of footer of /server -auto output", NULL}},
 	{"format.ui.grep.start", 1, Val_string,
 		.str = "%{b}%{c:94}Results of ${1}:",
 		.strhandle = config_redraws,
@@ -1358,8 +1371,7 @@ config_read(char *filename) {
 	if (!bt)
 		bt = emalloc((sizeof(char *)) * (btoffset + 1));
 	else
-		bt = realloc(bt, (sizeof(char *)) * (btoffset + 1));
-	assert(bt != NULL);
+		bt = erealloc(bt, (sizeof(char *)) * (btoffset + 1));
 
 	*(bt + btoffset) = path;
 	btoffset++;
@@ -1370,13 +1382,13 @@ config_read(char *filename) {
 		goto shrink;
 	}
 
-	save = readingconf;
-	readingconf = 1;
+	save = nouich;
+	nouich = 1;
 	while (read_line(fileno(file), buf, sizeof(buf)))
 		if (*buf == '/')
-			command_eval(buf);
+			command_eval(NULL, buf);
 	fclose(file);
-	readingconf = save;
+	nouich = save;
 
 shrink:
 	/* Remove path from bt and shrink */
@@ -1386,7 +1398,7 @@ shrink:
 		free(bt);
 		bt = NULL;
 	} else {
-		bt = realloc(bt, (sizeof(char *)) * btoffset);
+		bt = erealloc(bt, (sizeof(char *)) * btoffset);
 		assert(bt != NULL);
 	}
 }
