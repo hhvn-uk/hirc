@@ -39,6 +39,7 @@ emalloc(size_t size) {
 
 	if ((mem = malloc(size)) == NULL) {
 		perror("malloc()");
+		endwin();
 		exit(EXIT_FAILURE);
 	}
 
@@ -51,6 +52,7 @@ estrdup(const char *str) {
 
 	if ((ret = strdup(str)) == NULL) {
 		perror("strdup()");
+		endwin();
 		exit(EXIT_FAILURE);
 	}
 
