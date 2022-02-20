@@ -415,13 +415,15 @@ handle_RPL_ENDOFNAMES(struct Server *server, struct History *msg) {
 static void
 handle_ERR_NICKNAMEINUSE(struct Server *server, struct History *msg) {
 	char nick[64]; /* should be limited to 9 chars, but newer servers *shrug*/
+	struct Nick *nnick;
 
 	hist_addp(server->history, msg, Activity_status, HIST_DFL);
 
 	if (expect_get(server, Expect_nicknameinuse) == NULL) {
 		snprintf(nick, sizeof(nick), "%s_", server->self->nick);
+		nnick = nick_create(nick, ' ', server);
 		nick_free(server->self);
-		server->self = nick_create(nick, ' ', server);
+		server->self = nnick;
 		server->self->self = 1;
 		ircprintf(server, "NICK %s\r\n", nick);
 	} else {
