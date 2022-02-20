@@ -59,6 +59,19 @@ estrdup(const char *str) {
 	return ret;
 }
 
+void *
+erealloc(void *ptr, size_t size) {
+	void *mem;
+
+	if ((mem = realloc(ptr, size)) == NULL) {
+		perror("realloc()");
+		endwin();
+		exit(EXIT_FAILURE);
+	}
+
+	return mem;
+}
+
 /* Assign memory and store in array for freeing by main loop */
 void *
 talloc(size_t size) {
@@ -70,10 +83,9 @@ talloc(size_t size) {
 	if (size) {
 		mem = emalloc(size);
 		if (!mems)
-			mema = malloc((sizeof(char *)) * (mems + 1));
+			mema = emalloc((sizeof(char *)) * (mems + 1));
 		else
-			mema = realloc(mema, (sizeof(char *)) * (mems + 1));
-		assert(mema != NULL);
+			mema = erealloc(mema, (sizeof(char *)) * (mems + 1));
 
 		*(mema + mems) = mem;
 		mems++;

@@ -414,7 +414,7 @@ support_set(struct Server *server, char *key, char *value) {
 		return;
 
 	if (!server->supports) {
-		server->supports = malloc(sizeof(struct Support));
+		server->supports = emalloc(sizeof(struct Support));
 		server->supports->prev = server->supports->next = NULL;
 		server->supports->key = key ? strdup(key) : NULL;
 		server->supports->value = value ? strdup(value) : NULL;
@@ -429,7 +429,7 @@ support_set(struct Server *server, char *key, char *value) {
 		}
 	}
 
-	p->next = malloc(sizeof(struct Support));
+	p->next = emalloc(sizeof(struct Support));
 	p->next->prev = p;
 	p->next->next = NULL;
 	p->next->key = key ? strdup(key) : NULL;
@@ -523,7 +523,7 @@ schedule_push(struct Server *server, char *tmsg, char *msg) {
 		return;
 
 	if (!server->schedule) {
-		server->schedule = malloc(sizeof(struct Schedule));
+		server->schedule = emalloc(sizeof(struct Schedule));
 		server->schedule->prev = server->schedule->next = NULL;
 		server->schedule->tmsg = strdup(tmsg);
 		server->schedule->msg  = strdup(msg);
@@ -532,7 +532,7 @@ schedule_push(struct Server *server, char *tmsg, char *msg) {
 
 	for (p = server->schedule; p && p->next; p = p->next);
 
-	p->next = malloc(sizeof(struct Schedule));
+	p->next = emalloc(sizeof(struct Schedule));
 	p->next->prev = p;
 	p->next->next = NULL;
 	p->next->tmsg = strdup(tmsg);
