@@ -7,6 +7,13 @@ Set your default nickname to 'hhvn'.
 .Dl /connect -network hlircnet irc.hlirc.net
 Connect to 'irc.hlirc.net' with the network name 'hlircnet'.
 
+.Dl /server -auto hlircnet /join #hlircnet
+Automatically run the command '/join #hlircnet' when connecting to the network 'hlircnet'.
+Due to the way server structures are created internally,
+this must be run after the first /connect to the specified network.
+In practice, this means the command needs to be used via a config file,
+or it may not trigger for the first connexion to a server.
+
 .Dl /bind ^[1 /select 1
 Bind alt-1 so that it selects buffer 1.
 

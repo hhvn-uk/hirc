@@ -22,6 +22,19 @@ a lot of configurability and integrating some things only
 possible with perl plugins. That said,
 .Nm
 does not share any code with irssi.
+.Sh DISCLAIMER
+Since
+.Nm
+is purely a hobby project aiming to be:
+.Bl -dash -compact
+.It
+fun
+.It
+an IRC client tailoured to my liking.
+.El
+there are many features one may expect of IRC clients left missing,
+or handled in ways that are not 'proper'.
+Implement it yourself, or deal with it.
 .Sh CONFIGURATION
 .Nm
 reads each line of
@@ -32,15 +45,12 @@ Any line beginning with a character other than '/' are ignored.
 Variables beginning with format.* are used to customize the way that messages and ui elements are formatted.
 The parser is designed to never report any errors, and simply print verbatim if it cannot understand the format.
 The following styling may be used:
-.Bl -tag -compact -width "%{c:fg[,bg]} "
+.Bl -tag -compact -width "%{c:fg[,bg]}"
 .It %{b}
 Set/reset boldness.
 .It %{c:fg[,bg]}
 Set foreground/background colours.
 Background optional.
-.It %{nick:...}
-Set foreground colour to colourised version of text in ellipsis.
-Ellipsis may contain a variable.
 .It %{i}
 Set/reset italics.
 .It %{o}
@@ -51,10 +61,20 @@ Reverse foreground/background.
 Set/reset underline.
 .It %{=}
 Place divider here. If disabled, acts like space.
-.It %{pad:n,...}
-Pad string to n length. Positive pads to the left, negative to the right.
-.It %{split:n,c,...}
-Split string using character c, and print nth element.
+.El
+
+The following formats behave the same as above,
+but the string 's' is re-evaluated,
+and can so contain other stylings and variables within:
+.Bl -tag -compact -width "%{split:n,c,s}"
+.It %{nick:s}
+Set foreground colour to the string's hashed colour.
+.It %{pad:n,s}
+Pad string s to n length, using
+.Xr printf 3
+formats.
+.It %{split:n,c,s}
+Split string s using character c, and print nth element.
 .El
 
 Certain variables may also be used in formats:
@@ -65,6 +85,7 @@ Raw message.
 The command of a message.
 .It ${nick}
 Nickname that sent the message.
+Since this is only the raw nick, this is commonly used with %{nick:...}
 .It ${ident}
 Ident of the nick that sent the message.
 .It ${host}
@@ -118,6 +139,9 @@ does not support replying to CTCP requests.
 .Ss The divider
 The divider is inspired by weechat's feature where it creates a bar seperating two elements of a line.
 If divider.toggle is set to 1, the divider will appear in all messages in channels.
-The left hand side of the divider will be padded out to the length specified in divider.margin, and divider.string is inserted between the left and right hand side elements.
+The left hand side of the divider will be padded out to the length specified in divider.margin,
+and divider.string is inserted between the left and right hand side elements.
+There is no whitespace added before or after divider.string - this is done intentionally;
+if you wish to add it, add spaces to the value using /format.
 .Ss Variables
 The following variables can be set using the /set command:
