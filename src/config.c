@@ -735,7 +735,7 @@ struct Config config[] = {
 		.description = {
 		"Format of RPL_ENDOFWHO (315) numeric", NULL}},
 	{"format.rpl.whoisidle", 1, Val_string,
-		.str = " %{b}signon  %{b}: %{time:%c,${4}}, idle: ${3} seconds",
+		.str = " %{b}signon  %{b}: %{time:%c,${4}}, idle: %{rdate:${3}}",
 		.strhandle = config_redraws,
 		.description = {
 		"Format of RPL_WHOISIDLE (317) numeric", NULL}},
