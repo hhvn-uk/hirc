@@ -54,12 +54,9 @@ serv_free(struct Server *server) {
 		free(p->value);
 	}
 #ifdef TLS
-	if (server->tls) {
+	if (server->tls)
 		if (server->tls_ctx)
 			tls_free(server->tls_ctx);
-		if (server->tls_conf)
-			tls_config_free(server->tls_conf);
-	}
 #endif /* TLS */
 	free(p);
 }
@@ -110,7 +107,6 @@ serv_create(char *name, char *host, char *port, char *nick,
 	server->tls_verify = tls_verify;
 	server->tls = tls;
 	server->tls_ctx = NULL;
-	server->tls_conf = NULL;
 #else
 	if (tls)
 		hist_format(server->history, Activity_error, HIST_SHOW,
@@ -196,6 +192,7 @@ serv_remove(struct Server **head, char *name) {
 
 void
 serv_connect(struct Server *server) {
+	struct tls_config *tls_conf;
 	struct Support *s, *prev;
 	struct addrinfo hints;
 	struct addrinfo *ai;
@@ -250,31 +247,28 @@ serv_connect(struct Server *server) {
 
 #ifdef TLS
 	if (server->tls) {
-		if (server->tls_conf)
-			tls_config_free(server->tls_conf);
 		if (server->tls_ctx)
 			tls_free(server->tls_ctx);
-		server->tls_conf = NULL;
 		server->tls_ctx = NULL;
 
-		if ((server->tls_conf = tls_config_new()) == NULL) {
-			ui_tls_config_error(server->tls_conf, "tls_config_new()");
-			server->tls = 0;
+		if ((tls_conf = tls_config_new()) == NULL) {
+			ui_tls_config_error(tls_conf, "tls_config_new()");
+			goto fail;
 		}
 
 		if (!server->tls_verify) {
-			tls_config_insecure_noverifycert(server->tls_conf);
-			tls_config_insecure_noverifyname(server->tls_conf);
+			tls_config_insecure_noverifycert(tls_conf);
+			tls_config_insecure_noverifyname(tls_conf);
 		}
 
 		if ((server->tls_ctx = tls_client()) == NULL) {
 			ui_perror("tls_client()");
-			server->tls = 0;
+			goto fail;
 		}
 
-		if (tls_configure(server->tls_ctx, server->tls_conf) == -1) {
+		if (tls_configure(server->tls_ctx, tls_conf) == -1) {
 			ui_tls_error(server->tls_ctx, "tls_configure()");
-			server->tls = 0;
+			goto fail;
 		}
 
 		if (tls_connect_socket(server->tls_ctx, fd, server->host) == -1) {
@@ -283,6 +277,8 @@ serv_connect(struct Server *server) {
 					server->name, server->host, server->port, tls_error(server->tls_ctx));
 			goto fail;
 		}
+
+		tls_config_free(tls_conf);
 
 		if (tls_peer_cert_provided(server->tls_ctx)) {
 			hist_format(server->history, Activity_status, HIST_SHOW,
@@ -352,20 +348,19 @@ void
 serv_disconnect(struct Server *server, int reconnect, char *msg) {
 	struct Channel *chan;
 	struct Support *s, *prev = NULL;
+	int ret;
 
 	if (msg)
 		ircprintf(server, "QUIT %s\r\n", msg);
 #ifdef TLS
 	if (server->tls) {
 		if (server->tls_ctx) {
-			tls_close(server->tls_ctx);
-			tls_reset(server->tls_ctx);
+			do {
+				ret = tls_close(server->tls_ctx);
+			} while (ret == TLS_WANT_POLLIN || ret == TLS_WANT_POLLOUT);
 			tls_free(server->tls_ctx);
 		}
-		if (server->tls_conf)
-			tls_config_free(server->tls_conf);
 		server->tls_ctx = NULL;
-		server->tls_conf = NULL;
 	} else {
 #endif /* TLS */
 		shutdown(server->rfd, SHUT_RDWR);

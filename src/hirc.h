@@ -36,6 +36,7 @@ size_t		strlcpy(char *dst, const char *src, size_t dsize);
 
 /* main.c */
 void *		emalloc(size_t size);
+void *		erealloc(void *ptr, size_t size);
 char *		estrdup(const char *str);
 void *		talloc(size_t size);
 char *		tstrdup(const char *str);

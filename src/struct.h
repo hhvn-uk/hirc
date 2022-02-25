@@ -157,8 +157,8 @@ struct Server {
 	time_t pingsent; /* last time a ping was sent to server */
 #ifdef TLS
 	int tls;
+	int tls_verify;
 	struct tls *tls_ctx;
-	struct tls_config *tls_conf;
 #endif /* TLS */
 	struct Server *next;
 };
