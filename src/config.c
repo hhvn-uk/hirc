@@ -633,7 +633,7 @@ struct Config config[] = {
 		.description = {
 		"Format of RPL_LUSERCHANNELS (254) numeric", NULL}},
 	{"format.rpl.luserme", 1, Val_string,
-		.str = "${2-}",
+		.str = "There are %{split:3, ,${2}} clients and %{split:6, ,${2}} servers connected to this server",
 		.strhandle = config_redraws,
 		.description = {
 		"Format of RPL_LUSERME (255) numeric", NULL}},
