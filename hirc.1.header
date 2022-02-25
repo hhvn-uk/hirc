@@ -75,6 +75,9 @@ Pad string s to n length, using
 formats.
 .It %{split:n,c,s}
 Split string s using character c, and print nth element.
+.It %{time:f,s}
+If string s is a unix timestamp, format it by passing f to
+.Xr strftime 3 "."
 .El
 
 Certain variables may also be used in formats:
@@ -103,7 +106,8 @@ This selects a parameter of a message.
 Where n is a non-zero positive integer.
 This selects all parameters following n.
 .It ${time}
-May also be written as ${time:format} where format is passed to
+Unix timestamp of a message in string form.
+Should most likely be used with the %{time:f,s} styling.
 .Xr strftime 3 "."
 .El
 

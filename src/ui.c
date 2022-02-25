@@ -1231,7 +1231,7 @@ ui_format(struct Window *window, char *format, struct History *hist) {
 	struct Nick *nick;
 	size_t rc, pc;
 	int escape, i;
-	long pn;
+	long long pn;
 	int rhs = 0;
 	int divider = 0;
 	char **params;
@@ -1239,6 +1239,7 @@ ui_format(struct Window *window, char *format, struct History *hist) {
 	char *ts, *save;
 	char colourbuf[2][3];
 	char chs[2];
+	size_t len;
 	enum {
 		sub_raw,
 		sub_cmd,
@@ -1248,6 +1249,7 @@ ui_format(struct Window *window, char *format, struct History *hist) {
 		sub_channel,
 		sub_topic,
 		sub_server,
+		sub_time,
 	};
 	struct {
 		char *name;
@@ -1261,6 +1263,7 @@ ui_format(struct Window *window, char *format, struct History *hist) {
 		[sub_channel]	= {"channel", NULL},
 		[sub_topic]	= {"topic", NULL},
 		[sub_server]	= {"server", NULL},
+		[sub_time]	= {"time", NULL},
 		{NULL, NULL},
 	};
 
@@ -1286,6 +1289,10 @@ ui_format(struct Window *window, char *format, struct History *hist) {
 				subs[sub_server].val  = hist->origin->server->name;
 			}
 		}
+
+		len = snprintf(subs[sub_time].val, 0, "%lld", (long long)hist->timestamp) + 1;
+		subs[sub_time].val = emalloc(len);
+		snprintf(subs[sub_time].val, len, "%lld", (long long)hist->timestamp);
 
 		params = hist->params;
 		subs[sub_cmd].val = *params;
@@ -1341,19 +1348,6 @@ ui_format(struct Window *window, char *format, struct History *hist) {
 					format = strchr(format, '}') + 1;
 					continue;
 				}
-			}
-
-			if (hist && content && strncmp(content, "time:", strlen("time:")) == 0 || strcmp(content, "time") == 0) {
-				/* This always continues, so okay to modify content */
-				content = strtok(content, ":");
-				content = strtok(NULL, ":");
-
-				if (!content)
-					rc += strftime(&ret[rc], sizeof(ret) - rc, "%H:%M", gmtime(&hist->timestamp));
-				else
-					rc += strftime(&ret[rc], sizeof(ret) - rc, content, gmtime(&hist->timestamp));
-				format = strchr(format, '}') + 1;
-				continue;
 			}
 
 			for (i=0; subs[i].name; i++) {
@@ -1457,7 +1451,7 @@ ui_format(struct Window *window, char *format, struct History *hist) {
 				break;
 			}
 
-			/* pad, nick and split must then continue as they modify content */
+			/* pad, nick, split and time, must then continue as they modify content */
 			if (strncmp(content, "pad:", strlen("pad:")) == 0 && strchr(content, ',')) {
 				pn = strtol(content + strlen("pad:"), NULL, 10);
 				content = estrdup(ui_format_get_content(strchr(format+2+strlen("pad:"), ',') + 1, 1));
@@ -1472,6 +1466,27 @@ ui_format(struct Window *window, char *format, struct History *hist) {
 				free(content);
 				free(save);
 				free(p);
+				continue;
+			}
+
+			if (strncmp(content, "time:", strlen("time:")) == 0 && strchr(content, ',')) {
+				content = estrdup(ui_format_get_content(strchr(format+2+strlen("time:"), ',') + 1, 1));
+				save = estrdup(ret);
+				recursive = 1;
+				p = estrdup(ui_format(NULL, content, hist));
+				recursive = 0;
+				memcpy(ret, save, rc);
+				pn = strtoll(p, NULL, 10);
+
+				free(p);
+				p = struntil(format+2+strlen("time:"), ',');
+
+				rc += strftime(&ret[rc], sizeof(ret) - rc, p, gmtime((time_t *)&pn));
+				format = strchr(format+2+strlen("time:"), ',') + strlen(content) + 2;
+
+				free(content);
+				free(save);
+				/* don't free p */
 				continue;
 			}
 
@@ -1610,6 +1625,8 @@ ui_format(struct Window *window, char *format, struct History *hist) {
 		}
 	}
 
+	if (subs[sub_time].val)
+		free(subs[sub_time].val);
 	if (ts[0] != '\0')
 		free(ts);
 

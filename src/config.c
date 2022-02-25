@@ -196,7 +196,7 @@ struct Config config[] = {
 		.description = {
 		"Turn on/off timestamps", NULL}},
 	{"format.ui.timestamp", 1, Val_string,
-		.str = "%{c:92}${time}%{o} ",
+		.str = "%{c:92}%{time:%H:%M,${time}}%{o} ",
 		.strhandle = config_redraws,
 		.description = {
 		"Format of timestamps",
