@@ -198,6 +198,9 @@ read_line(int fd, char *buf, size_t buf_len) {
 void
 ircread(struct Server *sp) {
 	char *line, *end;
+	char *err;
+	char *reason = "connection closed";
+	size_t len;
 	int ret;
 
 	if (!sp)
@@ -206,14 +209,17 @@ ircread(struct Server *sp) {
 #ifdef TLS
 	if (sp->tls) {
 		switch (ret = tls_read(sp->tls_ctx, &sp->inputbuf[sp->inputlen], SERVER_INPUT_SIZE - sp->inputlen - 1)) {
+		case -1:
+			err = (char *)tls_error(sp->tls_ctx);
+			len = strlen("tls_read(): ") + strlen(err) + 1;
+			reason = talloc(len);
+			snprintf(reason, len, "tls_read(): %s", err);
+			/* fallthrough */
 		case 0:
 			serv_disconnect(sp, 1, "EOF");
 			hist_format(sp->history, Activity_error, HIST_SHOW,
-					"SELF_CONNECTLOST %s %s %s :connection closed",
-					sp->name, sp->host, sp->port);
-			return;
-		case -1:
-			ui_tls_error(sp->tls_ctx, "tls_read()");
+					"SELF_CONNECTLOST %s %s %s :%s",
+					sp->name, sp->host, sp->port, reason);
 			return;
 		case TLS_WANT_POLLIN:
 		case TLS_WANT_POLLOUT:
@@ -225,14 +231,17 @@ ircread(struct Server *sp) {
 	} else {
 #endif /* TLS */
 		switch (ret = read(sp->rfd, &sp->inputbuf[sp->inputlen], SERVER_INPUT_SIZE - sp->inputlen - 1)) {
+		case -1:
+			err = tstrdup(strerror(errno));
+			len = strlen("read(): ") + strlen(err) + 1;
+			reason = talloc(len);
+			snprintf(reason, len, "read(): %s", err);
+			/* fallthrough */
 		case 0:
 			serv_disconnect(sp, 1, "EOF");
 			hist_format(sp->history, Activity_error, HIST_SHOW,
-					"SELF_CONNECTLOST %s %s %s :connection closed",
-					sp->name, sp->host, sp->port);
-			return;
-		case -1:
-			ui_perror("read()");
+					"SELF_CONNECTLOST %s %s %s :%s",
+					sp->name, sp->host, sp->port, reason);
 			return;
 		default:
 			sp->inputlen += ret;
