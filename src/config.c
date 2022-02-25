@@ -196,7 +196,7 @@ struct Config config[] = {
 		.description = {
 		"Turn on/off timestamps", NULL}},
 	{"format.ui.timestamp", 1, Val_string,
-		.str = "%{c:92}%{time:%H:%M,${time}}%{o} ",
+		.str = "%{c:92}%{time:%H:%M:%S,${time}}%{o} ",
 		.strhandle = config_redraws,
 		.description = {
 		"Format of timestamps",
@@ -718,7 +718,7 @@ struct Config config[] = {
 		.description = {
 		"Format of RPL_ENDOFWHO (315) numeric", NULL}},
 	{"format.rpl.whoisidle", 1, Val_string,
-		.str = " %{b}idle    %{b}: ${3} seconds",
+		.str = " %{b}signon  %{b}: %{time:%c,${4}}, idle: ${3} seconds",
 		.strhandle = config_redraws,
 		.description = {
 		"Format of RPL_WHOISIDLE (317) numeric", NULL}},
@@ -1140,7 +1140,7 @@ struct Config config[] = {
 		.description = {
 		"Format of RPL_WHOISACCOUNT (330) numeric", NULL}},
 	{"format.rpl.topicwhotime", 1, Val_string,
-		.str = "set by %{nick:${3}}${3}%{o} on ${4}",
+		.str = "set by %{nick:${3}}${3}%{o} at %{time:%Y-%m-%d %H:%M:%S,${4}}",
 		.strhandle = config_redraws,
 		.description = {
 		"Format of RPL_TOPICWHOTIME (333) numeric", NULL}},
