@@ -190,6 +190,23 @@ struct Config config[] = {
 		.strhandle = config_redraws,
 		.description = {
 		"String to be used as divider", NULL}},
+	{"rdate.short", 1, Val_bool,
+		.num = 0,
+		.numhandle = config_redrawl,
+		.description = {
+		"Show short units of time (eg, 1d 2h) vs",
+		"long (eg, 1 day 2 hours) units for %{rdate:...}"}},
+	{"rdate.averages", 1, Val_bool,
+		.num = 1,
+		.numhandle = config_redrawl,
+		.description = {
+		"Months and years are calculated with averages.",
+		"Disabling this setting will only use absolute units."}}, /* heh, not intentional */
+	{"rdate.verbose", 1, Val_bool,
+		.num = 0,
+		.numhandle = config_redrawl,
+		.description = {
+		"Show all units for %{rdate:...}"}},
 	{"timestamp.toggle", 1, Val_bool,
 		.num = 1,
 		.numhandle = config_redrawl,

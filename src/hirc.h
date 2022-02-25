@@ -53,6 +53,7 @@ char		chrcmp(char c, char *s);
 char *		struntil(char *str, char until);
 int		strisnum(char *str);
 char *		strntok(char *str, char *sep, int n);
+char *		strrdate(time_t secs);
 
 /* chan.c */
 void		chan_free(struct Channel *channel);

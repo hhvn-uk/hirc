@@ -1451,7 +1451,10 @@ ui_format(struct Window *window, char *format, struct History *hist) {
 				break;
 			}
 
-			/* pad, nick, split and time, must then continue as they modify content */
+			/* pad, nick, split, rdate and time, must then continue as they modify content
+			 *
+			 * These styling formatters are quite ugly and repetitive. 
+			 * %{nick:...} was implemented first, and has the most (all of them :)) comments */
 			if (strncmp(content, "pad:", strlen("pad:")) == 0 && strchr(content, ',')) {
 				pn = strtol(content + strlen("pad:"), NULL, 10);
 				content = estrdup(ui_format_get_content(strchr(format+2+strlen("pad:"), ',') + 1, 1));
@@ -1467,6 +1470,22 @@ ui_format(struct Window *window, char *format, struct History *hist) {
 				free(save);
 				free(p);
 				continue;
+			}
+
+			if (strncmp(content, "rdate:", strlen("rdate:")) == 0) {
+				content = estrdup(ui_format_get_content(format+2+strlen("rdate:"), 1));
+				save = estrdup(ret);
+				recursive = 1;
+				p = estrdup(ui_format(NULL, content, hist));
+				recursive = 0;
+				memcpy(ret, save, rc);
+				pn = strtoll(p, NULL, 10);
+				rc += snprintf(&ret[rc], sizeof(ret) - rc, "%s", strrdate((time_t)pn));
+				format += 3 + strlen("rdate:") + strlen(content);
+
+				free(content);
+				free(save);
+				free(p);
 			}
 
 			if (strncmp(content, "time:", strlen("time:")) == 0 && strchr(content, ',')) {

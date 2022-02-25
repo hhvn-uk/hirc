@@ -78,6 +78,10 @@ Split string s using character c, and print nth element.
 .It %{time:f,s}
 If string s is a unix timestamp, format it by passing f to
 .Xr strftime 3 "."
+.It %{rtime:s}
+Get relative date from unix timestamp s.
+This behaviour is dictated by rdate.* namespaced settings.
+For a better understanding, see strrdate() in src/main.c.
 .El
 
 Certain variables may also be used in formats:
@@ -108,7 +112,6 @@ This selects all parameters following n.
 .It ${time}
 Unix timestamp of a message in string form.
 Should most likely be used with the %{time:f,s} styling.
-.Xr strftime 3 "."
 .El
 
 For example, the message:

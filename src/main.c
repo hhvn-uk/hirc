@@ -365,6 +365,72 @@ strntok(char *str, char *sep, int n) {
 	return NULL;
 }
 
+#define S_YEAR	31557600 /* 60*60*24*365.25 */
+#define S_MONTH	2629800  /* 60*60*24*(365.25 / 12) */
+#define S_WEEK	604800   /* 60*60*24*7 */
+#define S_DAY	86400    /* 60*60*24 */
+#define S_HOUR	3600     /* 60*60 */
+#define S_MIN	60
+
+char *
+strrdate(time_t secs) {
+	static char ret[1024];
+	size_t rc = 0;
+	long shrt = config_getl("rdate.short");
+	long avg  = config_getl("rdate.averages");
+	long verb = config_getl("rdate.verbose");
+	int years = 0, months = 0, weeks = 0,
+	    days  = 0, hours  = 0, mins  = 0;
+
+	if (avg) {
+		years  = secs   / S_YEAR;
+		secs  -= years  * S_YEAR;
+
+		months = secs   / S_MONTH;
+		secs  -= months * S_MONTH;
+	}
+
+	weeks = secs  / S_WEEK;
+	secs -= weeks * S_WEEK;
+
+	days  = secs  / S_DAY;
+	secs -= days  * S_DAY;
+
+	hours = secs  / S_HOUR;
+	secs -= hours * S_HOUR;
+
+	mins  = secs  / S_MIN;
+	secs -= mins  * S_MIN;
+
+	if (years || (verb && avg))
+		rc += snprintf(&ret[rc], sizeof(ret) - rc, "%d%s%s, ", years,
+				shrt ? "y" : " year", !shrt && years != 1 ? "s" : "");
+	if (months || (verb && avg))
+		rc += snprintf(&ret[rc], sizeof(ret) - rc, "%d%s%s, ", months,
+				shrt ? "mo" : " month", !shrt && months != 1 ? "s" : "");
+	if (weeks || verb)
+		rc += snprintf(&ret[rc], sizeof(ret) - rc, "%d%s%s, ", weeks,
+				shrt ? "w" : " week", !shrt && weeks != 1 ? "s" : "");
+	if (days || verb)
+		rc += snprintf(&ret[rc], sizeof(ret) - rc, "%d%s%s, ", days,
+				shrt ? "d" : " day", !shrt && days != 1 ? "s" : "");
+	if (hours || verb)
+		rc += snprintf(&ret[rc], sizeof(ret) - rc, "%d%s%s, ", hours,
+				shrt ? "h" : " hour", !shrt && hours != 1 ? "s" : "");
+	if (mins || verb)
+		rc += snprintf(&ret[rc], sizeof(ret) - rc, "%d%s%s, ", mins,
+				shrt ? "m" : " min", !shrt && mins != 1 ? "s" : "");
+	if (secs || verb)
+		rc += snprintf(&ret[rc], sizeof(ret) - rc, "%d%s%s, ", secs,
+				shrt ? "s" : " sec", !shrt && secs != 1 ? "s" : "");
+	if (rc >= 2)
+		ret[rc - 2] = '\0';
+	else
+		ret[rc] = '\0';
+
+	return ret;
+}
+
 void
 sighandler(int signal) {
 	return;
