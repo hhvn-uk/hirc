@@ -349,6 +349,22 @@ strisnum(char *str) {
 	return 1;
 }
 
+char *
+strntok(char *str, char *sep, int n) {
+	static char buf[8192];
+	char *ret, *save;
+
+	strlcpy(buf, str, sizeof(buf));
+
+	ret = strtok_r(buf, sep, &save);
+	if (--n == 0)
+		return ret;
+	while ((ret = strtok_r(NULL, sep, &save)) != NULL)
+		if (--n == 0)
+			return ret;
+	return NULL;
+}
+
 void
 sighandler(int signal) {
 	return;

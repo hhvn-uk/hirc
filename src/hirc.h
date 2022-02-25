@@ -52,6 +52,7 @@ char *		homepath(char *path);
 char		chrcmp(char c, char *s);
 char *		struntil(char *str, char until);
 int		strisnum(char *str);
+char *		strntok(char *str, char *sep, int n);
 
 /* chan.c */
 void		chan_free(struct Channel *channel);

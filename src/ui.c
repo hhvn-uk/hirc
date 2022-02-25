@@ -1235,9 +1235,10 @@ ui_format(struct Window *window, char *format, struct History *hist) {
 	int rhs = 0;
 	int divider = 0;
 	char **params;
-	char *content, *p;
+	char *content, *p, *p2;
 	char *ts, *save;
 	char colourbuf[2][3];
+	char chs[2];
 	enum {
 		sub_raw,
 		sub_cmd,
@@ -1456,7 +1457,7 @@ ui_format(struct Window *window, char *format, struct History *hist) {
 				break;
 			}
 
-			/* pad: and nick: must come last as it modifies content */
+			/* pad, nick and split must then continue as they modify content */
 			if (strncmp(content, "pad:", strlen("pad:")) == 0 && strchr(content, ',')) {
 				pn = strtol(content + strlen("pad:"), NULL, 10);
 				content = estrdup(ui_format_get_content(strchr(format+2+strlen("pad:"), ',') + 1, 1));
@@ -1467,6 +1468,36 @@ ui_format(struct Window *window, char *format, struct History *hist) {
 				memcpy(ret, save, rc);
 				rc += snprintf(&ret[rc], sizeof(ret) - rc, "%1$*2$s", p, pn);
 				format = strchr(format+2+strlen("pad:"), ',') + strlen(content) + 2;
+
+				free(content);
+				free(save);
+				free(p);
+				continue;
+			}
+
+			/* second comma ptr - second comma ptr = distance.
+			 * If the distance is 2, then there is one non-comma char between. */
+			p = strchr(content, ',');
+			if (p)
+				p2 = strchr(p + 1, ',');
+			if (strncmp(content, "split:", strlen("split:")) == 0 && p2 - p == 2) {
+				pn = strtol(content + strlen("split:"), NULL, 10);
+				chs[0] = *(strchr(content, ',') + 1);
+				chs[1] = '\0';
+				content = estrdup(ui_format_get_content(
+							strchr(
+								strchr(format+2+strlen("split:"), ',') + 1,
+								',') + 1,
+							1));
+				save = estrdup(ret);
+				recursive = 1;
+				p = estrdup(ui_format(NULL, content, hist));
+				recursive = 0;
+				memcpy(ret, save, rc);
+				rc += snprintf(&ret[rc], sizeof(ret) - rc, "%s", strntok(p, chs, pn));
+				format = strchr(
+					strchr(format+2+strlen("split:"), ',') + 1,
+					',') + strlen(content) + 2;
 
 				free(content);
 				free(save);
