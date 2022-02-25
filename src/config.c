@@ -618,17 +618,17 @@ struct Config config[] = {
 		.description = {
 		"Format of RPL_LUSERCLIENT (251) numeric", NULL}},
 	{"format.rpl.luserop", 1, Val_string,
-		.str = "${2-}",
+		.str = "There are ${2} opers online",
 		.strhandle = config_redraws,
 		.description = {
 		"Format of RPL_LUSEROP (252) numeric", NULL}},
 	{"format.rpl.luserunknown", 1, Val_string,
-		.str = "${2-}",
+		.str = "There are ${2} unknown connections",
 		.strhandle = config_redraws,
 		.description = {
 		"Format of RPL_LUSERUNKNOWN (253) numeric", NULL}},
 	{"format.rpl.luserchannels", 1, Val_string,
-		.str = "${2-}",
+		.str = "There are ${2} channels formed",
 		.strhandle = config_redraws,
 		.description = {
 		"Format of RPL_LUSERCHANNELS (254) numeric", NULL}},
@@ -1123,12 +1123,12 @@ struct Config config[] = {
 		.str = "There are ${2} current local users, record of ${3}",
 		.strhandle = config_redraws,
 		.description = {
-		"Format of RPL_WHOISSPECIAL (320) numeric", NULL}},
+		"Format of RPLS_LOCALUSERS (265) numeric", NULL}},
 	{"format.rpl.globalusers", 1, Val_string,
 		.str = "There are ${2} current global users, record of ${3}",
 		.strhandle = config_redraws,
 		.description = {
-		"Format of RPL_WHOISSPECIAL (320) numeric", NULL}},
+		"Format of RPL_GLOBALUSERS (266) numeric", NULL}},
 	{"format.rpl.whoisspecial", 1, Val_string,
 		.str = " %{b}info    %{b}: ${3}",
 		.strhandle = config_redraws,
