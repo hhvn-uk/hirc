@@ -1515,6 +1515,6 @@ config_redraws(char *str) {
 
 static int
 config_redrawl(long num) {
-	windows[Win_main].refresh = 1;
+	ui_redraw();
 	return 1;
 }
