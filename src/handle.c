@@ -559,6 +559,7 @@ handle_RPL_WELCOME(struct Server *server, struct History *msg) {
 		serv_auto_send(server);
 	}
 	hist_addp(server->history, msg, Activity_status, HIST_DFL);
+	windows[Win_buflist].refresh = 1;
 }
 
 static void
@@ -569,6 +570,7 @@ handle_RPL_ENDOFMOTD(struct Server *server, struct History *msg) {
 		serv_auto_send(server);
 	}
 	hist_addp(server->history, msg, Activity_status, HIST_DFL);
+	windows[Win_buflist].refresh = 1;
 }
 
 void
