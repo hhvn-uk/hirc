@@ -1057,9 +1057,16 @@ ui_strlenc(struct Window *window, char *s, int *lines) {
 	return ret;
 }
 
-static char *
-ui_get_pseudocmd(struct History *hist) {
+char *
+ui_hformat(struct Window *window, struct History *hist) {
 	char *cmd, *p1, *p2;
+	int i;
+
+	if (!hist)
+		return NULL;
+
+	if (!hist->params)
+		goto raw;
 
 	cmd = *(hist->params);
 	p1 = *(hist->params+1);
@@ -1067,78 +1074,36 @@ ui_get_pseudocmd(struct History *hist) {
 
 	if (strcmp_n(cmd, "MODE") == 0) {
 		if (p1 && serv_ischannel(hist->origin->server, p1))
-			return "MODE-CHANNEL";
+			cmd = "MODE-CHANNEL";
 		else if (hist->from && nick_isself(hist->from) && strcmp_n(hist->from->nick, p1) == 0)
-			return "MODE-NICK-SELF";
+			cmd = "MODE-NICK-SELF";
 		else
-			return "MODE-NICK";
-	}
-
-	if (strcmp_n(cmd, "PRIVMSG") == 0) {
+			cmd = "MODE-NICK";
+	} else if (strcmp_n(cmd, "PRIVMSG") == 0) {
 		/* ascii 1 is ^A */
 		if (*p2 == 1 && strncmp(p2 + 1, "ACTION", strlen("ACTION")) == 0)
-			return "PRIVMSG-ACTION";
+			cmd = "PRIVMSG-ACTION";
 		else if (*p2 == 1)
-			return "PRIVMSG-CTCP";
+			cmd = "PRIVMSG-CTCP";
+	} else if (strcmp_n(cmd, "NOTICE") == 0 && *p2 == 1) {
+		cmd = "NOTICE-CTCP";
 	}
 
-	if (strcmp_n(cmd, "NOTICE") == 0 && *p2 == 1)
-		return "NOTICE-CTCP";
-
-	return cmd;
-}
-
-int
-ui_hist_print(struct Window *window, int lines, struct History *hist) {
-	char *cmd, *p1, *p2;
-	int i;
-
-	if (!hist)
-		return -1;
-
-	if (!hist->params)
-		goto raw;
-
-	cmd = ui_get_pseudocmd(hist);
-
 	for (i=0; formatmap[i].cmd; i++)
 		if (formatmap[i].format && strcmp_n(formatmap[i].cmd, cmd) == 0)
-			return ui_wprintc(window, lines, "%s\n", ui_format(window, config_gets(formatmap[i].format), hist));
+			return ui_format(window, config_gets(formatmap[i].format), hist);
 
 	if (isdigit(*cmd) && isdigit(*(cmd+1)) && isdigit(*(cmd+2)) && !*(cmd+3))
-		return ui_wprintc(window, lines, "%s\n", ui_format(window, config_gets("format.rpl.other"), hist));
+		return ui_format(window, config_gets("format.rpl.other"), hist);
 
 raw:
-	return ui_wprintc(window, lines, "%s\n", ui_format(window, config_gets("format.other"), hist));
-}
-
-int
-ui_hist_len(struct Window *window, struct History *hist, int *lines) {
-	char *cmd;
-	int i;
-
-	if (!hist)
-		return -1;
-
-	if (!hist->params)
-		goto raw;
-
-	cmd = ui_get_pseudocmd(hist);
-
-	for (i=0; formatmap[i].cmd; i++)
-		if (formatmap[i].format && strcmp_n(formatmap[i].cmd, cmd) == 0)
-			return ui_strlenc(window, ui_format(window, config_gets(formatmap[i].format), hist), lines);
-
-	if (isdigit(*cmd) && isdigit(*(cmd+1)) && isdigit(*(cmd+2)) && !*(cmd+3))
-		return ui_strlenc(window, ui_format(window, config_gets("format.rpl.other"), hist), lines);
-
-raw:
-	return ui_strlenc(window, ui_format(window, config_gets("format.other"), hist), lines);
+	return ui_format(window, config_gets("format.other"), hist);
 }
 
 void
 ui_draw_main(void) {
 	struct History *p;
+	char *format;
 	int y, lines;
 	int i;
 
@@ -1154,17 +1119,19 @@ ui_draw_main(void) {
 	for (; p && y > 0; p = p->next) {
 		if (!(p->options & HIST_SHOW))
 			continue;
-		if (ui_hist_len(&windows[Win_main], p, &lines) <= 0)
+		if ((format = ui_hformat(&windows[Win_main], p)) == NULL)
+			continue;
+		if (ui_strlenc(&windows[Win_main], format, &lines) <= 0)
 			continue;
 		y = y - lines;
 		if (y < lines) {
 			y *= -1;
 			wmove(windows[Win_main].window, 0, 0);
-			ui_hist_print(&windows[Win_main], y, p);
+			ui_wprintc(&windows[Win_main], y, "%s\n", format);
 			break;
 		}
 		wmove(windows[Win_main].window, y, 0);
-		ui_hist_print(&windows[Win_main], 0, p);
+		ui_wprintc(&windows[Win_main], 0, "%s\n", format);
 	}
 
 	if (selected.channel && selected.channel->topic) {
