@@ -1195,6 +1195,7 @@ char *
 ui_format(struct Window *window, char *format, struct History *hist) {
 	static char ret[8192];
 	static int recursive = 0;
+	int srecursive;
 	struct Nick *nick;
 	size_t rc, pc;
 	int escape, i;
@@ -1268,9 +1269,10 @@ ui_format(struct Window *window, char *format, struct History *hist) {
 	}
 
 	if (!recursive && hist && config_getl("timestamp.toggle")) {
+		srecursive = recursive;
 		recursive = 1;
 		ts = estrdup(ui_format(NULL, config_gets("format.ui.timestamp"), hist));
-		recursive = 0;
+		recursive = srecursive;
 	} else {
 		ts = "";
 	}
@@ -1427,9 +1429,10 @@ ui_format(struct Window *window, char *format, struct History *hist) {
 				pn = strtol(content + strlen("pad:"), NULL, 10);
 				content = estrdup(ui_format_get_content(strchr(format+2+strlen("pad:"), ',') + 1, 1));
 				save = estrdup(ret);
+				srecursive = recursive;
 				recursive = 1;
 				p = estrdup(ui_format(NULL, content, hist));
-				recursive = 0;
+				recursive = srecursive;
 				memcpy(ret, save, rc);
 				rc += snprintf(&ret[rc], sizeof(ret) - rc, "%1$*2$s", p, pn);
 				format = strchr(format+2+strlen("pad:"), ',') + strlen(content) + 2;
@@ -1443,9 +1446,10 @@ ui_format(struct Window *window, char *format, struct History *hist) {
 			if (strncmp(content, "rdate:", strlen("rdate:")) == 0) {
 				content = estrdup(ui_format_get_content(format+2+strlen("rdate:"), 1));
 				save = estrdup(ret);
+				srecursive = recursive;
 				recursive = 1;
 				p = estrdup(ui_format(NULL, content, hist));
-				recursive = 0;
+				recursive = srecursive;
 				memcpy(ret, save, rc);
 				pn = strtoll(p, NULL, 10);
 				rc += snprintf(&ret[rc], sizeof(ret) - rc, "%s", strrdate((time_t)pn));
@@ -1459,9 +1463,10 @@ ui_format(struct Window *window, char *format, struct History *hist) {
 			if (strncmp(content, "time:", strlen("time:")) == 0 && strchr(content, ',')) {
 				content = estrdup(ui_format_get_content(strchr(format+2+strlen("time:"), ',') + 1, 1));
 				save = estrdup(ret);
+				srecursive = recursive;
 				recursive = 1;
 				p = estrdup(ui_format(NULL, content, hist));
-				recursive = 0;
+				recursive = srecursive;
 				memcpy(ret, save, rc);
 				pn = strtoll(p, NULL, 10);
 
@@ -1492,9 +1497,10 @@ ui_format(struct Window *window, char *format, struct History *hist) {
 								',') + 1,
 							1));
 				save = estrdup(ret);
+				srecursive = recursive;
 				recursive = 1;
 				p = estrdup(ui_format(NULL, content, hist));
-				recursive = 0;
+				recursive = srecursive;
 				memcpy(ret, save, rc);
 				rc += snprintf(&ret[rc], sizeof(ret) - rc, "%s", strntok(p, chs, pn));
 				format = strchr(
@@ -1510,9 +1516,10 @@ ui_format(struct Window *window, char *format, struct History *hist) {
 			if (hist && !recursive && strncmp(content, "nick:", strlen("nick:")) == 0) {
 				content = estrdup(ui_format_get_content(format+2+strlen("nick:"), 1));
 				save = estrdup(ret); /* save ret, as this will be modified by recursing */
+				srecursive = recursive;
 				recursive = 1;
 				p = estrdup(ui_format(NULL, content, hist));
-				recursive = 0;
+				recursive = srecursive;
 				memcpy(ret, save, rc); /* copy saved value back into ret, we don't 
 							  need strlcpy as we don't use null byte */
 				nick = nick_create(p, ' ', hist->origin ? hist->origin->server : NULL);
