@@ -46,7 +46,6 @@ HANDLER(handle_RPL_ENDOFNAMES);
 HANDLER(handle_RPL_ENDOFMOTD);
 HANDLER(handle_ERR_NICKNAMEINUSE);
 HANDLER(handle_RPL_AWAY);
-#undef HANDLER
 
 struct Handler handlers[] = {
 	{ "ERROR",	handle_ERROR			},
@@ -79,16 +78,16 @@ struct Handler handlers[] = {
 	{ NULL,		NULL 				},
 };
 
-static void
-handle_PING(struct Server *server, struct History *msg) {
+HANDLER(
+handle_PING) {
 	if (param_len(msg->params) < 2)
 		return;
 
 	ircprintf(server, "PONG :%s\r\n", *(msg->params+1));
 }
 
-static void
-handle_PONG(struct Server *server, struct History *msg) {
+HANDLER(
+handle_PONG) {
 	int len;
 
 	if ((len = param_len(msg->params)) < 2)
@@ -103,8 +102,8 @@ handle_PONG(struct Server *server, struct History *msg) {
 	}
 }
 
-static void
-handle_JOIN(struct Server *server, struct History *msg) {
+HANDLER(
+handle_JOIN) {
 	struct Channel *chan;
 	struct Nick *nick;
 	char *target;
@@ -135,8 +134,8 @@ handle_JOIN(struct Server *server, struct History *msg) {
 	}
 }
 
-static void
-handle_PART(struct Server *server, struct History *msg) {
+HANDLER(
+handle_PART) {
 	struct Channel *chan;
 	struct Nick *nick;
 	char *target;
@@ -167,8 +166,8 @@ handle_PART(struct Server *server, struct History *msg) {
 	hist_addp(chan->history, msg, Activity_status, HIST_SHOW);
 }
 
-static void
-handle_KICK(struct Server *server, struct History *msg) {
+HANDLER(
+handle_KICK) {
 	struct Channel *chan;
 	struct Nick *nick;
 	char *target;
@@ -198,14 +197,14 @@ handle_KICK(struct Server *server, struct History *msg) {
 	nick_free(nick);
 }
 
-static void
-handle_ERROR(struct Server *server, struct History *msg) {
+HANDLER(
+handle_ERROR) {
 	serv_disconnect(server, 0, NULL);
 	hist_addp(server->history, msg, Activity_status, HIST_DFL);
 }
 
-static void
-handle_QUIT(struct Server *server, struct History *msg) {
+HANDLER(
+handle_QUIT) {
 	struct Channel *chan;
 	struct Nick *nick;
 
@@ -228,8 +227,8 @@ handle_QUIT(struct Server *server, struct History *msg) {
 	}
 }
 
-static void
-handle_MODE(struct Server *server, struct History *msg) {
+HANDLER(
+handle_MODE) {
 	struct Channel *chan;
 
 	if (!msg->from || param_len(msg->params) < 3)
@@ -248,8 +247,8 @@ handle_MODE(struct Server *server, struct History *msg) {
 	}
 }
 
-static void
-handle_PRIVMSG(struct Server *server, struct History *msg) {
+HANDLER(
+handle_PRIVMSG) {
 	int act_direct = Activity_hilight, act_regular = Activity_message;
 	struct Channel *chan;
 	struct Channel *priv;
@@ -290,8 +289,8 @@ handle_PRIVMSG(struct Server *server, struct History *msg) {
 	}
 }
 
-static void
-handle_RPL_ISUPPORT(struct Server *server, struct History *msg) {
+HANDLER(
+handle_RPL_ISUPPORT) {
 	char *key, *value;
 	char **params = msg->params;
 
@@ -316,8 +315,8 @@ handle_RPL_ISUPPORT(struct Server *server, struct History *msg) {
 	}
 }
 
-static void
-handle_RPL_AWAY(struct Server *server, struct History *msg) {
+HANDLER(
+handle_RPL_AWAY) {
 	struct Channel *priv;
 	struct HistInfo *history;
 
@@ -328,8 +327,8 @@ handle_RPL_AWAY(struct Server *server, struct History *msg) {
 	hist_addp(history, msg, Activity_status, HIST_DFL);
 }
 
-static void
-handle_RPL_CHANNELMODEIS(struct Server *server, struct History *msg) {
+HANDLER(
+handle_RPL_CHANNELMODEIS) {
 	struct Channel *chan;
 
 	if (param_len(msg->params) < 4)
@@ -349,8 +348,8 @@ handle_RPL_CHANNELMODEIS(struct Server *server, struct History *msg) {
 	}
 }
 
-static void
-handle_RPL_NAMREPLY(struct Server *server, struct History *msg) {
+HANDLER(
+handle_RPL_NAMREPLY) {
 	struct Channel *chan;
 	struct Nick *oldnick;
 	char **params = msg->params;
@@ -399,8 +398,8 @@ handle_RPL_NAMREPLY(struct Server *server, struct History *msg) {
 	param_free(nicksref);
 }
 
-static void
-handle_RPL_ENDOFNAMES(struct Server *server, struct History *msg) {
+HANDLER(
+handle_RPL_ENDOFNAMES) {
 	char *target;
 
 	hist_addp(server->history, msg, Activity_status, HIST_LOG);
@@ -412,8 +411,8 @@ handle_RPL_ENDOFNAMES(struct Server *server, struct History *msg) {
 		expect_set(server, Expect_names, NULL);
 }
 
-static void
-handle_ERR_NICKNAMEINUSE(struct Server *server, struct History *msg) {
+HANDLER(
+handle_ERR_NICKNAMEINUSE) {
 	char nick[64]; /* should be limited to 9 chars, but newer servers *shrug*/
 	struct Nick *nnick;
 
@@ -431,8 +430,8 @@ handle_ERR_NICKNAMEINUSE(struct Server *server, struct History *msg) {
 	}
 }
 
-static void
-handle_NICK(struct Server *server, struct History *msg) {
+HANDLER(
+handle_NICK) {
 	struct Nick *nick, *chnick;
 	struct Channel *chan;
 	char prefix[128];
@@ -470,8 +469,8 @@ handle_NICK(struct Server *server, struct History *msg) {
 	}
 }
 
-static void
-handle_TOPIC(struct Server *server, struct History *msg) {
+HANDLER(
+handle_TOPIC) {
 	struct Channel *chan;
 
 	if (param_len(msg->params) < 3 || !msg->from)
@@ -484,8 +483,8 @@ handle_TOPIC(struct Server *server, struct History *msg) {
 	}
 }
 
-static void
-handle_RPL_NOTOPIC(struct Server *server, struct History *msg) {
+HANDLER(
+handle_RPL_NOTOPIC) {
 	struct Channel *chan;
 	char *target;
 
@@ -505,8 +504,8 @@ handle_RPL_NOTOPIC(struct Server *server, struct History *msg) {
 	}
 }
 
-static void
-handle_RPL_TOPIC(struct Server *server, struct History *msg) {
+HANDLER(
+handle_RPL_TOPIC) {
 	struct Channel *chan;
 	char *target, *topic;
 
@@ -531,8 +530,8 @@ handle_RPL_TOPIC(struct Server *server, struct History *msg) {
 	}
 }
 
-static void
-handle_RPL_TOPICWHOTIME(struct Server *server, struct History *msg) {
+HANDLER(
+handle_RPL_TOPICWHOTIME) {
 	struct Channel *chan;
 	char *target;
 
@@ -552,8 +551,8 @@ handle_RPL_TOPICWHOTIME(struct Server *server, struct History *msg) {
 	}
 }
 
-static void
-handle_RPL_WELCOME(struct Server *server, struct History *msg) {
+HANDLER(
+handle_RPL_WELCOME) {
 	if (server->status != ConnStatus_connected) {
 		server->status = ConnStatus_connected;
 		serv_auto_send(server);
@@ -562,8 +561,8 @@ handle_RPL_WELCOME(struct Server *server, struct History *msg) {
 	windows[Win_buflist].refresh = 1;
 }
 
-static void
-handle_RPL_ENDOFMOTD(struct Server *server, struct History *msg) {
+HANDLER(
+handle_RPL_ENDOFMOTD) {
 	/* If server doesn't support RPL_WELCOME, use RPL_ENDOFMOTD to set status */
 	if (server->status != ConnStatus_connected) {
 		server->status = ConnStatus_connected;
