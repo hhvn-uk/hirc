@@ -1248,7 +1248,8 @@ ui_format(struct Window *window, char *format, struct History *hist) {
 
 		if (hist->origin) {
 			if (hist->origin->channel) {
-				divider = config_getl("divider.toggle");
+				if (!recursive)
+					divider = config_getl("divider.toggle");
 				subs[sub_channel].val = hist->origin->channel->name;
 				subs[sub_topic].val   = hist->origin->channel->topic;
 			}
