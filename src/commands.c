@@ -33,41 +33,43 @@
 #define command_toomany(cmd) ui_error("/%s: too many arguments", cmd)
 #define command_needselected(cmd, type) ui_error("/%s: no %s selected", cmd, type)
 
-static void command_away(struct Server *server, char *str);
-static void command_msg(struct Server *server, char *str);
-static void command_notice(struct Server *server, char *str);
-static void command_me(struct Server *server, char *str);
-static void command_ctcp(struct Server *server, char *str);
-static void command_query(struct Server *server, char *str);
-static void command_quit(struct Server *server, char *str);
-static void command_join(struct Server *server, char *str);
-static void command_part(struct Server *server, char *str);
-static void command_kick(struct Server *server, char *str);
-static void command_mode(struct Server *server, char *str);
-static void command_nick(struct Server *server, char *str);
-static void command_list(struct Server *server, char *str);
-static void command_whois(struct Server *server, char *str);
-static void command_whowas(struct Server *server, char *str);
-static void command_ping(struct Server *server, char *str);
-static void command_quote(struct Server *server, char *str);
-static void command_connect(struct Server *server, char *str);
-static void command_disconnect(struct Server *server, char *str);
-static void command_select(struct Server *server, char *str);
-static void command_set(struct Server *server, char *str);
-static void command_format(struct Server *server, char *str);
-static void command_server(struct Server *server, char *str);
-static void command_names(struct Server *server, char *str);
-static void command_topic(struct Server *server, char *str);
-static void command_bind(struct Server *server, char *str);
-static void command_help(struct Server *server, char *str);
-static void command_echo(struct Server *server, char *str);
-static void command_grep(struct Server *server, char *str);
-static void command_clear(struct Server *server, char *str);
-static void command_alias(struct Server *server, char *str);
-static void command_scroll(struct Server *server, char *str);
-static void command_source(struct Server *server, char *str);
-static void command_dump(struct Server *server, char *str);
-static void command_close(struct Server *server, char *str);
+#define COMMAND(func) static void func(struct Server *server, char *str)
+
+COMMAND(command_away);
+COMMAND(command_msg);
+COMMAND(command_notice);
+COMMAND(command_me);
+COMMAND(command_ctcp);
+COMMAND(command_query);
+COMMAND(command_quit);
+COMMAND(command_join);
+COMMAND(command_part);
+COMMAND(command_kick);
+COMMAND(command_mode);
+COMMAND(command_nick);
+COMMAND(command_list);
+COMMAND(command_whois);
+COMMAND(command_whowas);
+COMMAND(command_ping);
+COMMAND(command_quote);
+COMMAND(command_connect);
+COMMAND(command_disconnect);
+COMMAND(command_select);
+COMMAND(command_set);
+COMMAND(command_format);
+COMMAND(command_server);
+COMMAND(command_names);
+COMMAND(command_topic);
+COMMAND(command_bind);
+COMMAND(command_help);
+COMMAND(command_echo);
+COMMAND(command_grep);
+COMMAND(command_clear);
+COMMAND(command_alias);
+COMMAND(command_scroll);
+COMMAND(command_source);
+COMMAND(command_dump);
+COMMAND(command_close);
 
 static char *command_optarg;
 enum {
@@ -233,8 +235,8 @@ struct Command commands[] = {
 
 struct Alias *aliases = NULL;
 
-static void
-command_away(struct Server *server, char *str) {
+COMMAND(
+command_away) {
 	struct Server *sp;
 	char *format;
 	int all = 1, ret;
@@ -269,8 +271,8 @@ command_away(struct Server *server, char *str) {
 	}
 }
 
-static void
-command_msg(struct Server *server, char *str) {
+COMMAND(
+command_msg) {
 	struct Channel *chan = NULL;
 	char *target, *message;
 
@@ -293,8 +295,8 @@ command_msg(struct Server *server, char *str) {
 	}
 }
 
-static void
-command_notice(struct Server *server, char *str) {
+COMMAND(
+command_notice) {
 	struct Channel *chan = NULL;
 	char *target, *message;
 
@@ -317,8 +319,8 @@ command_notice(struct Server *server, char *str) {
 	}
 }
 
-static void
-command_me(struct Server *server, char *str) {
+COMMAND(
+command_me) {
 	if (!selected.channel) {
 		command_needselected("me", "channel or query");
 		return;
@@ -332,8 +334,8 @@ command_me(struct Server *server, char *str) {
 			HIST_SHOW|HIST_LOG|HIST_SELF, "PRIVMSG %s :%cACTION %s%c", selected.channel->name, 1, str, 1);
 }
 
-static void
-command_ctcp(struct Server *server, char *str) {
+COMMAND(
+command_ctcp) {
 	struct Channel *chan;
 	char *target, *ctcp;
 
@@ -366,8 +368,8 @@ command_ctcp(struct Server *server, char *str) {
 	}
 }
 
-static void
-command_query(struct Server *server, char *str) {
+COMMAND(
+command_query) {
 	struct Channel *priv;
 
 	if (!str) {
@@ -392,14 +394,14 @@ command_query(struct Server *server, char *str) {
 		ui_select(server, priv);
 }
 
-static void
-command_quit(struct Server *server, char *str) {
+COMMAND(
+command_quit) {
 	cleanup(str ? str : config_gets("misc.quitmessage"));
 	exit(EXIT_SUCCESS);
 }
 
-static void
-command_join(struct Server *server, char *str) {
+COMMAND(
+command_join) {
 	char msg[512];
 
 	if (!str) {
@@ -423,8 +425,8 @@ command_join(struct Server *server, char *str) {
 	expect_set(server, Expect_join, str);
 }
 
-static void
-command_part(struct Server *server, char *str) {
+COMMAND(
+command_part) {
 	char *channel = NULL, *reason = NULL;
 	char msg[512];
 
@@ -450,8 +452,8 @@ command_part(struct Server *server, char *str) {
 	expect_set(server, Expect_part, channel);
 }
 
-static void
-command_kick(struct Server *server, char *str) {
+COMMAND(
+command_kick) {
 	char *channel, *nick, *reason;
 	char *s;
 
@@ -481,8 +483,8 @@ command_kick(struct Server *server, char *str) {
 		ircprintf(server, "KICK %s %s\r\n", channel, nick);
 }
 
-static void
-command_mode(struct Server *server, char *str) {
+COMMAND(
+command_mode) {
 	char *channel, *modes;
 	char *s = NULL;
 
@@ -512,8 +514,8 @@ command_mode(struct Server *server, char *str) {
 	}
 }
 
-static void
-command_nick(struct Server *server, char *str) {
+COMMAND(
+command_nick) {
 	if (!str) {
 		command_toofew("nick");
 		return;
@@ -528,8 +530,8 @@ command_nick(struct Server *server, char *str) {
 	expect_set(server, Expect_nicknameinuse, str);
 }
 
-static void
-command_list(struct Server *server, char *str) {
+COMMAND(
+command_list) {
 	if (str) {
 		command_toomany("list");
 		return;
@@ -538,8 +540,8 @@ command_list(struct Server *server, char *str) {
 	ircprintf(server, "LIST\r\n", str);
 }
 
-static void
-command_whois(struct Server *server, char *str) {
+COMMAND(
+command_whois) {
 	char *tserver, *nick;
 
 	if (!str) {
@@ -559,8 +561,8 @@ command_whois(struct Server *server, char *str) {
 		ircprintf(server, "WHOIS %s\r\n", nick);
 }
 
-static void
-command_whowas(struct Server *server, char *str) {
+COMMAND(
+command_whowas) {
 	char *nick, *count, *tserver;
 
 	if (!str) {
@@ -579,8 +581,8 @@ command_whowas(struct Server *server, char *str) {
 		ircprintf(server, "WHOWAS %s 5\r\n", nick);
 }
 
-static void
-command_ping(struct Server *server, char *str) {
+COMMAND(
+command_ping) {
 	if (!str) {
 		command_toofew("ping");
 		return;
@@ -590,8 +592,8 @@ command_ping(struct Server *server, char *str) {
 	expect_set(server, Expect_pong, str);
 }
 
-static void
-command_quote(struct Server *server, char *str) {
+COMMAND(
+command_quote) {
 	char msg[512];
 
 	if (!str) {
@@ -607,8 +609,8 @@ command_quote(struct Server *server, char *str) {
 	}
 }
 
-static void
-command_connect(struct Server *server, char *str) {
+COMMAND(
+command_connect) {
 	struct Server *tserver;
 	char *network	= NULL;
 	char *host	= NULL;
@@ -708,8 +710,8 @@ command_connect(struct Server *server, char *str) {
 		ui_select(tserver, NULL);
 }
 
-static void
-command_disconnect(struct Server *server, char *str) {
+COMMAND(
+command_disconnect) {
 	struct Server *sp;
 	int len;
 	char *msg;
@@ -738,8 +740,8 @@ command_disconnect(struct Server *server, char *str) {
 	serv_disconnect(sp, 0, msg);
 }
 
-static void
-command_select(struct Server *server, char *str) {
+COMMAND(
+command_select) {
 	struct Server *sp;
 	struct Channel *chp;
 	char *tserver = NULL;
@@ -812,8 +814,8 @@ command_select(struct Server *server, char *str) {
 	}
 }
 
-static void
-command_set(struct Server *server, char *str) {
+COMMAND(
+command_set) {
 	char *name, *val;
 
 	if (!str) {
@@ -824,8 +826,8 @@ command_set(struct Server *server, char *str) {
 	config_set(name, val);
 }
 
-static void
-command_format(struct Server *server, char *str) {
+COMMAND(
+command_format) {
 	char *newstr;
 	int len;
 
@@ -840,8 +842,8 @@ command_format(struct Server *server, char *str) {
 	command_set(server, newstr);
 }
 
-static void
-command_server(struct Server *server, char *str) {
+COMMAND(
+command_server) {
 	struct Server *nserver;
 	char *tserver, *cmd, *arg;
 	char **acmds;
@@ -931,8 +933,8 @@ command_server(struct Server *server, char *str) {
 	}
 }
 
-static void
-command_names(struct Server *server, char *str) {
+COMMAND(
+command_names) {
 	char *channel, *save = NULL;
 
 	channel = strtok_r(str, " ", &save);
@@ -953,8 +955,8 @@ command_names(struct Server *server, char *str) {
 	expect_set(server, Expect_names, channel);
 }
 
-static void
-command_topic(struct Server *server, char *str) {
+COMMAND(
+command_topic) {
 	char *channel, *topic = NULL;
 	int clear = 0, ret;
 	enum { opt_clear, };
@@ -1005,8 +1007,8 @@ command_topic(struct Server *server, char *str) {
 	} else ircprintf(server, "TOPIC %s :%s\r\n", channel, topic);
 }
 
-static void
-command_bind(struct Server *server, char *str) {
+COMMAND(
+command_bind) {
 	struct Keybind *p;
 	char *binding = NULL, *cmd = NULL;
 	int delete = 0, ret;
@@ -1109,8 +1111,8 @@ command_alias(struct Server *server, char *str) {
 }
 
 
-static void
-command_help(struct Server *server, char *str) {
+COMMAND(
+command_help) {
 	int cmdonly = 0;
 	int i, j;
 
@@ -1165,8 +1167,8 @@ command_help(struct Server *server, char *str) {
 	ui_error("no help on '%s'", str);
 }
 
-static void
-command_echo(struct Server *server, char *str) {
+COMMAND(
+command_echo) {
 	if (!str)
 		str = "";
 
@@ -1234,8 +1236,8 @@ command_grep(struct Server *server, char *str) {
 	hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_GREP, "SELF_GREP_END :end of /grep command");
 }
 
-static void
-command_clear(struct Server *server, char *str) {
+COMMAND(
+command_clear) {
 	int ret, tmp = 0;
 	enum { opt_tmp };
 	static struct CommandOpts opts[] = {
@@ -1264,8 +1266,8 @@ command_clear(struct Server *server, char *str) {
 	windows[Win_main].refresh = 1;
 }
 
-static void
-command_scroll(struct Server *server, char *str) {
+COMMAND(
+command_scroll) {
 	int ret, winid = Win_main;
 	long diff;
 	enum { opt_buflist, opt_nicklist };
@@ -1312,8 +1314,8 @@ narg:
 	command_toofew("scroll");
 }
 
-static void
-command_source(struct Server *server, char *str) {
+COMMAND(
+command_source) {
 	if (!str) {
 		command_toofew("source");
 		return;
@@ -1322,8 +1324,8 @@ command_source(struct Server *server, char *str) {
 	config_read(str);
 }
 
-static void
-command_dump(struct Server *server, char *str) {
+COMMAND(
+command_dump) {
 	FILE *file;
 	int selected = 0;
 	int def = 0, ret;
@@ -1461,8 +1463,8 @@ command_dump(struct Server *server, char *str) {
 	fclose(file);
 }
 
-static void
-command_close(struct Server *server, char *str) {
+COMMAND(
+command_close) {
 	struct Server *sp;
 	struct Channel *chp;
 	int buf;
