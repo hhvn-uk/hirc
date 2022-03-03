@@ -36,6 +36,7 @@ hist_free(struct History *history) {
 		free(history->from);
 	}
 	free(history->raw);
+	free(history->format);
 	free(history);
 }
 
@@ -62,6 +63,7 @@ hist_create(struct HistInfo *histinfo, struct Nick *from, char *msg,
 	new->activity = activity;
 	new->raw = estrdup(msg);
 	new->_params = new->params = param_create(msg);
+	new->format = NULL;
 	new->options = options;
 	new->origin = histinfo;
 

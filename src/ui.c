@@ -533,6 +533,7 @@ ui_input_delete(int num, int counter) {
 
 void
 ui_redraw(void) {
+	struct History *p;
 	char *format;
 	long nicklistwidth, buflistwidth;
 	int x = 0, rx = 0;
@@ -620,6 +621,18 @@ ui_redraw(void) {
 		if (windows[i].location) {
 			ui_placewindow(&windows[i]);
 			windows[i].refresh = 1;
+		}
+	}
+
+	/* Clear format element of history.
+	 * Formats need updating if the windows are resized,
+	 * or format.* settings are changed. */
+	if (selected.history) {
+		for (p = selected.history->history; p; p = p->next) {
+			if (p->format) {
+				free(p->format);
+				p->format = NULL;
+			}
 		}
 	}
 }
@@ -1102,36 +1115,46 @@ raw:
 
 void
 ui_draw_main(void) {
-	struct History *p;
+	struct History *p, *hp;
 	char *format;
 	int y, lines;
 	int i;
 
 	werase(windows[Win_main].window);
 
-	for (i=0, p = selected.history->history; p && p->next && i < windows[Win_main].scroll; i++)
-		p = p->next;
-
-	if (i)
-		windows[Win_main].scroll = i;
-
-	y = windows[Win_main].h;
-	for (; p && y > 0; p = p->next) {
+	for (i=0, p = selected.history->history, hp = NULL; p; p = p->next) {
 		if (!(p->options & HIST_SHOW))
 			continue;
-		if ((format = ui_hformat(&windows[Win_main], p)) == NULL)
+		if (windows[Win_main].scroll > 0 && !hp && !p->next)
+			hp = p;
+		else if (i == windows[Win_main].scroll && !hp)
+			hp = p;
+
+		if (i < windows[Win_main].scroll)
+			i++;
+		if (!p->format)
+			p->format = estrdup(ui_hformat(&windows[Win_main], p));
+	}
+
+	if (windows[Win_main].scroll > 0)
+		windows[Win_main].scroll = i;
+	if (!hp)
+		hp = selected.history->history;
+
+	for (y = windows[Win_main].h; hp && y > 0; hp = hp->next) {
+		if (!(hp->options & HIST_SHOW) || !hp->format)
 			continue;
-		if (ui_strlenc(&windows[Win_main], format, &lines) <= 0)
+		if (ui_strlenc(&windows[Win_main], hp->format, &lines) <= 0)
 			continue;
 		y = y - lines;
 		if (y < lines) {
 			y *= -1;
 			wmove(windows[Win_main].window, 0, 0);
-			ui_wprintc(&windows[Win_main], y, "%s\n", format);
+			ui_wprintc(&windows[Win_main], y, "%s\n", hp->format);
 			break;
 		}
 		wmove(windows[Win_main].window, y, 0);
-		ui_wprintc(&windows[Win_main], 0, "%s\n", format);
+		ui_wprintc(&windows[Win_main], 0, "%s\n", hp->format);
 	}
 
 	if (selected.channel && selected.channel->topic) {
