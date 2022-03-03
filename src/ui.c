@@ -260,6 +260,7 @@ struct {
 	char string[INPUT_MAX];
 	unsigned counter;
 	char *history[INPUT_HIST_MAX];
+	int histindex;
 } input;
 
 struct Selected selected;
@@ -315,6 +316,7 @@ ui_init(void) {
 	input.string[0] = '\0';
 	memset(input.history, 0, sizeof(input.history));
 	input.counter = 0;
+	input.histindex = -1;
 
 	windows[Win_nicklist].location = config_getl("nicklist.location");
 	windows[Win_buflist].location = config_getl("buflist.location");
@@ -374,7 +376,6 @@ ui_placewindow(struct Window *window) {
 
 void
 ui_read(void) {
-	static int histindex = -1; /* -1 == current input */
 	static char *backup = NULL;
 	struct Keybind *kp;
 	int key;
@@ -407,10 +408,10 @@ ui_read(void) {
 					}
 				}
 
-				if (histindex) {
+				if (input.histindex) {
 					free(backup);
 					backup = NULL;
-					histindex = -1;
+					input.histindex = -1;
 				}
 
 			}
@@ -429,24 +430,24 @@ ui_read(void) {
 			}
 			break;
 		case KEY_UP:
-			if (histindex < INPUT_HIST_MAX && input.history[histindex + 1]) {
-				if (histindex == -1)
+			if (input.histindex < INPUT_HIST_MAX && input.history[input.histindex + 1]) {
+				if (input.histindex == -1)
 					backup = estrdup(input.string);
-				histindex++;
-				strlcpy(input.string, input.history[histindex], sizeof(input.string));
+				input.histindex++;
+				strlcpy(input.string, input.history[input.histindex], sizeof(input.string));
 				input.counter = strlen(input.string);
 			}
 			return; /* return so histindex and backup aren't reset */
 		case KEY_DOWN:
-			if (histindex > -1) {
-				histindex--;
-				if (histindex == -1) {
+			if (input.histindex > -1) {
+				input.histindex--;
+				if (input.histindex == -1) {
 					if (backup)
 						strlcpy(input.string, backup, sizeof(input.string));
 					free(backup);
 					backup = NULL;
 				} else {
-					strlcpy(input.string, input.history[histindex], sizeof(input.string));
+					strlcpy(input.string, input.history[input.histindex], sizeof(input.string));
 				}
 				input.counter = strlen(input.string);
 			}
@@ -468,6 +469,7 @@ ui_read(void) {
 			input.history[0] = estrdup(input.string);
 			input.string[0] = '\0';
 			input.counter = 0;
+			input.histindex = -1;
 			break;
 		default:
 			if ((key & 0xFF80) == 0x80 || isprint(key) || iscntrl(key)) {
