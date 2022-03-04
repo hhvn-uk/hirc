@@ -730,7 +730,7 @@ struct Config config[] = {
 		.description = {
 		"Format of RPL_WHOWASUSER (314) numeric", NULL}},
 	{"format.rpl.endofwho", 1, Val_string,
-		.str = "${2-}",
+		.str = "End of WHO results for ${2}",
 		.strhandle = config_redraws,
 		.description = {
 		"Format of RPL_ENDOFWHO (315) numeric", NULL}},
@@ -795,7 +795,7 @@ struct Config config[] = {
 		.description = {
 		"Format of RPL_VERSION (351) numeric", NULL}},
 	{"format.rpl.whoreply", 1, Val_string,
-		.str = "${2-}",
+		.str = "%{b}${6}!${3}@${4}%{b} (%{split:2, ,${8}}): ${7} %{split:1, ,${8}}",
 		.strhandle = config_redraws,
 		.description = {
 		"Format of RPL_WHOREPLY (352) numeric", NULL}},

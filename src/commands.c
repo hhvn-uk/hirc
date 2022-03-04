@@ -49,6 +49,7 @@ COMMAND(command_mode);
 COMMAND(command_nick);
 COMMAND(command_list);
 COMMAND(command_whois);
+COMMAND(command_who);
 COMMAND(command_whowas);
 COMMAND(command_ping);
 COMMAND(command_quote);
@@ -128,6 +129,9 @@ struct Command commands[] = {
 	{"whois", command_whois, 1, {
 		"usage: /whois [server] [nick]",
 		"Request information on a nick or oneself", NULL}},
+	{"who", command_who, 1, {
+		"usage: /whois [mask [options]]",
+		"Request short information on nicks", NULL}},
 	{"whowas", command_whowas, 1, {
 		"usage: /whowas [nick [count [server]]]",
 		"Request information on old nicks",
@@ -559,6 +563,14 @@ command_whois) {
 		ircprintf(server, "WHOIS %s :%s\r\n", tserver, nick);
 	else
 		ircprintf(server, "WHOIS %s\r\n", nick);
+}
+
+COMMAND(
+command_who) {
+	if (!str)
+		str = "*"; /* wildcard */
+
+	ircprintf(server, "WHO %s\r\n", str);
 }
 
 COMMAND(
