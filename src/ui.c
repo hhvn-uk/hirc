@@ -1568,6 +1568,9 @@ ui_format(struct Window *window, char *format, struct History *hist) {
 			continue;
 		}
 
+		if (escape && (*format == '%' || *format == '$') && *(format+1) == '{' && strchr(format, '}'))
+			escape = 0;
+
 		if (escape) {
 			ret[rc++] = '\\';
 			escape = 0;
