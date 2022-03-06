@@ -148,14 +148,14 @@ hist_add(struct HistInfo *histinfo,
 	new->next->prev = new;
 	histinfo->history = new;
 
+ui:
 	if (options & HIST_LOG) {
 		if (histinfo->server)
-			hist_log(new->raw, new->from, new->timestamp, histinfo->server);
+			hist_log(new);
 		else
 			ui_error("HIST_LOG specified, but server is NULL", NULL);
 	}
 
-ui:
 	/* TODO: this triggers way too often, need to have some sort of delay */
 	if (selected.history == histinfo) {
 		if (options & HIST_SELF)
@@ -210,10 +210,13 @@ hist_format(struct HistInfo *histinfo, enum Activity activity, enum HistOpt opti
 }
 
 int
-hist_log(char *msg, struct Nick *from, time_t timestamp, struct Server *server) {
+hist_log(struct History *hist) {
 	char filename[2048];
+	FILE *f;
 	char *logdir;
 	int ret, serrno;
+	struct stat st;
+	char *nick, *ident, *host, *raw;
 
 	if (!config_getl("log.toggle"))
 		return -2;
@@ -221,35 +224,57 @@ hist_log(char *msg, struct Nick *from, time_t timestamp, struct Server *server) 
 	if ((logdir = config_gets("log.dir")) == NULL)
 		return -3;
 
-	if (*msg == ':' && strchr(msg, ' '))
-		msg = strchr(msg, ' ') + 1;
+	logdir = homepath(logdir);
 
-	if (dprintf(server->logfd, "!%lld :%s %s\n", (long long)timestamp, from ? from->prefix : server->name, msg) <  0) {
-		/* Can't write, try to open the file */
-		snprintf(filename, sizeof(filename), "%s/%s.log", homepath(logdir), server->name);
-		ret = open(filename, O_CREAT|O_APPEND|O_WRONLY);
-		serrno = errno;
-		if (ret == -1 && serrno == ENOENT) {
-			/* No such directory: attempt to create logdir */
-			if (mkdir(homepath(logdir), 0700) == -1) {
-				ui_error("Could not create '%s' directory for logging: %s", logdir, strerror(errno));
-				return -1;
-			}
-		} else if (ret == -1) {
-			ui_error("Could not open '%s' for logging: %s", filename, strerror(serrno));
-			return -1;
-		} else {
-			server->logfd = ret;
+	if (!hist || !hist->origin || !hist->origin->server)
+		return -4;
+
+	if (stat(logdir, &st) == -1) {
+		if (mkdir(logdir, 0700) == -1) {
+			ui_error("Could not create dir '%s': %s", logdir, strerror(errno));
+			return -5;
 		}
-	} else return 1;
-
-	/* retry */
-	if (dprintf(server->logfd, "!%lld :%s %s\n", (long long)timestamp, from ? from->prefix : server->name, msg) <  0) {
-		ui_error("Failed to write to log of server '%s': %s", server->name, strerror(errno));
-		return -1;
 	}
 
-	return 1;
+	if (hist->origin->channel)
+		snprintf(filename, sizeof(filename), "%s/%s,%s.log", logdir, hist->origin->server->name, hist->origin->channel->name);
+	else
+		snprintf(filename, sizeof(filename), "%s/%s.log", logdir, hist->origin->server->name);
+
+	if (!(f = fopen(filename, "a"))) {
+		ui_error("Could not open '%s': %s", filename, strerror(errno));
+		return -6;
+	}
+
+	if (hist->from) {
+		nick  = hist->from->nick  ? hist->from->nick  : " ";
+		ident = hist->from->ident ? hist->from->ident : " ";
+		host  = hist->from->host  ? hist->from->host  : " ";
+	} else {
+		nick = ident = host = " ";
+	}
+
+	if (*hist->raw == ':' && strchr(hist->raw, ' '))
+		raw = strchr(hist->raw, ' ') + 1;
+	else
+		raw = hist->raw;
+
+	ret = fprintf(f,
+			"%lld\t%d\t%d\t%d\t%c\t%s\t%s\t%s\t%s\n",
+			(long long)hist->timestamp,
+			hist->activity,
+			(hist->options & HIST_SHOW) ? 1 : 0,
+			hist->from ? hist->from->self   : 0, /* If from does not exist, it's probably not from us */
+			hist->from ? hist->from->priv   : ' ',
+			nick, ident, host, raw);
+
+	if (ret < 0) {
+		ui_error("Could not write to '%s': %s", filename, strerror(errno));
+		fclose(f);
+		return -7;
+	}
+
+	fclose(f);
 }
 
 int

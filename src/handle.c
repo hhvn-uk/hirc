@@ -121,7 +121,7 @@ handle_JOIN) {
 		nick_add(&chan->nicks, msg->from->prefix, ' ', server);
 
 	hist_addp(server->history, msg, Activity_status, HIST_LOG);
-	hist_addp(chan->history, msg, Activity_status, HIST_SHOW);
+	hist_addp(chan->history, msg, Activity_status, HIST_DFL);
 
 	if (nick_isself(nick)) {
 		if (strcmp_n(target, expect_get(server, Expect_join)) == 0)
@@ -163,7 +163,7 @@ handle_PART) {
 	}
 
 	hist_addp(server->history, msg, Activity_status, HIST_LOG);
-	hist_addp(chan->history, msg, Activity_status, HIST_SHOW);
+	hist_addp(chan->history, msg, Activity_status, HIST_DFL);
 }
 
 HANDLER(
@@ -193,7 +193,7 @@ handle_KICK) {
 	}
 
 	hist_addp(server->history, msg, Activity_status, HIST_LOG);
-	hist_addp(chan->history, msg, Activity_status, HIST_SHOW);
+	hist_addp(chan->history, msg, Activity_status, HIST_DFL);
 	nick_free(nick);
 }
 
@@ -220,7 +220,7 @@ handle_QUIT) {
 	for (chan = server->channels; chan; chan = chan->next) {
 		if (nick_get(&chan->nicks, nick->nick) != NULL) {
 			nick_remove(&chan->nicks, nick->nick);
-			hist_addp(chan->history, msg, Activity_status, HIST_SHOW);
+			hist_addp(chan->history, msg, Activity_status, HIST_DFL);
 			if (chan == selected.channel)
 				windows[Win_nicklist].refresh = 1;
 		}
@@ -238,6 +238,7 @@ handle_MODE) {
 		if ((chan = chan_get(&server->channels, *(msg->params+1), -1)) == NULL)
 			chan = chan_add(server, &server->channels, *(msg->params+1), 0);
 
+		hist_addp(server->history, msg, Activity_status, HIST_LOG);
 		hist_addp(chan->history, msg, Activity_status, HIST_DFL);
 		ircprintf(server, "MODE %s\r\n", chan->name); /* Get full mode via RPL_CHANNELMODEIS
 						               * instead of concatenating manually */
@@ -320,11 +321,12 @@ handle_RPL_AWAY) {
 	struct Channel *priv;
 	struct HistInfo *history;
 
-	if ((priv = chan_get(&server->privs, *(msg->params+2), -1)) != NULL)
-		history = priv->history;
-	else
-		history = server->history;
-	hist_addp(history, msg, Activity_status, HIST_DFL);
+	if ((priv = chan_get(&server->privs, *(msg->params+2), -1)) != NULL) {
+		hist_addp(priv->history, msg, Activity_status, HIST_DFL);
+		hist_addp(server->history, msg, Activity_status, HIST_LOG);
+	} else {
+		hist_addp(server->history, msg, Activity_status, HIST_DFL);
+	}
 }
 
 HANDLER(
@@ -340,6 +342,7 @@ handle_RPL_CHANNELMODEIS) {
 	free(chan->mode);
 	chan->mode = estrdup(*(msg->params+3));
 
+	hist_addp(server->history, msg, Activity_status, HIST_LOG);
 	if (expect_get(server, Expect_channelmodeis)) {
 		hist_addp(chan->history, msg, Activity_status, HIST_DFL);
 		expect_set(server, Expect_channelmodeis, NULL);
@@ -359,6 +362,8 @@ handle_RPL_NAMREPLY) {
 
 	if (param_len(params) < 5)
 		return;
+
+	hist_addp(server->history, msg, Activity_status, HIST_LOG);
 
 	params += 3;
 	target = *params;
@@ -462,7 +467,7 @@ handle_NICK) {
 			priv = chnick->priv;
 			nick_remove(&chan->nicks, nick->nick);
 			nick_add(&chan->nicks, prefix, priv, server);
-			hist_addp(chan->history, msg, Activity_status, HIST_SHOW);
+			hist_addp(chan->history, msg, Activity_status, HIST_DFL);
 			if (selected.channel == chan)
 				windows[Win_nicklist].refresh = 1;
 		}
@@ -493,6 +498,7 @@ handle_RPL_NOTOPIC) {
 
 	target = *(msg->params+2);
 
+	hist_addp(server->history, msg, Activity_status, HIST_LOG);
 	if ((chan = chan_get(&server->channels, target, -1)) == NULL)
 		return;
 
@@ -511,6 +517,8 @@ handle_RPL_TOPIC) {
 
 	if (param_len(msg->params) < 4)
 		return;
+
+	hist_addp(server->history, msg, Activity_status, HIST_LOG);
 
 	target = *(msg->params+2);
 	topic = *(msg->params+3);
@@ -537,6 +545,8 @@ handle_RPL_TOPICWHOTIME) {
 
 	if (param_len(msg->params) < 5)
 		return;
+
+	hist_addp(server->history, msg, Activity_status, HIST_LOG);
 
 	target = *(msg->params+2);
 

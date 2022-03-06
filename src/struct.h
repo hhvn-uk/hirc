@@ -134,7 +134,6 @@ struct Server {
 	char inputbuf[SERVER_INPUT_SIZE];
 	int inputlen;
 	struct pollfd *rpollfd;
-	int logfd;
 	enum ConnStatus status;
 	char *name;
 	char *username;
