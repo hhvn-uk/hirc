@@ -1231,6 +1231,7 @@ ui_format(struct Window *window, char *format, struct History *hist) {
 	char *content, *p, *p2;
 	char *ts, *save;
 	char colourbuf[2][3];
+	char priv[2];
 	char chs[2];
 	size_t len;
 	enum {
@@ -1239,6 +1240,7 @@ ui_format(struct Window *window, char *format, struct History *hist) {
 		sub_nick,
 		sub_ident,
 		sub_host,
+		sub_priv,
 		sub_channel,
 		sub_topic,
 		sub_server,
@@ -1253,6 +1255,7 @@ ui_format(struct Window *window, char *format, struct History *hist) {
 		[sub_nick]	= {"nick", NULL},
 		[sub_ident]	= {"ident", NULL},
 		[sub_host]	= {"host", NULL},
+		[sub_priv]      = {"priv", NULL},
 		[sub_channel]	= {"channel", NULL},
 		[sub_topic]	= {"topic", NULL},
 		[sub_server]	= {"server", NULL},
@@ -1271,6 +1274,12 @@ ui_format(struct Window *window, char *format, struct History *hist) {
 		subs[sub_nick].val  = hist->from ? hist->from->nick  : NULL;
 		subs[sub_ident].val = hist->from ? hist->from->ident : NULL;
 		subs[sub_host].val  = hist->from ? hist->from->host  : NULL;
+
+		if (hist->from) {
+			priv[0] = hist->from->priv;
+			priv[1] = '\0';
+			subs[sub_priv].val = priv;
+		}
 
 		if (hist->origin) {
 			if (hist->origin->channel) {
@@ -1303,6 +1312,7 @@ ui_format(struct Window *window, char *format, struct History *hist) {
 	}
 
 	for (escape = 0, rc = 0; format && *format && rc < sizeof(ret); ) {
+outcont:
 		if (!escape && *format == '$' && *(format+1) == '{' && strchr(format, '}')) {
 			escape = 0;
 			content = ui_format_get_content(format+2, 0);
@@ -1350,7 +1360,7 @@ ui_format(struct Window *window, char *format, struct History *hist) {
 					if (subs[i].val)
 						rc += snprintf(&ret[rc], sizeof(ret) - rc, "%s", subs[i].val);
 					format = strchr(format, '}') + 1;
-					continue;
+					goto outcont; /* unfortunately, need to use a goto as we are already in a loop */
 				}
 			}
 		}

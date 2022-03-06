@@ -624,6 +624,6 @@ handle(struct Server *server, char *msg) {
 	}
 
 	/* add it to server->history if there is no handler */
-	hist_add(server->history, NULL, msg, Activity_status, timestamp, HIST_DFL);
+	hist_add(server->history, msg, Activity_status, timestamp, HIST_DFL);
 	param_free(params);
 }

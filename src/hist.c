@@ -56,6 +56,8 @@ struct History *
 hist_create(struct HistInfo *histinfo, struct Nick *from, char *msg,
 		enum Activity activity, time_t timestamp, enum HistOpt options) {
 	struct History *new;
+	struct Nick *np;
+	char *nick;
 
 	new = emalloc(sizeof(struct History));
 	new->prev = new->next = NULL;
@@ -67,12 +69,22 @@ hist_create(struct HistInfo *histinfo, struct Nick *from, char *msg,
 	new->options = options;
 	new->origin = histinfo;
 
-	if (from)
+	if (from) {
 		new->from = nick_dup(from, histinfo->server);
-	else if (**new->_params == ':')
-		new->from = nick_create(*new->_params, ' ', histinfo->server);
-	else
+	} else if (**new->_params == ':') {
+		np = NULL;
+		if (histinfo->channel) {
+			prefix_tokenize(*new->_params, &nick, NULL, NULL);
+			np = nick_get(&histinfo->channel->nicks, nick);
+		}
+
+		if (np)
+			new->from = nick_dup(np, histinfo->server);
+		else
+			new->from = nick_create(*new->_params, ' ', histinfo->server);
+	} else {
 		new->from = NULL;
+	}
 
 	if (**new->_params == ':')
 		new->params++;
@@ -82,30 +94,35 @@ hist_create(struct HistInfo *histinfo, struct Nick *from, char *msg,
 
 struct History *
 hist_addp(struct HistInfo *histinfo, struct History *p, enum Activity activity, enum HistOpt options) {
-	return hist_add(histinfo, p->from, p->raw, activity, p->timestamp, options);
+	return hist_add(histinfo, p->raw, activity, p->timestamp, options);
 }
 
 struct History *
-hist_add(struct HistInfo *histinfo, struct Nick *from,
-		char *msg,  enum Activity activity,
+hist_add(struct HistInfo *histinfo,
+		char *msg, enum Activity activity,
 		time_t timestamp, enum HistOpt options) {
+	struct Nick *from = NULL;
 	struct History *new, *p;
 	int i;
 
 	if (options & HIST_MAIN) {
 		if (options & HIST_TMP && histinfo == main_buf) {
-			hist_add(main_buf, from, msg, activity, timestamp, HIST_SHOW);
+			hist_add(main_buf, msg, activity, timestamp, HIST_SHOW);
 			new = NULL;
 			goto ui;
 		} else if (histinfo != main_buf) {
-			hist_add(main_buf, from, msg, activity, timestamp, HIST_SHOW);
+			hist_add(main_buf, msg, activity, timestamp, HIST_SHOW);
 		} else {
 			ui_error("HIST_MAIN specified, but history is &main_buf", NULL);
 		}
 	}
 
-	if (options & HIST_SELF && histinfo->server)
-		from = histinfo->server->self;
+	if (options & HIST_SELF && histinfo->server) {
+		if (histinfo->channel && histinfo->channel->nicks)
+			from = nick_get(&histinfo->channel->nicks, histinfo->server->self->nick);
+		if (!from)
+			from = histinfo->server->self;
+	}
 
 	new = hist_create(histinfo, from, msg, activity, timestamp, options);
 
@@ -189,7 +206,7 @@ hist_format(struct HistInfo *histinfo, enum Activity activity, enum HistOpt opti
 
 	params = param_create(msg);
 
-	return hist_add(histinfo, NULL, msg, Activity_status, 0, options);
+	return hist_add(histinfo, msg, Activity_status, 0, options);
 }
 
 int

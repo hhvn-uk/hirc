@@ -89,7 +89,7 @@ struct History *hist_create(struct HistInfo *histinfo, struct Nick *from, char *
 struct History *hist_addp(struct HistInfo *histinfo, struct History *p,
 		enum Activity activity, enum HistOpt options);
 struct History *hist_add(struct HistInfo *histinfo,
-		struct Nick *from, char *msg, enum Activity activity,
+		char *msg, enum Activity activity,
 		time_t timestamp, enum HistOpt options);
 struct History *hist_format(struct HistInfo *history, enum Activity activity,
 		enum HistOpt options, char *format, ...);

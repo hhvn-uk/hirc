@@ -408,7 +408,7 @@ struct Config config[] = {
 		.description = {
 		"Used for horizontal line separating input and main window", NULL}},
 	{"format.privmsg", 1, Val_string,
-		.str = "%{nick:${nick}}${nick}%{o}%{=}${2}",
+		.str = "%{nick:${nick}}${priv}${nick}%{o}%{=}${2}",
 		.strhandle = config_redraws,
 		.description = {
 		"Format of messages", NULL}},
@@ -428,7 +428,7 @@ struct Config config[] = {
 		.description = {
 		"Format of CTCP answers", NULL}},
 	{"format.notice", 1, Val_string,
-		.str = "%{nick:${nick}}-${nick}-%{o}%{=}${2}",
+		.str = "%{nick:${nick}}-${priv}${nick}-%{o}%{=}${2}",
 		.strhandle = config_redraws,
 		.description = {
 		"Format of notices", NULL}},
