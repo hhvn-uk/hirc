@@ -27,9 +27,7 @@
 struct Nick {
 	struct Nick *prev;
 	char priv;    /* [~&@%+ ] */
-	char *prefix; /* don't read from this, nick, ident, host are
-			 pointers to segments of this.
-			 printf(":%s!%s@%s\n", nick, ident, host); */
+	char *prefix;
 	char *nick;
 	char *ident;
 	char *host;
