@@ -93,6 +93,7 @@ struct {
 	{"SELF_AUTOCMDS_START",	"format.ui.autocmds.start"},
 	{"SELF_AUTOCMDS_LIST",	"format.ui.autocmds"},
 	{"SELF_AUTOCMDS_END",	"format.ui.autocmds.end"},
+	{"SELF_LOG_RESTORE",	"format.ui.logrestore"},
 	/* Real commands/numerics from server */
 	{"PRIVMSG", 		"format.privmsg"},
 	{"NOTICE",		"format.notice"},

@@ -307,6 +307,11 @@ struct Config config[] = {
 		.strhandle = config_redraws,
 		.description = {
 		"Format of footer of /server -auto output", NULL}},
+	{"format.ui.logrestore", 1, Val_string,
+		.str = "%{=}%{c:93}<--- Restored log up until %{b}%{time:%c,${1}}%{b} -->",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of log restore footer.", NULL}},
 	{"format.ui.grep.start", 1, Val_string,
 		.str = "%{b}%{c:94}Results of ${1}:",
 		.strhandle = config_redraws,

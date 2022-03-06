@@ -95,6 +95,7 @@ struct History *hist_format(struct HistInfo *history, enum Activity activity,
 		enum HistOpt options, char *format, ...);
 int		hist_len(struct History **history);
 int		hist_log(struct History *hist);
+struct History *hist_loadlog(struct HistInfo *hist, char *server, char *channel);
 void		hist_purgeopt(struct HistInfo *histinfo, enum HistOpt options);
 
 /* serv.c */

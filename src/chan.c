@@ -62,7 +62,10 @@ chan_create(struct Server *server, char *name, int priv) {
 	channel->history->unread = 0;
 	channel->history->server = server;
 	channel->history->channel = channel;
-	channel->history->history = NULL;
+	if (server)
+		channel->history->history = hist_loadlog(channel->history, server->name, name);
+	else
+		channel->history->history = NULL;
 
 	return channel;
 }

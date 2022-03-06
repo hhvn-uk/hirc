@@ -24,6 +24,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdarg.h>
+#include <stdlib.h>
 #include <ncurses.h>
 #include <sys/stat.h>
 #include "hirc.h"
@@ -236,6 +237,7 @@ hist_log(struct History *hist) {
 		}
 	}
 
+	/* use ',' as it's illegal in dns hostnames (I think) and channel names */
 	if (hist->origin->channel)
 		snprintf(filename, sizeof(filename), "%s/%s,%s.log", logdir, hist->origin->server->name, hist->origin->channel->name);
 	else
@@ -275,6 +277,108 @@ hist_log(struct History *hist) {
 	}
 
 	fclose(f);
+}
+
+struct History *
+hist_loadlog(struct HistInfo *hist, char *server, char *channel) {
+	struct History *head = NULL, *p, *prev;
+	char filename[2048];
+	char *logdir;
+	FILE *f;
+	char *lines[HIST_MAX];
+	char buf[2048];
+	int i, j;
+	char *tok[9];
+	char *save;
+	time_t timestamp;
+	enum Activity activity;
+	char *prefix;
+	size_t len;
+	struct Nick *from;
+	char *format;
+
+	if (!server || !hist)
+		return NULL;
+
+	if ((logdir = config_gets("log.dir")) == NULL)
+		return NULL;
+
+	logdir = homepath(logdir);
+
+	if (channel)
+		snprintf(filename, sizeof(filename), "%s/%s,%s.log", logdir, server, channel);
+	else
+		snprintf(filename, sizeof(filename), "%s/%s.log", logdir, server);
+
+	if (!(f = fopen(filename, "rb")))
+		return NULL;
+
+	memset(lines, 0, sizeof(lines));
+
+	while (fgets(buf, sizeof(buf), f)) {
+		free(lines[HIST_MAX - 1]);
+		memmove(lines + 1, lines, HIST_MAX - 1);
+		buf[strlen(buf) - 1] = '\0'; /* strip newline */
+		lines[0] = estrdup(buf);
+	}
+
+	for (i = 0, prev = NULL; i < HIST_MAX && lines[i]; i++) {
+		tok[0] = strtok_r(lines[i], "\t", &save);
+		for (j = 1; j < 9; j++)
+			tok[j] = strtok_r(NULL, "\t", &save);
+
+		if (!tok[0] || !tok[1] || !tok[2] ||
+				!tok[3] || !tok[4] || !tok[5] ||
+				!tok[6] || !tok[7] || !tok[8])
+			continue;
+
+		timestamp = (time_t)strtoll(tok[0], NULL, 10);
+		activity = (int)strtol(tok[1], NULL, 10);
+
+		len = 1;
+		if (*tok[5] != ' ')
+			len += strlen(tok[5]);
+		if (*tok[6] != ' ')
+			len += strlen(tok[6]) + 1;
+		if (*tok[7] != ' ')
+			len += strlen(tok[7]) + 1;
+		prefix = emalloc(len);
+		snprintf(prefix, len, "%s%s%s%s%s",
+				tok[5] ? tok[5] : "",
+				tok[6] ? "!" : "", tok[6] ? tok[6] : "",
+				tok[7] ? "@" : "", tok[7] ? tok[7] : "");
+		from = nick_create(prefix, *tok[4], hist->server);
+		if (from)
+			from->self = *tok[3] == '1';
+
+		p = hist_create(hist, from, tok[8], activity, timestamp, *tok[2] == '1' ? HIST_SHOW : 0);
+
+		if (!head)
+			head = p;
+
+		if (prev) {
+			prev->next = p;
+			p->prev = prev;
+		}
+		prev = p;
+
+		nick_free(from);
+		free(lines[i]);
+	}
+
+	fclose(f);
+
+	if (head) {
+		len = snprintf(format, 0, "SELF_LOG_RESTORE %lld :log restored up to", (long long)head->timestamp) + 1;
+		format = emalloc(len);
+		snprintf(format, len, "SELF_LOG_RESTORE %lld :log restored up to", (long long)head->timestamp);
+		p = hist_create(hist, NULL, format, Activity_status, time(NULL), HIST_SHOW);
+		free(format);
+		p->next = head;
+		head->prev = p;
+		head = p;
+	}
+	return head;
 }
 
 int
