@@ -458,7 +458,10 @@ command_join) {
 
 	/* Perhaps we should update expect from schedule?
 	 * That'd make more sense if different stuff gets
-	 * scheduled for events that happen at different times */
+	 * scheduled for events that happen at different times
+	 *
+	 * Actually, I think that would be a bad idea if schedule gets opened
+	 * up to the user. Don't want automatic events triggering ui changes. */
 	expect_set(server, Expect_join, str);
 }
 
