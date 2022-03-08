@@ -88,6 +88,13 @@ struct Config config[] = {
 		"If a server doesn't supply this in the nonstandard",
 		"RPL_ISUPPORT, it likely won't support nonstandard",
 		"prefixes.", NULL}},
+	{"def.modes", 1, Val_signed,
+		.num = 1,
+		.numhandle = NULL,
+		.description = {
+		"You most likely don't want to touch this.",
+		"If a server doesn't send MODES=... in RPL_ISUPPORT,",
+		"use this number instead.", NULL}},
 	{"reconnect.interval", 1, Val_nzunsigned,
 		.num = 10,
 		.numhandle = NULL,

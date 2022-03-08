@@ -33,7 +33,7 @@
 #define command_toomany(cmd) ui_error("/%s: too many arguments", cmd)
 #define command_needselected(cmd, type) ui_error("/%s: no %s selected", cmd, type)
 
-#define COMMAND(func) static void func(struct Server *server, char *str)
+#define COMMAND(func) static void func(struct Server *server, struct Channel *channel, char *str)
 
 COMMAND(command_away);
 COMMAND(command_msg);
@@ -71,6 +71,17 @@ COMMAND(command_scroll);
 COMMAND(command_source);
 COMMAND(command_dump);
 COMMAND(command_close);
+
+COMMAND(command_op);
+COMMAND(command_voice);
+COMMAND(command_halfop);
+COMMAND(command_admin);
+COMMAND(command_owner);
+COMMAND(command_deop);
+COMMAND(command_devoice);
+COMMAND(command_dehalfop);
+COMMAND(command_deadmin);
+COMMAND(command_deowner);
 
 static char *command_optarg;
 enum {
@@ -234,6 +245,36 @@ struct Command commands[] = {
 	{"close", command_close, 0, {
 		"usage: /close [id]",
 		"Forget about selected buffer, or a buffer by id.", NULL}},
+	{"op", command_op, 2, {
+		"usage: /op nicks...",
+		"Give a nickname +o on the current channel.", NULL}},
+	{"voice", command_voice, 2, {
+		"usage: /voice nicks...",
+		"Give a nickname +v on the current channel.", NULL}},
+	{"halfop", command_halfop, 2, {
+		"usage: /halfop nicks...",
+		"Give a nickname +h on the current channel.", NULL}},
+	{"admin", command_admin, 2, {
+		"usage: /admin nicks...",
+		"Give a nickname +a on the current channel.", NULL}},
+	{"owner", command_owner, 2, {
+		"usage: /owner nicks...",
+		"Give a nickname +q on the current channel.", NULL}},
+	{"deop", command_deop, 2, {
+		"usage: /deop nicks...",
+		"Remove +o for a nick on the current channel.", NULL}},
+	{"devoice", command_devoice, 2, {
+		"usage: /devoice nicks...",
+		"Remove +v for a nick on the current channel.", NULL}},
+	{"dehalfop", command_dehalfop, 2, {
+		"usage: /dehalfop nicks...",
+		"Remove +h for a nick on the current channel.", NULL}},
+	{"deadmin", command_deadmin, 2, {
+		"usage: /deadmin nicks...",
+		"Remove +a for a nick on the current channel.", NULL}},
+	{"deowner", command_deowner, 2, {
+		"usage: /deowner nicks...",
+		"Remove +q for a nick on the current channel.", NULL}},
 	{NULL, NULL},
 };
 
@@ -431,34 +472,34 @@ command_join) {
 
 COMMAND(
 command_part) {
-	char *channel = NULL, *reason = NULL;
+	char *chan = NULL, *reason = NULL;
 	char msg[512];
 
 	if (str) {
 		if (serv_ischannel(server, str))
-			channel = strtok_r(str, " ", &reason);
+			chan = strtok_r(str, " ", &reason);
 		else
 			reason = str;
 	}
 
-	if (!channel) {
+	if (!chan) {
 		if (selected.channel) {
-			channel = selected.channel->name;
+			chan = selected.channel->name;
 		} else {
 			command_toofew("part");
 			return;
 		}
 	}
 
-	snprintf(msg, sizeof(msg), "PART %s :%s\r\n", channel, reason ? reason : config_gets("misc.partmessage"));
+	snprintf(msg, sizeof(msg), "PART %s :%s\r\n", chan, reason ? reason : config_gets("misc.partmessage"));
 
 	ircprintf(server, "%s", msg);
-	expect_set(server, Expect_part, channel);
+	expect_set(server, Expect_part, chan);
 }
 
 COMMAND(
 command_kick) {
-	char *channel, *nick, *reason;
+	char *chan, *nick, *reason;
 	char *s;
 
 	if (!str) {
@@ -469,7 +510,7 @@ command_kick) {
 	s = strtok_r(str,  " ", &reason);
 
 	if (serv_ischannel(server, s)) {
-		channel = s;
+		chan = s;
 		nick = strtok_r(NULL, " ", &reason);
 	} else {
 		if (selected.channel == NULL) {
@@ -477,33 +518,33 @@ command_kick) {
 			return;
 		}
 
-		channel = selected.channel->name;
+		chan = selected.channel->name;
 		nick = s;
 	}
 
 	if (reason)
-		ircprintf(server, "KICK %s %s :%s\r\n", channel, nick, reason);
+		ircprintf(server, "KICK %s %s :%s\r\n", chan, nick, reason);
 	else
-		ircprintf(server, "KICK %s %s\r\n", channel, nick);
+		ircprintf(server, "KICK %s %s\r\n", chan, nick);
 }
 
 COMMAND(
 command_mode) {
-	char *channel, *modes;
+	char *chan, *modes;
 	char *s = NULL;
 
 	if (str)
 		s = strtok_r(str,  " ", &modes);
 
 	if (serv_ischannel(server, s)) {
-		channel = s;
+		chan = s;
 	} else {
 		if (selected.channel == NULL) {
 			command_needselected("mode", "channel");
 			return;
 		}
 
-		channel = selected.channel->name;
+		chan = selected.channel->name;
 		if (modes) {
 			*(modes - 1) = ' ';
 			modes = s;
@@ -511,10 +552,10 @@ command_mode) {
 	}
 
 	if (modes) {
-		ircprintf(server, "MODE %s %s\r\n", channel, modes);
+		ircprintf(server, "MODE %s %s\r\n", chan, modes);
 	} else {
-		expect_set(server, Expect_channelmodeis, channel);
-		ircprintf(server, "MODE %s\r\n", channel);
+		expect_set(server, Expect_channelmodeis, chan);
+		ircprintf(server, "MODE %s\r\n", chan);
 	}
 }
 
@@ -851,7 +892,7 @@ command_format) {
 	len = strlen(str) + strlen("format.") + 1;
 	newstr = talloc(len);
 	snprintf(newstr, len, "format.%s", str);
-	command_set(server, newstr);
+	command_set(server, channel, newstr);
 }
 
 COMMAND(
@@ -908,7 +949,7 @@ command_server) {
 
 		for (i=0; commands[i].name && commands[i].func; i++) {
 			if (strcmp(commands[i].name, cmd) == 0) {
-				commands[i].func(nserver, arg);
+				commands[i].func(nserver, channel, arg);
 				return;
 			}
 		}
@@ -947,13 +988,13 @@ command_server) {
 
 COMMAND(
 command_names) {
-	char *channel, *save = NULL;
+	char *chan, *save = NULL;
 
-	channel = strtok_r(str, " ", &save);
-	if (!channel)
-		channel = selected.channel ? selected.channel->name : NULL;
+	chan = strtok_r(str, " ", &save);
+	if (!chan)
+		chan = selected.channel ? selected.channel->name : NULL;
 
-	if (!channel) {
+	if (!chan) {
 		command_needselected("names", "channel");
 		return;
 	}
@@ -963,13 +1004,13 @@ command_names) {
 		return;
 	}
 
-	ircprintf(server, "NAMES %s\r\n", channel);
-	expect_set(server, Expect_names, channel);
+	ircprintf(server, "NAMES %s\r\n", chan);
+	expect_set(server, Expect_names, chan);
 }
 
 COMMAND(
 command_topic) {
-	char *channel, *topic = NULL;
+	char *chan, *topic = NULL;
 	int clear = 0, ret;
 	enum { opt_clear, };
 	struct CommandOpts opts[] = {
@@ -988,18 +1029,18 @@ command_topic) {
 	}
 
 	if (str)
-		channel = strtok_r(str,  " ", &topic);
+		chan = strtok_r(str,  " ", &topic);
 	else
-		channel = topic = NULL;
+		chan = topic = NULL;
 
-	if (channel && !serv_ischannel(server, channel)) {
-		topic = channel;
-		channel = NULL;
+	if (chan && !serv_ischannel(server, chan)) {
+		topic = chan;
+		chan = NULL;
 	}
 
-	if (!channel && selected.channel) {
-		channel = selected.channel->name;
-	} else if (!channel) {
+	if (!chan && selected.channel) {
+		chan = selected.channel->name;
+	} else if (!chan) {
 		command_needselected("topic", "channel");
 		return;
 	}
@@ -1009,14 +1050,14 @@ command_topic) {
 			command_toomany("topic");
 			return;
 		}
-		ircprintf(server, "TOPIC %s :\r\n", channel);
+		ircprintf(server, "TOPIC %s :\r\n", chan);
 		return;
 	}
 
 	if (!topic) {
-		ircprintf(server, "TOPIC %s\r\n", channel);
-		expect_set(server, Expect_topic, channel);
-	} else ircprintf(server, "TOPIC %s :%s\r\n", channel, topic);
+		ircprintf(server, "TOPIC %s\r\n", chan);
+		expect_set(server, Expect_topic, chan);
+	} else ircprintf(server, "TOPIC %s :%s\r\n", chan, topic);
 }
 
 COMMAND(
@@ -1070,9 +1111,8 @@ command_bind) {
 	}
 }
 
-static
-void
-command_alias(struct Server *server, char *str) {
+COMMAND(
+command_alias) {
 	struct Alias *p;
 	char *alias = NULL, *cmd = NULL;
 	int delete = 0, ret;
@@ -1129,7 +1169,7 @@ command_help) {
 	int i, j;
 
 	if (!str) {
-		command_help(server, "/help");
+		command_help(server, channel, "/help");
 		return;
 	}
 
@@ -1187,9 +1227,8 @@ command_echo) {
 	hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP, "SELF_UI :%s", str);
 }
 
-static
-void
-command_grep(struct Server *server, char *str) {
+COMMAND(
+command_grep) {
 	struct History *p;
 	regex_t re;
 	int regopt = 0, ret;
@@ -1516,6 +1555,111 @@ command_close) {
 	}
 }
 
+static void
+modelset(struct Server *server, struct Channel *channel,
+		int remove, char mode, char *args) {
+	char *percmds, *p;
+	char *modes;
+	int percmd;
+	int i;
+	size_t len;
+
+	percmds = support_get(server, "MODES");
+	if (percmds)
+		percmd = atoi(percmds);
+	else
+		percmd = config_getl("def.modes");
+
+	/*
+	 * Now, I'd hope that servers do something clever like determining this
+	 * value from the max length of channels, nicks and IRC messages
+	 * overall, so that it is impossible to send messages that are too
+	 * long, but I doubt it.
+	 * TODO: some maths for limiting percmd based on lengths.
+	 * 
+	 * It'd be useful to be able to check if the desired priviledge is
+	 * supported by the server. Theoretically some servers could also use
+	 * different modes for priviledges, in this case it would make sense
+	 * that 'char mode' be the symbol, i,e, ~&@%+ and then we would look up
+	 * the mode in PREFIX.
+	 * TODO: check PREFIX=...
+	 *
+	 */
+
+	/* 2 = null byte and +/- */
+	len = percmd + 2;
+	modes = talloc(len);
+	*modes = remove ? '-' : '+';
+	for (i = 0; i < percmd; i++)
+		*(modes + i + 1) = mode;
+	*(modes + len - 1) = '\0';
+
+	do {
+		for (i = 0, p = args; *p && i < percmd; p++)
+			if (*p == ' ' && *(p+1) != ' ')
+				i++;
+		if (*p)
+			*(p - 1) = '\0';
+		else
+			i++;
+		*(modes + i + 1) = '\0';
+
+		ircprintf(server, "MODE %s %s %s\r\n", channel->name, modes, args);
+
+		args = p;
+	} while (*args);
+}
+
+COMMAND(
+command_op) {
+	modelset(server, channel, 0, 'o', str);
+}
+
+COMMAND(
+command_voice) {
+	modelset(server, channel, 0, 'v', str);
+}
+
+COMMAND(
+command_halfop) {
+	modelset(server, channel, 0, 'h', str);
+}
+
+COMMAND(
+command_admin) {
+	modelset(server, channel, 0, 'a', str);
+}
+
+COMMAND(
+command_owner) {
+	modelset(server, channel, 0, 'q', str);
+}
+
+COMMAND(
+command_deop) {
+	modelset(server, channel, 1, 'o', str);
+}
+
+COMMAND(
+command_devoice) {
+	modelset(server, channel, 1, 'v', str);
+}
+
+COMMAND(
+command_dehalfop) {
+	modelset(server, channel, 1, 'h', str);
+}
+
+COMMAND(
+command_deadmin) {
+	modelset(server, channel, 1, 'a', str);
+}
+
+COMMAND(
+command_deowner) {
+	modelset(server, channel, 1, 'q', str);
+}
+
 int
 command_getopt(char **str, struct CommandOpts *opts) {
 	char *opt;
@@ -1674,11 +1818,15 @@ command_eval(struct Server *server, char *str) {
 
 		for (cmdp = commands; cmdp->name && cmdp->func; cmdp++) {
 			if (strcmp(cmdp->name, cmd) == 0) {
-				if (cmdp->needserver && !server) {
+				if (cmdp->need == 2 && !selected.channel)
+					ui_error("/%s requires a channel to be selected", cmdp->name);
+				else if (cmdp->need == 2 && selected.channel->server != server)
+					ui_error("/%s cannot be run with /server", cmdp->name);
+				else if (cmdp->need == 1 && !server)
 					ui_error("/%s requires a server to be selected or provided by /server", cmdp->name);
-				} else {
-					cmdp->func(server, s);
-				}
+				else
+					cmdp->func(server, selected.channel, s);
+
 				return;
 			}
 		}

@@ -170,8 +170,11 @@ struct Handler {
 /* commands received from user */
 struct Command {
 	char *name;
-	void (*func)(struct Server *server, char *str);
-	int needserver;
+	void (*func)(struct Server *server, struct Channel *channel, char *str);
+	int need; /* 0  - nothing
+		     1  - server
+		     2  - channel (and implicitly server)
+		     3+ - implementation defined (pfft. who's gonna reimplement hirc?) */
 	char *description[64];
 };
 
