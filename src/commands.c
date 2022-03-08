@@ -104,7 +104,7 @@ struct Command commands[] = {
 		"usage: /notice <nick|channel> message..",
 		"Send a notice to a nick or channel.",
 		"Will appear in buffers if already open.", NULL}},
-	{"me", command_me, 1, {
+	{"me", command_me, 2, {
 		"usage: /me message..",
 		"Send a CTCP ACTION to the selected channel/query", NULL}},
 	{"ctcp", command_ctcp, 1, {
@@ -366,17 +366,12 @@ command_notice) {
 
 COMMAND(
 command_me) {
-	if (!selected.channel) {
-		command_needselected("me", "channel or query");
-		return;
-	}
-
 	if (!str)
 		str = "";
 
-	ircprintf(server, "PRIVMSG %s :%cACTION %s%c\r\n", selected.channel->name, 1, str, 1);
-	hist_format(selected.channel->history, Activity_self,
-			HIST_SHOW|HIST_LOG|HIST_SELF, "PRIVMSG %s :%cACTION %s%c", selected.channel->name, 1, str, 1);
+	ircprintf(server, "PRIVMSG %s :%cACTION %s%c\r\n", channel->name, 1, str, 1);
+	hist_format(channel->history, Activity_self,
+			HIST_SHOW|HIST_LOG|HIST_SELF, "PRIVMSG %s :%cACTION %s%c", channel->name, 1, str, 1);
 }
 
 COMMAND(
@@ -391,12 +386,9 @@ command_ctcp) {
 
 	target = strtok_r(str, " ", &ctcp);
 
-	if (!ctcp && !selected.channel) {
-		command_needselected("ctcp", "channel or query");
-		return;
-	} else if (!ctcp) {
+	if (!ctcp) {
 		ctcp = target;
-		target = selected.channel->name;
+		target = channel->name;
 	}
 
 	if ((chan = chan_get(&server->channels, target, -1)) == NULL)
@@ -407,7 +399,7 @@ command_ctcp) {
 	 * implemented. */
 	ircprintf(server, "PRIVMSG %s :%c%s%c\r\n", target, 1, ctcp, 1);
 	if (chan) {
-		hist_format(selected.channel->history, Activity_self,
+		hist_format(channel->history, Activity_self,
 				HIST_SHOW|HIST_LOG|HIST_SELF, "PRIVMSG %s :%c%s%c",
 				target, 1, ctcp, 1);
 	}
@@ -483,8 +475,8 @@ command_part) {
 	}
 
 	if (!chan) {
-		if (selected.channel) {
-			chan = selected.channel->name;
+		if (channel) {
+			chan = channel->name;
 		} else {
 			command_toofew("part");
 			return;
@@ -513,12 +505,12 @@ command_kick) {
 		chan = s;
 		nick = strtok_r(NULL, " ", &reason);
 	} else {
-		if (selected.channel == NULL) {
+		if (channel == NULL) {
 			command_needselected("kick", "channel");
 			return;
 		}
 
-		chan = selected.channel->name;
+		chan = channel->name;
 		nick = s;
 	}
 
@@ -539,12 +531,12 @@ command_mode) {
 	if (serv_ischannel(server, s)) {
 		chan = s;
 	} else {
-		if (selected.channel == NULL) {
+		if (channel == NULL) {
 			command_needselected("mode", "channel");
 			return;
 		}
 
-		chan = selected.channel->name;
+		chan = channel->name;
 		if (modes) {
 			*(modes - 1) = ' ';
 			modes = s;
@@ -992,7 +984,7 @@ command_names) {
 
 	chan = strtok_r(str, " ", &save);
 	if (!chan)
-		chan = selected.channel ? selected.channel->name : NULL;
+		chan = channel ? channel->name : NULL;
 
 	if (!chan) {
 		command_needselected("names", "channel");
@@ -1038,8 +1030,8 @@ command_topic) {
 		chan = NULL;
 	}
 
-	if (!chan && selected.channel) {
-		chan = selected.channel->name;
+	if (!chan && channel) {
+		chan = channel->name;
 	} else if (!chan) {
 		command_needselected("topic", "channel");
 		return;
