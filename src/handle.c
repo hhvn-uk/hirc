@@ -443,7 +443,7 @@ handle_NICK) {
 	char *newnick;
 	char priv;
 
-	if (!msg->from || !*msg->params || !*msg->params+1)
+	if (!msg->from || !*msg->params || !*(msg->params+1))
 		return;
 
 	nick = msg->from;
