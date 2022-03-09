@@ -1551,13 +1551,18 @@ command_close) {
 }
 
 static void
-modelset(struct Server *server, struct Channel *channel,
+modelset(char *cmd, struct Server *server, struct Channel *channel,
 		int remove, char mode, char *args) {
 	char *percmds, *p;
 	char *modes;
 	int percmd;
 	int i;
 	size_t len;
+
+	if (!args) {
+		command_toofew(cmd);
+		return;
+	}
 
 	percmds = support_get(server, "MODES");
 	if (percmds)
@@ -1589,7 +1594,7 @@ modelset(struct Server *server, struct Channel *channel,
 		*(modes + i + 1) = mode;
 	*(modes + len - 1) = '\0';
 
-	do {
+	while (*args) {
 		for (i = 0, p = args; *p && i < percmd; p++)
 			if (*p == ' ' && *(p+1) != ' ')
 				i++;
@@ -1602,57 +1607,57 @@ modelset(struct Server *server, struct Channel *channel,
 		ircprintf(server, "MODE %s %s %s\r\n", channel->name, modes, args);
 
 		args = p;
-	} while (*args);
+	}
 }
 
 COMMAND(
 command_op) {
-	modelset(server, channel, 0, 'o', str);
+	modelset("op", server, channel, 0, 'o', str);
 }
 
 COMMAND(
 command_voice) {
-	modelset(server, channel, 0, 'v', str);
+	modelset("voice", server, channel, 0, 'v', str);
 }
 
 COMMAND(
 command_halfop) {
-	modelset(server, channel, 0, 'h', str);
+	modelset("halfop", server, channel, 0, 'h', str);
 }
 
 COMMAND(
 command_admin) {
-	modelset(server, channel, 0, 'a', str);
+	modelset("admin", server, channel, 0, 'a', str);
 }
 
 COMMAND(
 command_owner) {
-	modelset(server, channel, 0, 'q', str);
+	modelset("owner", server, channel, 0, 'q', str);
 }
 
 COMMAND(
 command_deop) {
-	modelset(server, channel, 1, 'o', str);
+	modelset("deop", server, channel, 1, 'o', str);
 }
 
 COMMAND(
 command_devoice) {
-	modelset(server, channel, 1, 'v', str);
+	modelset("devoice", server, channel, 1, 'v', str);
 }
 
 COMMAND(
 command_dehalfop) {
-	modelset(server, channel, 1, 'h', str);
+	modelset("dehalfop", server, channel, 1, 'h', str);
 }
 
 COMMAND(
 command_deadmin) {
-	modelset(server, channel, 1, 'a', str);
+	modelset("deadmin", server, channel, 1, 'a', str);
 }
 
 COMMAND(
 command_deowner) {
-	modelset(server, channel, 1, 'q', str);
+	modelset("deowner", server, channel, 1, 'q', str);
 }
 
 int
