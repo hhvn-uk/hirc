@@ -351,7 +351,7 @@ serv_disconnect(struct Server *server, int reconnect, char *msg) {
 	int ret;
 
 	if (msg)
-		ircprintf(server, "QUIT %s\r\n", msg);
+		ircprintf(server, "QUIT :%s\r\n", msg);
 #ifdef TLS
 	if (server->tls) {
 		if (server->tls_ctx) {
