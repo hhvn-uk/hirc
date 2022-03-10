@@ -108,6 +108,27 @@ struct Support {
 };
 
 enum Expect {
+	/*
+	 * The expect system is how a command or handler is able to change the
+	 * actions performed by subsequent handlers (without changing
+	 * server/chan/nick structs with I prefer to primarily track data, not
+	 * actions).
+	 *
+	 * Each element in the expect array (contained in every server struct)
+	 * can be set to either NULL or an arbitrary string (usually a channel
+	 * name), as such they aren't really standard - the best way to know
+	 * what each does is to grep through the source.
+	 *
+	 * I think this system works pretty well considering its simplicity.
+	 * Alternatively handlers could look back in history - this would
+	 * likely be much more robust, whilst being much less effecient as a
+	 * handler needs to perform extra logic rather than looking up a
+	 * string. There could also be some system utilizing callbacks that
+	 * performs logic itself, rather than having handlers perform logic
+	 * with the return value of expect_get: this may be more elegant and
+	 * "proper", but it seems needlessly complicated to me.
+	 *
+	 */
 	Expect_join,
 	Expect_part,
 	Expect_pong,
