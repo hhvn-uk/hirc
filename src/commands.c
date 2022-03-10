@@ -547,6 +547,8 @@ command_mode) {
 	}
 
 	if (modes) {
+		if (chan == channel->name)
+			expect_set(server, Expect_nosuchnick, chan);
 		ircprintf(server, "MODE %s %s\r\n", chan, modes);
 	} else {
 		expect_set(server, Expect_channelmodeis, chan);
@@ -1608,6 +1610,8 @@ modelset(char *cmd, struct Server *server, struct Channel *channel,
 
 		args = p;
 	}
+
+	expect_set(server, Expect_nosuchnick, channel->name);
 }
 
 COMMAND(

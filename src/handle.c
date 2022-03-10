@@ -44,6 +44,7 @@ HANDLER(handle_RPL_TOPICWHOTIME);
 HANDLER(handle_RPL_NAMREPLY);
 HANDLER(handle_RPL_ENDOFNAMES);
 HANDLER(handle_RPL_ENDOFMOTD);
+HANDLER(handle_ERR_NOSUCHNICK);
 HANDLER(handle_ERR_NICKNAMEINUSE);
 HANDLER(handle_RPL_AWAY);
 
@@ -74,6 +75,7 @@ struct Handler handlers[] = {
 	{ "353",	handle_RPL_NAMREPLY		},
 	{ "366",	handle_RPL_ENDOFNAMES		},
 	{ "376",	handle_RPL_ENDOFMOTD		},
+	{ "401",	handle_ERR_NOSUCHNICK		},
 	{ "433",	handle_ERR_NICKNAMEINUSE	},
 	{ NULL,		NULL 				},
 };
@@ -238,6 +240,7 @@ handle_MODE) {
 		if ((chan = chan_get(&server->channels, *(msg->params+1), -1)) == NULL)
 			chan = chan_add(server, &server->channels, *(msg->params+1), 0);
 
+		expect_set(server, Expect_nosuchnick, NULL);
 		hist_addp(server->history, msg, Activity_status, HIST_LOG);
 		hist_addp(chan->history, msg, Activity_status, HIST_DFL);
 		ircprintf(server, "MODE %s\r\n", chan->name); /* Get full mode via RPL_CHANNELMODEIS
@@ -414,6 +417,19 @@ handle_RPL_ENDOFNAMES) {
 	target = *(msg->params+2);
 	if (strcmp_n(target, expect_get(server, Expect_names)) == 0)
 		expect_set(server, Expect_names, NULL);
+}
+
+HANDLER(
+handle_ERR_NOSUCHNICK) {
+	char *expectation;
+	struct Channel *chan = NULL;
+
+	if ((expectation = expect_get(server, Expect_nosuchnick)) != NULL) {
+		chan = chan_get(&server->channels, expectation, -1);
+		expect_set(server, Expect_nosuchnick, NULL);
+	}
+
+	hist_addp(chan ? chan->history : server->history, msg, Activity_error, HIST_DFL);
 }
 
 HANDLER(

@@ -917,17 +917,17 @@ struct Config config[] = {
 		.description = {
 		"Format of RPL_NOUSERS (395) numeric", NULL}},
 	{"format.err.nosuchnick", 1, Val_string,
-		.str = "${2-}",
+		.str = "No such nick: ${2}",
 		.strhandle = config_redraws,
 		.description = {
 		"Format of ERR_NOSUCHNICK (401) numeric", NULL}},
 	{"format.err.nosuchserver", 1, Val_string,
-		.str = "${2-}",
+		.str = "No such server: ${2}",
 		.strhandle = config_redraws,
 		.description = {
 		"Format of ERR_NOSUCHSERVER (402) numeric", NULL}},
 	{"format.err.nosuchchannel", 1, Val_string,
-		.str = "${2-}",
+		.str = "No such channel: ${2}",
 		.strhandle = config_redraws,
 		.description = {
 		"Format of ERR_NOSUCHCHANNEL (403) numeric", NULL}},

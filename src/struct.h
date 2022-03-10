@@ -116,6 +116,8 @@ enum Expect {
 	Expect_topicwhotime,
 	Expect_channelmodeis,
 	Expect_nicknameinuse,
+	Expect_nosuchnick, /* currently set by commands that send MODE
+			      and subsequently unset by handle_mode */
 	Expect_last,
 };
 
