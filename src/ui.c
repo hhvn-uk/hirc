@@ -1218,11 +1218,10 @@ end:
 }
 
 char *
-ui_format(struct Window *window, char *format, struct History *hist) {
-	static char ret[8192];
-	static int recursive = 0;
-	int srecursive;
+ui_format_(struct Window *window, char *format, struct History *hist, int recursive) {
+	static char *ret;
 	struct Nick *nick;
+	size_t rs = BUFSIZ;
 	size_t rc, pc;
 	int escape, i;
 	long long pn;
@@ -1264,7 +1263,8 @@ ui_format(struct Window *window, char *format, struct History *hist) {
 		{NULL, NULL},
 	};
 
-	/* ${time} is implemented specially so doesn't appear in list */
+	free(ret);
+	ret = emalloc(rs);
 
 	subs[sub_channel].val = selected.channel ? selected.channel->name  : NULL;
 	subs[sub_topic].val   = selected.channel ? selected.channel->topic : NULL;
@@ -1304,16 +1304,18 @@ ui_format(struct Window *window, char *format, struct History *hist) {
 	}
 
 	if (!recursive && hist && config_getl("timestamp.toggle")) {
-		srecursive = recursive;
-		recursive = 1;
-		ts = estrdup(ui_format(NULL, config_gets("format.ui.timestamp"), hist));
-		recursive = srecursive;
+		ts = estrdup(ui_format_(NULL, config_gets("format.ui.timestamp"), hist, 1));
 	} else {
 		ts = "";
 	}
 
-	for (escape = 0, rc = 0; format && *format && rc < sizeof(ret); ) {
+	for (escape = 0, rc = 0; format && *format && rc < rs; ) {
 outcont:
+		if (rc > rs / 2) {
+			rs *= 2;
+			ret = erealloc(ret, rs);
+		}
+
 		if (!escape && *format == '$' && *(format+1) == '{' && strchr(format, '}')) {
 			escape = 0;
 			content = ui_format_get_content(format+2, 0);
@@ -1324,11 +1326,11 @@ outcont:
 				pn = strtol(content, NULL, 10) - 1;
 				if (pn >= 0 && param_len(params) > pn) {
 					if (**(params+pn) == 1 && strncmp((*(params+pn))+1, "ACTION", strlen("ACTION")) == 0 && strchr(*(params+pn), ' '))
-						rc += snprintf(&ret[rc], sizeof(ret) - rc, "%s", struntil(strchr(*(params+pn), ' ') + 1, 1));
+						rc += snprintf(&ret[rc], rs - rc, "%s", struntil(strchr(*(params+pn), ' ') + 1, 1));
 					else if (**(params+pn) == 1)
-						rc += snprintf(&ret[rc], sizeof(ret) - rc, "%s", struntil((*(params+pn)) + 1, 1));
+						rc += snprintf(&ret[rc], rs - rc, "%s", struntil((*(params+pn)) + 1, 1));
 					else
-						rc += snprintf(&ret[rc], sizeof(ret) - rc, "%s", *(params+pn));
+						rc += snprintf(&ret[rc], rs - rc, "%s", *(params+pn));
 					format = strchr(format, '}') + 1;
 					continue;
 				}
@@ -1339,15 +1341,15 @@ outcont:
 				if (pn >= 0 && param_len(params) > pn) {
 					for (; *(params+pn) != NULL; pn++) {
 						if (**(params+pn) == 1 && strncmp((*(params+pn))+1, "ACTION", strlen("ACTION")) == 0 && strchr(*(params+pn), ' ')) {
-							rc += snprintf(&ret[rc], sizeof(ret) - rc, "%s%s",
+							rc += snprintf(&ret[rc], rs - rc, "%s%s",
 									struntil(strchr(*(params+pn), ' ') + 1, 1),
 									*(params+pn+1) ? " " : "");
 						} else if (**(params+pn) == 1) {
-							rc += snprintf(&ret[rc], sizeof(ret) - rc, "%s%s",
+							rc += snprintf(&ret[rc], rs - rc, "%s%s",
 									struntil((*(params+pn)) + 1, 1),
 									*(params+pn+1) ? " " : "");
 						} else {
-							rc += snprintf(&ret[rc], sizeof(ret) - rc, "%s%s",
+							rc += snprintf(&ret[rc], rs - rc, "%s%s",
 									*(params+pn), *(params+pn+1) ? " " : "");
 						}
 					}
@@ -1359,7 +1361,7 @@ outcont:
 			for (i=0; subs[i].name; i++) {
 				if (strcmp_n(subs[i].name, content) == 0) {
 					if (subs[i].val)
-						rc += snprintf(&ret[rc], sizeof(ret) - rc, "%s", subs[i].val);
+						rc += snprintf(&ret[rc], rs - rc, "%s", subs[i].val);
 					format = strchr(format, '}') + 1;
 					goto outcont; /* unfortunately, need to use a goto as we are already in a loop */
 				}
@@ -1396,7 +1398,7 @@ outcont:
 						content += 1;
 					}
 					if (*content == '\0') {
-						rc += snprintf(&ret[rc], sizeof(ret) - rc, "%c%02d,%02d", 3 /* ^C */,
+						rc += snprintf(&ret[rc], rs - rc, "%c%02d,%02d", 3 /* ^C */,
 								atoi(colourbuf[0]), colourbuf[1][0] ? atoi(colourbuf[1]) : 99);
 						format = strchr(format, '}') + 1;
 						continue;
@@ -1444,7 +1446,7 @@ outcont:
 					 * margin to pad out properly. */
 					/* Save ret for use in snprintf */
 					save = estrdup(ret);
-					rc = snprintf(ret, sizeof(ret), "%1$*3$s%2$s", save, config_gets("divider.string"),
+					rc = snprintf(ret, rs, "%1$*3$s%2$s", save, config_gets("divider.string"),
 							config_getl("divider.margin") + (strlen(ret) - ui_strlenc(window, ret, NULL)));
 					free(save);
 					format = strchr(format, '}') + 1;
@@ -1464,57 +1466,46 @@ outcont:
 			if (strncmp(content, "pad:", strlen("pad:")) == 0 && strchr(content, ',')) {
 				pn = strtol(content + strlen("pad:"), NULL, 10);
 				content = estrdup(ui_format_get_content(strchr(format+2+strlen("pad:"), ',') + 1, 1));
-				save = estrdup(ret);
-				srecursive = recursive;
-				recursive = 1;
-				p = estrdup(ui_format(NULL, content, hist));
-				recursive = srecursive;
-				memcpy(ret, save, rc);
-				rc += snprintf(&ret[rc], sizeof(ret) - rc, "%1$*2$s", p, pn);
+				save = ret;
+				ret = NULL;
+				ui_format_(NULL, content, hist, 1);
+				rc += snprintf(&save[rc], rs - rc, "%1$*2$s", ret, pn);
+				free(ret);
+				ret = save;
 				format = strchr(format+2+strlen("pad:"), ',') + strlen(content) + 2;
 
 				free(content);
-				free(save);
-				free(p);
 				continue;
 			}
 
 			if (strncmp(content, "rdate:", strlen("rdate:")) == 0) {
 				content = estrdup(ui_format_get_content(format+2+strlen("rdate:"), 1));
-				save = estrdup(ret);
-				srecursive = recursive;
-				recursive = 1;
-				p = estrdup(ui_format(NULL, content, hist));
-				recursive = srecursive;
-				memcpy(ret, save, rc);
-				pn = strtoll(p, NULL, 10);
-				rc += snprintf(&ret[rc], sizeof(ret) - rc, "%s", strrdate((time_t)pn));
+				save = ret;
+				ret = NULL;
+				ui_format_(NULL, content, hist, 1);
+				pn = strtoll(ret, NULL, 10);
+				rc += snprintf(&save[rc], rs - rc, "%s", strrdate((time_t)pn));
 				format += 3 + strlen("rdate:") + strlen(content);
 
+				free(ret);
+				ret = save;
 				free(content);
-				free(save);
-				free(p);
 			}
 
 			if (strncmp(content, "time:", strlen("time:")) == 0 && strchr(content, ',')) {
 				content = estrdup(ui_format_get_content(strchr(format+2+strlen("time:"), ',') + 1, 1));
-				save = estrdup(ret);
-				srecursive = recursive;
-				recursive = 1;
-				p = estrdup(ui_format(NULL, content, hist));
-				recursive = srecursive;
-				memcpy(ret, save, rc);
-				pn = strtoll(p, NULL, 10);
-
-				free(p);
+				save = ret;
+				ret = NULL;
+				ui_format_(NULL, content, hist, 1);
+				pn = strtoll(ret, NULL, 10);
 				p = struntil(format+2+strlen("time:"), ',');
 
-				rc += strftime(&ret[rc], sizeof(ret) - rc, p, gmtime((time_t *)&pn));
+				rc += strftime(&save[rc], rs - rc, p, gmtime((time_t *)&pn));
 				format = strchr(format+2+strlen("time:"), ',') + strlen(content) + 2;
 
+				free(ret);
+				ret = save;
 				free(content);
-				free(save);
-				/* don't free p */
 				continue;
 			}
 
@@ -1532,47 +1523,40 @@ outcont:
 								strchr(format+2+strlen("split:"), ',') + 1,
 								',') + 1,
 							1));
-				save = estrdup(ret);
-				srecursive = recursive;
-				recursive = 1;
-				p = estrdup(ui_format(NULL, content, hist));
-				recursive = srecursive;
-				memcpy(ret, save, rc);
-				rc += snprintf(&ret[rc], sizeof(ret) - rc, "%s", strntok(p, chs, pn));
+				save = ret;
+				ret = NULL;
+				ui_format_(NULL, content, hist, 1);
+				rc += snprintf(&save[rc], rs - rc, "%s", strntok(ret, chs, pn));
 				format = strchr(
 					strchr(format+2+strlen("split:"), ',') + 1,
 					',') + strlen(content) + 2;
 
+				free(ret);
+				ret = save;
 				free(content);
-				free(save);
-				free(p);
 				continue;
 			}
 
 			if (hist && !recursive && strncmp(content, "nick:", strlen("nick:")) == 0) {
 				content = estrdup(ui_format_get_content(format+2+strlen("nick:"), 1));
-				save = estrdup(ret); /* save ret, as this will be modified by recursing */
-				srecursive = recursive;
-				recursive = 1;
-				p = estrdup(ui_format(NULL, content, hist));
-				recursive = srecursive;
-				memcpy(ret, save, rc); /* copy saved value back into ret, we don't 
-							  need strlcpy as we don't use null byte */
-				nick = nick_create(p, ' ', hist->origin ? hist->origin->server : NULL);
-				rc += snprintf(&ret[rc], sizeof(ret) - rc, "%c%02d", 3 /* ^C */, nick_getcolour(nick));
+				save = ret;
+				ret = NULL;
+				ui_format_(NULL, content, hist, 1);
+				nick = nick_create(ret, ' ', hist->origin ? hist->origin->server : NULL);
+				rc += snprintf(&save[rc], rs - rc, "%c%02d", 3 /* ^C */, nick_getcolour(nick));
 				format += 3 + strlen("nick:") + strlen(content);
 
+				free(ret);
+				ret = save;
 				nick_free(nick);
 				free(content);
-				free(save);
-				free(p);
 				continue;
 			}
 		}
 
 		if (escape && *format == 'n') {
 			ret[rc++] = '\n';
-			rc += snprintf(&ret[rc], sizeof(ret) - rc, "%1$*3$s%2$s", "", config_gets("divider.string"),
+			rc += snprintf(&ret[rc], rs - rc, "%1$*3$s%2$s", "", config_gets("divider.string"),
 					ui_strlenc(NULL, ts, NULL) + config_getl("divider.margin"));
 			escape = 0;
 			format++;
@@ -1599,16 +1583,16 @@ outcont:
 	ret[rc] = '\0';
 	if (!recursive && divider && !rhs) {
 		save = estrdup(ret);
-		rc = snprintf(ret, sizeof(ret), "%1$*4$s%2$s%3$s", "", config_gets("divider.string"), save, config_getl("divider.margin"));
+		rc = snprintf(ret, rs, "%1$*4$s%2$s%3$s", "", config_gets("divider.string"), save, config_getl("divider.margin"));
 		free(save);
 	}
 
 	save = estrdup(ret);
-	rc = snprintf(ret, sizeof(ret), "%s%s", ts, save);
+	rc = snprintf(ret, rs, "%s%s", ts, save);
 	free(save);
 
 	if (!recursive && window) {
-		for (p = ret, pc = 0; p && p <= (ret + sizeof(ret)); p++) {
+		for (p = ret, pc = 0; p && p <= (ret + rs); p++) {
 			/* lifted from ui_strlenc */
 			switch (*p) {
 			case 2:  /* ^B */
@@ -1644,11 +1628,11 @@ outcont:
 					save = estrdup(p);
 
 					if (divider) {
-						p += snprintf(p, sizeof(ret) - ((size_t)(p - ret)), "%1$*4$s %2$s%3$s",
+						p += snprintf(p, rs - ((size_t)(p - ret)), "%1$*4$s %2$s%3$s",
 								"", config_gets("divider.string"), save,
 								config_getl("divider.margin") + ui_strlenc(NULL, ts, NULL));
 					} else {
-						p += snprintf(p, sizeof(ret) - ((size_t)(p - ret)), "%1$*3$s %2$s", "", save, ui_strlenc(NULL, ts, NULL));
+						p += snprintf(p, rs - ((size_t)(p - ret)), "%1$*3$s %2$s", "", save, ui_strlenc(NULL, ts, NULL));
 					}
 
 					free(save);

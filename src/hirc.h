@@ -145,7 +145,8 @@ int		ui_get_pair(short fg, short bg);
 int		ui_wprintc(struct Window *window, int lines, char *format, ...);
 int		ui_strlenc(struct Window *window, char *s, int *lines);
 void		ui_select(struct Server *server, struct Channel *channel);
-char *		ui_format(struct Window *window, char *format, struct History *hist);
+char *		ui_format_(struct Window *window, char *format, struct History *hist, int recursive);
+#define		ui_format(window, format, hist) ui_format_(window, format, hist, 0)
 char *		ui_rectrl(char *str);
 char *		ui_unctrl(char *str);
 int		ui_bind(char *binding, char *cmd);
