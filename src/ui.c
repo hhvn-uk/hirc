@@ -885,7 +885,7 @@ ui_wprintc(struct Window *window, int lines, char *format, ...) {
 	va_list ap;
 	int ret;
 	attr_t curattr;
-	int temp; /* used only for wattr_get,
+	short temp; /* used only for wattr_get,
 		     because ncurses is dumb */
 	int cc, lc, elc, utfc;
 	char colourbuf[2][3];
