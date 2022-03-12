@@ -1,4 +1,7 @@
 .\" vim: set syntax=nroff :
+.Pp
+Note: to escape options, place a backstroke ("\\") before the dash ("-").
+All options following will also be escaped.
 .Sh EXAMPLES
 .Ss Commands
 .Dl /set def.nick hhvn
