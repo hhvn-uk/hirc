@@ -35,12 +35,12 @@
 
 #define COMMAND(func) static void func(struct Server *server, struct Channel *channel, char *str)
 
+/* IRC commands */
 COMMAND(command_away);
 COMMAND(command_msg);
 COMMAND(command_notice);
 COMMAND(command_me);
 COMMAND(command_ctcp);
-COMMAND(command_query);
 COMMAND(command_quit);
 COMMAND(command_join);
 COMMAND(command_part);
@@ -55,22 +55,8 @@ COMMAND(command_ping);
 COMMAND(command_quote);
 COMMAND(command_connect);
 COMMAND(command_disconnect);
-COMMAND(command_select);
-COMMAND(command_set);
-COMMAND(command_format);
-COMMAND(command_server);
 COMMAND(command_names);
 COMMAND(command_topic);
-COMMAND(command_bind);
-COMMAND(command_help);
-COMMAND(command_echo);
-COMMAND(command_grep);
-COMMAND(command_clear);
-COMMAND(command_alias);
-COMMAND(command_scroll);
-COMMAND(command_source);
-COMMAND(command_dump);
-COMMAND(command_close);
 COMMAND(command_motd);
 COMMAND(command_oper);
 COMMAND(command_time);
@@ -79,6 +65,8 @@ COMMAND(command_kill);
 COMMAND(command_links);
 COMMAND(command_map);
 COMMAND(command_lusers);
+
+/* Channel priviledges (use modelset only) */
 COMMAND(command_op);
 COMMAND(command_voice);
 COMMAND(command_halfop);
@@ -90,6 +78,23 @@ COMMAND(command_dehalfop);
 COMMAND(command_deadmin);
 COMMAND(command_deowner);
 
+/* UI commands */
+COMMAND(command_query);
+COMMAND(command_select);
+COMMAND(command_set);
+COMMAND(command_format);
+COMMAND(command_server);
+COMMAND(command_bind);
+COMMAND(command_help);
+COMMAND(command_echo);
+COMMAND(command_grep);
+COMMAND(command_clear);
+COMMAND(command_alias);
+COMMAND(command_scroll);
+COMMAND(command_source);
+COMMAND(command_dump);
+COMMAND(command_close);
+
 static char *command_optarg;
 enum {
 	opt_error = -2,
@@ -99,6 +104,7 @@ enum {
 };
 
 struct Command commands[] = {
+	/* IRC commands */
 	{"away", command_away, 0, {
 		"usage: /away [message]",
 		"Set yourself as away on the server.",
@@ -117,9 +123,6 @@ struct Command commands[] = {
 	{"ctcp", command_ctcp, 1, {
 		"usage: /ctcp [channel|nick] <TYPE>",
 		"Send a CTCP request to a channel or nick", NULL}},
-	{"query", command_query, 1, {
-		"usage: /query <nick>",
-		"Open a buffer for communication with a nick", NULL}},
 	{"quit", command_quit, 0, {
 		"usage: /quit",
 		"Cleanup and exit", NULL}},
@@ -166,28 +169,6 @@ struct Command commands[] = {
 	{"disconnect", command_disconnect, 0, {
 		"usage: /disconnect [network]",
 		"Disconnect from a network/server", NULL}},
-	{"select", command_select, 0, {
-		"usage: /select [-network <name>] [-channel <name>] [buffer id]",
-		"Select a buffer", NULL}},
-	{"set",	command_set, 0, {
-		"usage: /set <variable> [number/range] [end of range]",
-		"       /set <variable> string....",
-		"Set a configuration variable.",
-		"Passing only the name prints content.", NULL}},
-	{"format", command_format, 0, {
-		"usage: /format <format> string...",
-		"Set a formatting variable.",
-		"This is equivalent to /set format.<format> string...", NULL}},
-	{"server", command_server, 0, {
-		"usage: /server [-auto] <server> [cmd....]",
-		"       /server [-clear] <server>",
-		"Evaluate a cooked command with server as target.",
-		" -auto  if supplied with a command, run that command",
-		"        automatically when the server connects.",
-		"        Otherwise, list autocmds that have been set.",
-		" -clear clear autocmds from server",
-		"To send a raw command to a server, use:",
-		" /server <server> /quote ...", NULL}},
 	{"names", command_names, 1, {
 		"usage: /names <channel>",
 		"List nicks in channel (pretty useless with nicklist.", NULL}},
@@ -229,6 +210,63 @@ struct Command commands[] = {
 		"usage: /map",
 		"Similar to /links but prints an ascii diagram.",
 		"Nonstandard feature.", NULL}},
+	/* Channel priviledges */
+	{"op", command_op, 2, {
+		"usage: /op nicks...",
+		"Give a nickname +o on the current channel.", NULL}},
+	{"voice", command_voice, 2, {
+		"usage: /voice nicks...",
+		"Give a nickname +v on the current channel.", NULL}},
+	{"halfop", command_halfop, 2, {
+		"usage: /halfop nicks...",
+		"Give a nickname +h on the current channel.", NULL}},
+	{"admin", command_admin, 2, {
+		"usage: /admin nicks...",
+		"Give a nickname +a on the current channel.", NULL}},
+	{"owner", command_owner, 2, {
+		"usage: /owner nicks...",
+		"Give a nickname +q on the current channel.", NULL}},
+	{"deop", command_deop, 2, {
+		"usage: /deop nicks...",
+		"Remove +o for a nick on the current channel.", NULL}},
+	{"devoice", command_devoice, 2, {
+		"usage: /devoice nicks...",
+		"Remove +v for a nick on the current channel.", NULL}},
+	{"dehalfop", command_dehalfop, 2, {
+		"usage: /dehalfop nicks...",
+		"Remove +h for a nick on the current channel.", NULL}},
+	{"deadmin", command_deadmin, 2, {
+		"usage: /deadmin nicks...",
+		"Remove +a for a nick on the current channel.", NULL}},
+	{"deowner", command_deowner, 2, {
+		"usage: /deowner nicks...",
+		"Remove +q for a nick on the current channel.", NULL}},
+	/* UI commands */
+	{"query", command_query, 1, {
+		"usage: /query <nick>",
+		"Open a buffer for communication with a nick", NULL}},
+	{"select", command_select, 0, {
+		"usage: /select [-network <name>] [-channel <name>] [buffer id]",
+		"Select a buffer", NULL}},
+	{"set",	command_set, 0, {
+		"usage: /set <variable> [number/range] [end of range]",
+		"       /set <variable> string....",
+		"Set a configuration variable.",
+		"Passing only the name prints content.", NULL}},
+	{"format", command_format, 0, {
+		"usage: /format <format> string...",
+		"Set a formatting variable.",
+		"This is equivalent to /set format.<format> string...", NULL}},
+	{"server", command_server, 0, {
+		"usage: /server [-auto] <server> [cmd....]",
+		"       /server [-clear] <server>",
+		"Evaluate a cooked command with server as target.",
+		" -auto  if supplied with a command, run that command",
+		"        automatically when the server connects.",
+		"        Otherwise, list autocmds that have been set.",
+		" -clear clear autocmds from server",
+		"To send a raw command to a server, use:",
+		" /server <server> /quote ...", NULL}},
 	{"bind", command_bind, 0, {
 		"usage: /bind [<keybind> [cmd [..]]]",
 		"       /bind -delete <keybind>",
@@ -286,36 +324,6 @@ struct Command commands[] = {
 	{"close", command_close, 0, {
 		"usage: /close [id]",
 		"Forget about selected buffer, or a buffer by id.", NULL}},
-	{"op", command_op, 2, {
-		"usage: /op nicks...",
-		"Give a nickname +o on the current channel.", NULL}},
-	{"voice", command_voice, 2, {
-		"usage: /voice nicks...",
-		"Give a nickname +v on the current channel.", NULL}},
-	{"halfop", command_halfop, 2, {
-		"usage: /halfop nicks...",
-		"Give a nickname +h on the current channel.", NULL}},
-	{"admin", command_admin, 2, {
-		"usage: /admin nicks...",
-		"Give a nickname +a on the current channel.", NULL}},
-	{"owner", command_owner, 2, {
-		"usage: /owner nicks...",
-		"Give a nickname +q on the current channel.", NULL}},
-	{"deop", command_deop, 2, {
-		"usage: /deop nicks...",
-		"Remove +o for a nick on the current channel.", NULL}},
-	{"devoice", command_devoice, 2, {
-		"usage: /devoice nicks...",
-		"Remove +v for a nick on the current channel.", NULL}},
-	{"dehalfop", command_dehalfop, 2, {
-		"usage: /dehalfop nicks...",
-		"Remove +h for a nick on the current channel.", NULL}},
-	{"deadmin", command_deadmin, 2, {
-		"usage: /deadmin nicks...",
-		"Remove +a for a nick on the current channel.", NULL}},
-	{"deowner", command_deowner, 2, {
-		"usage: /deowner nicks...",
-		"Remove +q for a nick on the current channel.", NULL}},
 	{NULL, NULL},
 };
 
