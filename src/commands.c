@@ -75,7 +75,10 @@ COMMAND(command_motd);
 COMMAND(command_oper);
 COMMAND(command_time);
 COMMAND(command_stats);
-
+COMMAND(command_kill);
+COMMAND(command_links);
+COMMAND(command_map);
+COMMAND(command_lusers);
 COMMAND(command_op);
 COMMAND(command_voice);
 COMMAND(command_halfop);
@@ -208,6 +211,24 @@ struct Command commands[] = {
 		"usage: /stats [type [server]]",
 		"Query server statistics. Servers will usually list",
 		"types that can be queried if no arguments are given.", NULL}},
+	{"kill", command_kill, 1, {
+		"usage: /kill <nick> [reason]",
+		"Forcefully disconnect a nick from a server.",
+		"Uses misc.killmessage if no reason provided.", NULL}},
+	{"links", command_links, 1, {
+		"usage: /links [[server] mask]",
+		"Request list of linked servers from the veiwpoint",
+		"of the current or specified server, matching the",
+		"specified mask.", NULL}},
+	{"lusers", command_lusers, 1, {
+		"usage: /lusers",
+		"Request a list of users from the server.",
+		"This is implemented in all servers, but",
+		"only some allow its request via a command.", NULL}},
+	{"map", command_map, 1, {
+		"usage: /map",
+		"Similar to /links but prints an ascii diagram.",
+		"Nonstandard feature.", NULL}},
 	{"bind", command_bind, 0, {
 		"usage: /bind [<keybind> [cmd [..]]]",
 		"       /bind -delete <keybind>",
@@ -1099,34 +1120,77 @@ command_oper) {
 	ircprintf(server, "OPER %s %s\r\n", user, pass);
 }
 
+static void
+command_send0(struct Server *server, char *cmd, char *cmdname, char *str) {
+	if (str)
+		command_toomany(cmdname);
+	else
+		ircprintf(server, "%s\r\n", cmd);
+}
+
+COMMAND(
+command_lusers) {
+	command_send0(server, "LUSERS", "lusers", str);
+}
+
+COMMAND(
+command_map) {
+	command_send0(server, "MAP", "map", str);
+}
+
+static void
+command_send1(struct Server *server, char *cmd, char *cmdname, char *str) {
+	if (str && strchr(str, ' '))
+		command_toomany(cmdname);
+	else if (str)
+		ircprintf(server, "%s %s\r\n", cmd, str);
+	else
+		ircprintf(server, "%s\r\n", cmd);
+}
+
 COMMAND(
 command_motd) {
-	if (str && strchr(str, ' '))
-		command_toomany("motd");
-	else if (str)
-		ircprintf(server, "MOTD %s\r\n", str);
-	else
-		ircprintf(server, "MOTD\r\n");
+	command_send1(server, "MOTD", "motd", str);
 }
 
 COMMAND(
 command_time) {
-	if (str && strchr(str, ' '))
-		command_toomany("time");
+	command_send1(server, "TIME", "time", str);
+}
+
+static void
+command_send2(struct Server *server, char *cmd, char *cmdname, char *str) {
+	if (str && strchr(str, ' ') != strrchr(str, ' '))
+		command_toomany(cmdname);
 	else if (str)
-		ircprintf(server, "TIME %s\r\n", str);
+		ircprintf(server, "%s %s\r\n", cmd, str);
 	else
-		ircprintf(server, "TIME\r\n");
+		ircprintf(server, "%s\r\n", cmd);
+}
+
+COMMAND(
+command_links) {
+	command_send2(server, "LINKS", "links", str);
 }
 
 COMMAND(
 command_stats) {
-	if (str && strchr(str, ' ') != strrchr(str, ' '))
-		command_toomany("stats");
-	else if (str)
-		ircprintf(server, "STATS %s\r\n", str);
-	else
-		ircprintf(server, "STATS\r\n");
+	command_send2(server, "STATS", "stats", str);
+}
+
+COMMAND(
+command_kill) {
+	char *nick, *reason;
+
+	if (!str) {
+		command_toofew("kill");
+		return;
+	}
+
+	nick = strtok_r(str, " ", &reason);
+	if (!reason)
+		reason = config_gets("misc.killmessage");
+	ircprintf(server, "KILL %s :%s\r\n", nick, reason);
 }
 
 COMMAND(

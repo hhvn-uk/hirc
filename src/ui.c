@@ -238,6 +238,8 @@ struct {
 	{"003",			"format.rpl.created"},
 	{"004",			"format.rpl.myinfo"},
 	{"005",			"format.rpl.isupport"},
+	{"006",			"format.rpl.map"},    /* I'm not so sure if 006 and 007 */
+	{"007",			"format.rpl.mapend"}, /* are really exclusive to /map   */
 	{"265",			"format.rpl.localusers"},
 	{"266",			"format.rpl.globalusers"},
 	{"320",			"format.rpl.whoisspecial"},

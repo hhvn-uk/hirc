@@ -182,6 +182,11 @@ struct Config config[] = {
 		.strhandle = NULL,
 		.description = {
 		"Message to send on /part", NULL}},
+	{"misc.killmessage", 1, Val_string,
+		.str = "no reason",
+		.strhandle = NULL,
+		.description = {
+		"Message to send on /kill", NULL}},
 	{"divider.toggle", 1, Val_bool,
 		.num = 1,
 		.numhandle = config_redrawl,
@@ -515,6 +520,16 @@ struct Config config[] = {
 		.strhandle = config_redraws,
 		.description = {
 		"Format of RPL_MYSUPPORT (005) numeric", NULL}},
+	{"format.rpl.map", 1, Val_string,
+		.str = "${2-}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_MAP (006) numeric", NULL}},
+	{"format.rpl.mapend", 1, Val_string,
+		.str = "",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of RPL_MAPEND (007) numeric", NULL}},
 	/* START: misc/rpl-conf-gen.awk */
 	{"format.rpl.tracelink", 1, Val_string,
 		.str = "${2-}",
