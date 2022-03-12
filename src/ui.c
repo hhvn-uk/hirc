@@ -465,14 +465,16 @@ ui_read(void) {
 			break;
 		case KEY_ENTER:
 		case '\r':
-			command_eval(selected.server, input.string);
-			/* free checks for null */
-			free(input.history[INPUT_HIST_MAX - 1]);
-			memmove(input.history + 1, input.history, (sizeof(input.history) / INPUT_HIST_MAX) * (INPUT_HIST_MAX - 1));
-			input.history[0] = estrdup(input.string);
-			input.string[0] = '\0';
-			input.counter = 0;
-			input.histindex = -1;
+			if (*input.string != '\0') {
+				command_eval(selected.server, input.string);
+				/* free checks for null */
+				free(input.history[INPUT_HIST_MAX - 1]);
+				memmove(input.history + 1, input.history, (sizeof(input.history) / INPUT_HIST_MAX) * (INPUT_HIST_MAX - 1));
+				input.history[0] = estrdup(input.string);
+				input.string[0] = '\0';
+				input.counter = 0;
+				input.histindex = -1;
+			}
 			break;
 		default:
 			if ((key & 0xFF80) == 0x80 || isprint(key) || iscntrl(key)) {
