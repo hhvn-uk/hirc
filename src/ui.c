@@ -1283,7 +1283,7 @@ ui_format_(struct Window *window, char *format, struct History *hist, int recurs
 
 		if (hist->from) {
 			priv[0] = hist->from->priv;
-			priv[1] = '\0';
+			priv[priv[0] != ' '] = '\0';
 			subs[sub_priv].val = priv;
 		}
 

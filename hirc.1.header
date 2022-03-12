@@ -93,6 +93,8 @@ The command of a message.
 .It ${nick}
 Nickname that sent the message.
 Since this is only the raw nick, this is commonly used with %{nick:...}
+.It ${priv}
+Character indicating channel priviledge of user. Empty if none.
 .It ${ident}
 Ident of the nick that sent the message.
 .It ${host}
