@@ -1241,24 +1241,25 @@ config_getl(char *name) {
 
 void
 config_get_print(char *name) {
-	int i;
+	int i, found;
 
-	for (i=0; config[i].name; i++) {
-		if (strcmp(config[i].name, name) == 0) {
+	for (i = found = 0; config[i].name; i++) {
+		if (strncmp(config[i].name, name, strlen(name)) == 0) {
 			if (config[i].valtype == Val_string)
 				hist_format(main_buf, Activity_status, HIST_SHOW, "SELF_UI :%s: %s",
-						name, config[i].str);
+						config[i].name, config[i].str);
 			else if (config[i].valtype == Val_pair || config[i].valtype == Val_colourpair)
 				hist_format(main_buf, Activity_status, HIST_SHOW, "SELF_UI :%s: {%ld, %ld}",
-						name, config[i].pair[0], config[i].pair[1]);
+						config[i].name, config[i].pair[0], config[i].pair[1]);
 			else
 				hist_format(main_buf, Activity_status, HIST_SHOW, "SELF_UI :%s: %ld",
-						name, config[i].num);
-			return;
+						config[i].name, config[i].num);
+			found = 1;
 		}
 	}
 
-	ui_error("no such configuration variable: '%s'", name);
+	if (!found)
+		ui_error("no such configuration variable: '%s'", name);
 }
 
 char *

@@ -1307,6 +1307,7 @@ command_alias) {
 COMMAND(
 command_help) {
 	int cmdonly = 0;
+	int found = 0;
 	int i, j;
 
 	if (!str) {
@@ -1336,28 +1337,29 @@ command_help) {
 	}
 
 	for (i=0; commands[i].name && commands[i].func; i++) {
-		if (strcmp(commands[i].name, str) == 0) {
-			hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_HELP_START :%s", str);
+		if (strncmp(commands[i].name, str, strlen(str)) == 0) {
+			found = 1;
+			hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_HELP_START :%s", commands[i].name);
 			for (j=0; commands[i].description[j]; j++)
 				hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_HELP :%s", commands[i].description[j]);
-			hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_HELP_END :end of help");
-			return;
 		}
 	}
 
 	if (!cmdonly) {
 		for (i=0; config[i].name; i++) {
-			if (strcmp(config[i].name, str) == 0) {
-				hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_HELP_START :%s", str);
+			if (strncmp(config[i].name, str, strlen(str)) == 0) {
+				found = 1;
+				hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_HELP_START :%s", config[i].name);
 				for (j=0; config[i].description[j]; j++)
 					hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_UI :%s", config[i].description[j]);
-				hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_HELP_END :end of help");
-				return;
 			}
 		}
 	}
 
-	ui_error("no help on '%s'", str);
+	if (found)
+		hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_HELP_END :end of help");
+	else
+		ui_error("no help on '%s'", str);
 }
 
 COMMAND(
