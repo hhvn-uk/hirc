@@ -188,7 +188,7 @@ hist_purgeopt(struct HistInfo *histinfo, enum HistOpt options) {
 
 			if (p->next)
 				p->next->prev = p->prev;
-			else
+			else if (!p->prev)
 				histinfo->history = NULL;
 
 			free(p);
@@ -351,7 +351,7 @@ hist_loadlog(struct HistInfo *hist, char *server, char *channel) {
 		if (from)
 			from->self = *tok[3] == '1';
 
-		p = hist_create(hist, from, tok[8], activity, timestamp, *tok[2] == '1' ? HIST_SHOW : 0);
+		p = hist_create(hist, from, tok[8], activity, timestamp, HIST_RLOG|(*tok[2] == '1' ? HIST_SHOW : 0));
 
 		if (!head)
 			head = p;
@@ -372,7 +372,7 @@ hist_loadlog(struct HistInfo *hist, char *server, char *channel) {
 		len = snprintf(format, 0, "SELF_LOG_RESTORE %lld :log restored up to", (long long)head->timestamp) + 1;
 		format = emalloc(len);
 		snprintf(format, len, "SELF_LOG_RESTORE %lld :log restored up to", (long long)head->timestamp);
-		p = hist_create(hist, NULL, format, Activity_status, time(NULL), HIST_SHOW);
+		p = hist_create(hist, NULL, format, Activity_status, time(NULL), HIST_SHOW|HIST_RLOG);
 		free(format);
 		p->next = head;
 		head->prev = p;

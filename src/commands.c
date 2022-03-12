@@ -290,8 +290,14 @@ struct Command commands[] = {
 		"Searches are also cleared after selecting another buffer",
 		"See also config variables: regex.extended and regex.icase", NULL}},
 	{"clear", command_clear, 0, {
-		"usage: /clear [-tmp]",
-		"Clear selected buffer of (temporary if -tmp) messages", NULL}},
+		"usage: /clear [-tmp] [-err] [-serr] [-log]",
+		"Clear selected buffer of messages.",
+		"By default all messages are cleared.",
+		"The following options clear only certain messages:",
+		" -tmp:  temporary messages - cleared when switching buffer",
+		" -err:  hirc generated errors",
+		" -serr: server generated errors",
+		" -log:  messages restored from log files", NULL}},
 	{"alias", command_alias, 0, {
 		"usage: /alias [<alias> [cmd [...]]]",
 		"       /alias -delete <alias>",
@@ -1432,10 +1438,13 @@ command_grep) {
 
 COMMAND(
 command_clear) {
-	int ret, tmp = 0;
-	enum { opt_tmp };
+	int ret, cleared = 0;
+	enum { opt_tmp, opt_err, opt_serr, opt_log };
 	static struct CommandOpts opts[] = {
 		{"tmp", CMD_NARG, opt_tmp},
+		{"err", CMD_NARG, opt_err},
+		{"serr", CMD_NARG, opt_serr},
+		{"log", CMD_NARG, opt_log},
 		{NULL, 0, 0},
 	};
 
@@ -1445,7 +1454,20 @@ command_clear) {
 			case opt_error:
 				return;
 			case opt_tmp:
-				tmp = 1;
+				hist_purgeopt(selected.history, HIST_TMP);
+				cleared = 1;
+				break;
+			case opt_err:
+				hist_purgeopt(selected.history, HIST_ERR);
+				cleared = 1;
+				break;
+			case opt_serr:
+				hist_purgeopt(selected.history, HIST_SERR);
+				cleared = 1;
+				break;
+			case opt_log:
+				hist_purgeopt(selected.history, HIST_RLOG);
+				cleared = 1;
 				break;
 			}
 		}
@@ -1456,7 +1478,8 @@ command_clear) {
 		}
 	}
 
-	hist_purgeopt(selected.history, tmp ? HIST_TMP : HIST_ALL);
+	if (!cleared)
+		hist_purgeopt(selected.history, HIST_ALL);
 	windows[Win_main].refresh = 1;
 }
 

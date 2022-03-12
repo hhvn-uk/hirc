@@ -429,7 +429,7 @@ handle_ERR_NOSUCHNICK) {
 		expect_set(server, Expect_nosuchnick, NULL);
 	}
 
-	hist_addp(chan ? chan->history : server->history, msg, Activity_error, HIST_DFL);
+	hist_addp(chan ? chan->history : server->history, msg, Activity_error, HIST_DFL|HIST_SERR);
 }
 
 HANDLER(
@@ -612,14 +612,7 @@ handle(struct Server *server, char *msg) {
 	char *schmsg;
 	int i;
 
-	if (*msg == '!' && strchr(msg, ' ') && *(strchr(msg, ' ')+1) && *(msg+1) != ' ') {
-		msg++;
-		timestamp = (time_t)strtoll(msg, NULL, 10);
-		msg = strchr(msg, ' ') + 1;
-	} else {
-		timestamp = time(NULL);
-	}
-
+	timestamp = time(NULL);
 	params = param_create(msg);
 	if (!*params) {
 		free(params);
@@ -650,6 +643,9 @@ handle(struct Server *server, char *msg) {
 	}
 
 	/* add it to server->history if there is no handler */
-	hist_add(server->history, msg, Activity_status, timestamp, HIST_DFL);
+	if (*cmd == '4' && *cmd == '5')
+		hist_add(server->history, msg, Activity_error, timestamp, HIST_DFL|HIST_SERR);
+	else
+		hist_add(server->history, msg, Activity_status, timestamp, HIST_DFL);
 	param_free(params);
 }
