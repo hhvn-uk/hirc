@@ -195,7 +195,7 @@ serv_connect(struct Server *server) {
 	struct tls_config *tls_conf;
 	struct Support *s, *prev;
 	struct addrinfo hints;
-	struct addrinfo *ai;
+	struct addrinfo *ai = NULL;
 	int fd, ret, serrno;
 
 	if (!server)
