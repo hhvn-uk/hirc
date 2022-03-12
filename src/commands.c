@@ -77,6 +77,8 @@ COMMAND(command_devoice);
 COMMAND(command_dehalfop);
 COMMAND(command_deadmin);
 COMMAND(command_deowner);
+COMMAND(command_ban);
+COMMAND(command_unban);
 
 /* UI commands */
 COMMAND(command_query);
@@ -241,6 +243,12 @@ struct Command commands[] = {
 	{"deowner", command_deowner, 2, {
 		"usage: /deowner nicks...",
 		"Remove +q for a nick on the current channel.", NULL}},
+	{"ban", command_ban, 2, {
+		"usage: /ban masks...",
+		"Add masks to the +b banlist in the current channel", NULL}},
+	{"unban", command_unban, 2, {
+		"usage: /unban masks...",
+		"Remove masks from the banlist in the current channel", NULL}},
 	/* UI commands */
 	{"query", command_query, 1, {
 		"usage: /query <nick>",
@@ -1831,6 +1839,28 @@ command_deadmin) {
 COMMAND(
 command_deowner) {
 	modelset("deowner", server, channel, 1, 'q', str);
+}
+
+/* In most IRC clients /ban would create a mask from a nickname. I decided
+ * against doing this as there would have to be some way of templating a mask,
+ * eg, ${nick}*!*@*.{host}. This could've been done through splitting the
+ * variable handling out of ui_format and using that here as well, however,
+ * all though it could simplify ui_format by processing variables first, then
+ * formats, it could cause problems as the variables themselves could contain
+ * text that needs to be escaped or dealt with. Of course, there's nothing
+ * stopping me from leaving the one in ui_format and creating another, but at
+ * that point I decided it wasn't worth it for one command. Another approach I
+ * though of was having the ability to create templates with combinatorial
+ * options, but I think the mental overhead for doing so could be spent
+ * constructing the masks manually instead. *shrug*/
+COMMAND(
+command_ban) {
+	modelset("ban", server, channel, 0, 'b', str);
+}
+
+COMMAND(
+command_unban) {
+	modelset("unban", server, channel, 1, 'b', str);
 }
 
 int
