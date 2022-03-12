@@ -43,6 +43,10 @@
  *
  * I don't think I have ever used /knock
  *
+ * A lot of commands related to server administration are nonstandard and/or
+ * unwieldy, and as such aren't implemented here. These can be used via
+ * aliases, eg: /alias /kline /quote kline.
+ *
  */
 
 /* IRC commands */
@@ -76,6 +80,7 @@ COMMAND(command_links);
 COMMAND(command_map);
 COMMAND(command_lusers);
 COMMAND(command_invite);
+COMMAND(command_cycle);
 
 /* Channel priviledges (use modelset only) */
 COMMAND(command_op);
@@ -146,8 +151,11 @@ struct Command commands[] = {
 		"usage: /join <channel>",
 		"Join channel", NULL}},
 	{"part", command_part, 1, {
-		"usage: /part <channel>",
+		"usage: /part <channel> [reason]",
 		"Part channel", NULL}},
+	{"cycle", command_cycle, 1, {
+		"usage: /cycle <channel> [reason]",
+		"Part channel and rejoin", NULL}},
 	{"kick", command_kick, 1, {
 		"usage: /kick [channel] <nick> [reason]",
 		"Kick nick from channel", NULL}},
@@ -567,6 +575,23 @@ command_part) {
 
 	ircprintf(server, "%s", msg);
 	expect_set(server, Expect_part, chan);
+}
+
+COMMAND(
+command_cycle) {
+	char *chan = NULL;
+
+	if (str && serv_ischannel(server, str))
+		chan = strtok(str, " ");
+	if (!chan && channel) {
+		chan = channel->name;
+	} else if (!chan) {
+		command_toofew("cycle");
+		return;
+	}
+
+	command_part(server, channel, str);
+	command_join(server, channel, chan);
 }
 
 COMMAND(
