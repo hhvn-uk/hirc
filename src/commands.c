@@ -35,6 +35,16 @@
 
 #define COMMAND(func) static void func(struct Server *server, struct Channel *channel, char *str)
 
+/*
+ * There are some commands that may be useful that I haven't bothered to implement.
+ *
+ * /notify may be useful but would require storing data in the server, and the
+ * ability to perform actions at certain time intervals.
+ *
+ * I don't think I have ever used /knock
+ *
+ */
+
 /* IRC commands */
 COMMAND(command_away);
 COMMAND(command_msg);
@@ -65,6 +75,7 @@ COMMAND(command_kill);
 COMMAND(command_links);
 COMMAND(command_map);
 COMMAND(command_lusers);
+COMMAND(command_invite);
 
 /* Channel priviledges (use modelset only) */
 COMMAND(command_op);
@@ -212,6 +223,9 @@ struct Command commands[] = {
 		"usage: /map",
 		"Similar to /links but prints an ascii diagram.",
 		"Nonstandard feature.", NULL}},
+	{"invite", command_invite, 1, {
+		"usage: /invite <nick> [channel]",
+		"Invite a nick to the current or specified channel.", NULL}},
 	/* Channel priviledges */
 	{"op", command_op, 2, {
 		"usage: /op nicks...",
@@ -1861,6 +1875,22 @@ command_ban) {
 COMMAND(
 command_unban) {
 	modelset("unban", server, channel, 1, 'b', str);
+}
+
+COMMAND(
+command_invite) {
+	char *nick, *chan;
+
+	if (!str) {
+		command_toofew("invite");
+		return;
+	}
+
+	nick = strtok_r(str, " ", &chan);
+	if (!chan)
+		chan = channel->name;
+
+	ircprintf(server, "INVITE %s %s\r\n", nick, chan);
 }
 
 int

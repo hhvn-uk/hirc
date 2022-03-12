@@ -494,6 +494,11 @@ struct Config config[] = {
 		.strhandle = config_redraws,
 		.description = {
 		"Format of topic being set", NULL}},
+	{"format.invite", 1, Val_string,
+		.str = "%{nick:${nick}}${nick}%{o} invited you to ${2}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of an invitation being received.", NULL}},
 	/* Generic numerics (bit boring) */
 	{"format.rpl.welcome", 1, Val_string,
 		.str = "${2-}",
@@ -807,7 +812,7 @@ struct Config config[] = {
 		.description = {
 		"Format of RPL_TOPIC (332) numeric", NULL}},
 	{"format.rpl.inviting", 1, Val_string,
-		.str = "${2-}",
+		.str = "invite%{=}${2}",
 		.strhandle = config_redraws,
 		.description = {
 		"Format of RPL_INVITING (341) numeric", NULL}},

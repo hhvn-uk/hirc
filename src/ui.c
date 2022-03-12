@@ -103,6 +103,7 @@ struct {
 	{"QUIT",		"format.quit"},
 	{"NICK",		"format.nick"},
 	{"TOPIC",		"format.topic"},
+	{"INVITE",		"format.invite"},
 	/* START: misc/rpl-ui-gen.awk */
 	{"200",			"format.rpl.tracelink"},
 	{"201",			"format.rpl.traceconnecting"},

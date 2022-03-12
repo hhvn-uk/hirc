@@ -35,12 +35,14 @@ HANDLER(handle_NICK);
 HANDLER(handle_MODE);
 HANDLER(handle_TOPIC);
 HANDLER(handle_PRIVMSG);
+HANDLER(handle_INVITE);
 HANDLER(handle_RPL_WELCOME);
 HANDLER(handle_RPL_ISUPPORT);
 HANDLER(handle_RPL_CHANNELMODEIS);
 HANDLER(handle_RPL_NOTOPIC);
 HANDLER(handle_RPL_TOPIC);
 HANDLER(handle_RPL_TOPICWHOTIME);
+HANDLER(handle_RPL_INVITING);
 HANDLER(handle_RPL_NAMREPLY);
 HANDLER(handle_RPL_ENDOFNAMES);
 HANDLER(handle_RPL_ENDOFMOTD);
@@ -61,6 +63,7 @@ struct Handler handlers[] = {
 	{ "TOPIC",	handle_TOPIC			},
 	{ "PRIVMSG",	handle_PRIVMSG  		},
 	{ "NOTICE",	handle_PRIVMSG	  		},
+	{ "INVITE",	handle_INVITE			},
 	{ "001",	handle_RPL_WELCOME		},
 	{ "005",	handle_RPL_ISUPPORT		},
 	{ "301",	handle_RPL_AWAY			},
@@ -72,6 +75,7 @@ struct Handler handlers[] = {
 							    *  - it's annoyingly sent after MODE */
 	{ "332",	handle_RPL_TOPIC		},
 	{ "333",	handle_RPL_TOPICWHOTIME		},
+	{ "341",	handle_RPL_INVITING		},
 	{ "353",	handle_RPL_NAMREPLY		},
 	{ "366",	handle_RPL_ENDOFNAMES		},
 	{ "376",	handle_RPL_ENDOFMOTD		},
@@ -294,6 +298,19 @@ handle_PRIVMSG) {
 }
 
 HANDLER(
+handle_INVITE) {
+	struct Channel *priv;
+
+	if (!msg->from || param_len(msg->params) < 3)
+		return;
+
+	if ((priv = chan_get(&server->privs, msg->from->nick, -1)) != NULL)
+		hist_addp(priv->history, msg, Activity_status, HIST_DFL);
+	else
+		hist_addp(server->history, msg, Activity_status, HIST_DFL);
+}
+
+HANDLER(
 handle_RPL_ISUPPORT) {
 	char *key, *value;
 	char **params = msg->params;
@@ -352,6 +369,19 @@ handle_RPL_CHANNELMODEIS) {
 	} else {
 		hist_addp(chan->history, msg, Activity_status, HIST_LOG);
 	}
+}
+
+HANDLER(
+handle_RPL_INVITING) {
+	struct Channel *chan;
+
+	if (param_len(msg->params) < 4)
+		return;
+
+	if ((chan = chan_get(&server->channels, *(msg->params+3), -1)) == NULL)
+		chan = chan_add(server, &server->channels, *(msg->params+3), 0);
+
+	hist_addp(chan->history, msg, Activity_status, HIST_DFL|HIST_SELF);
 }
 
 HANDLER(
