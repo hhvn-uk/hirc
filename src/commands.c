@@ -71,6 +71,10 @@ COMMAND(command_scroll);
 COMMAND(command_source);
 COMMAND(command_dump);
 COMMAND(command_close);
+COMMAND(command_motd);
+COMMAND(command_oper);
+COMMAND(command_time);
+COMMAND(command_stats);
 
 COMMAND(command_op);
 COMMAND(command_voice);
@@ -188,6 +192,22 @@ struct Command commands[] = {
 		"usage: /topic [-clear] [channel] [topic]",
 		"Sets, clears, or checks topic in channel.",
 		"Provide only channel name to check.", NULL}},
+	{"oper", command_oper, 1, {
+		"usage: /oper [user] <password>",
+		"Authenticate for server operator status.",
+		"If a user is not specified, the current nickname is used.", NULL}},
+	{"motd", command_motd, 1, {
+		"usage: /motd [server/nick]",
+		"Get the Message Of The Day for the current server,",
+		"specified server, or the server with the specified nickname.", NULL}},
+	{"time", command_time, 1, {
+		"usage: /time [server/nick]",
+		"Get the time and timezone of the current server,",
+		"specified server, or the server with the specified nickname.", NULL}},
+	{"stats", command_stats, 1, {
+		"usage: /stats [type [server]]",
+		"Query server statistics. Servers will usually list",
+		"types that can be queried if no arguments are given.", NULL}},
 	{"bind", command_bind, 0, {
 		"usage: /bind [<keybind> [cmd [..]]]",
 		"       /bind -delete <keybind>",
@@ -1055,6 +1075,58 @@ command_topic) {
 		ircprintf(server, "TOPIC %s\r\n", chan);
 		expect_set(server, Expect_topic, chan);
 	} else ircprintf(server, "TOPIC %s :%s\r\n", chan, topic);
+}
+
+COMMAND(
+command_oper) {
+	char *user, *pass;
+
+	if (!str) {
+		command_toofew("oper");
+		return;
+	}
+
+	user = strtok_r(str, " ", &pass);
+	if (pass && strchr(pass, ' ')) {
+		command_toomany("oper");
+		return;
+	}
+	if (!pass) {
+		pass = user;
+		user = server->self->nick;
+	}
+
+	ircprintf(server, "OPER %s %s\r\n", user, pass);
+}
+
+COMMAND(
+command_motd) {
+	if (str && strchr(str, ' '))
+		command_toomany("motd");
+	else if (str)
+		ircprintf(server, "MOTD %s\r\n", str);
+	else
+		ircprintf(server, "MOTD\r\n");
+}
+
+COMMAND(
+command_time) {
+	if (str && strchr(str, ' '))
+		command_toomany("time");
+	else if (str)
+		ircprintf(server, "TIME %s\r\n", str);
+	else
+		ircprintf(server, "TIME\r\n");
+}
+
+COMMAND(
+command_stats) {
+	if (str && strchr(str, ' ') != strrchr(str, ' '))
+		command_toomany("stats");
+	else if (str)
+		ircprintf(server, "STATS %s\r\n", str);
+	else
+		ircprintf(server, "STATS\r\n");
 }
 
 COMMAND(
