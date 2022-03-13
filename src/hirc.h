@@ -20,6 +20,7 @@
 #ifndef H_HIRC
 #define H_HIRC
 
+#include <wchar.h>
 #include "struct.h"
 #define PARAM_MAX 64
 #define INPUT_MAX 8192

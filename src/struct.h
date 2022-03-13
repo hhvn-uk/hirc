@@ -269,6 +269,7 @@ struct Selected {
 	int hasnicks;
 };
 
+#include <wchar.h>
 struct Keybind {
 	struct Keybind *prev;
 	char *binding;

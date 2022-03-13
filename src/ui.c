@@ -19,6 +19,7 @@
 
 #include <errno.h>
 #include <ctype.h>
+#include <wchar.h>
 #include <wctype.h>
 #include <stdarg.h>
 #include <string.h>
