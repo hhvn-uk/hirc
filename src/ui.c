@@ -490,7 +490,10 @@ ui_read(void) {
 			}
 			break;
 		default:
-			if (iswprint(key) || iscntrl(key))
+			if (iswprint(key) || iscntrl(key) && input.counter + 1 != sizeof(input.string)) {
+					memmove(input.string + input.counter + 1,
+							input.string + input.counter,
+							(wcslen(input.string + input.counter) + 1) * sizeof(wchar_t));
 					input.string[input.counter++] = (wchar_t)key;
 			input.string[input.counter] = 0;
 			break;
