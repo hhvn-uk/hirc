@@ -836,7 +836,8 @@ ui_draw_buflist(void) {
 int
 ui_wprintc(struct Window *window, int lines, char *format, ...) {
 	char utfbuf[5];
-	char str[1024], *s;
+	char *str;
+	wchar_t *wcs, *s;
 	va_list ap;
 	int ret;
 	attr_t curattr;
@@ -852,7 +853,9 @@ ui_wprintc(struct Window *window, int lines, char *format, ...) {
 	int italic = 0;
 
 	va_start(ap, format);
-	ret = vsnprintf(str, sizeof(str), format, ap);
+	ret = vsnprintf(str, 0, format, ap) + 1;
+	str = emalloc(ret);
+	ret = vsnprintf(str, ret, format, ap);
 	va_end(ap);
 	if (ret < 0)
 		return ret;
@@ -861,7 +864,10 @@ ui_wprintc(struct Window *window, int lines, char *format, ...) {
 		ui_strlenc(window, str, &elc);
 	elc -= 1;
 
-	for (ret = cc = lc = 0, s = str; s && *s; s++) {
+	wcs = stowc(str);
+	free(str);
+
+	for (ret = cc = lc = 0, s = wcs; s && *s; s++) {
 		switch (*s) {
 		case 2: /* ^B */
 			if (bold)
@@ -943,30 +949,11 @@ ui_wprintc(struct Window *window, int lines, char *format, ...) {
 			if (lines > 0 && lc >= lines)
 				goto end;
 			if (!lines || lines > 0 || (lines < 0 && lc >= elc + lines)) {
-				if ((*s & 0xC0) == 0xC0) {
-					/* Copy a 11xxxxxx byte and
-					 * stop when a byte doesn't
-					 * match 10xxxxxx, to leave
-					 * a full char for writing. */
-					memset(utfbuf, '\0', sizeof(utfbuf));
-					utfbuf[0] = *s;
-					for (utfc = 1, s++; (*s & 0xC0) != 0xC0 && (*s & 0x80) == 0x80 && utfc < sizeof(utfbuf); utfc++, s++)
-						utfbuf[utfc] = *s;
-					waddstr(window->window, utfbuf);
-					s--;
-					ret++;
-					cc++;
-				} else if (!(*s & 0x80)) {
-					/* ANDing with 0x80
-					 * makes certain we
-					 * ignore malformed
-					 * utf-8 characters */
-					waddch(window->window, *s);
-					ret++;
-					cc++;
-				}
+				waddnwstr(window->window, s, 1);
+				ret++;
+				cc++;
 			}
-			if (cc == window->w || *s == '\n') {
+			if (cc == window->w || *s == L'\n') {
 				lc++;
 				cc = 0;
 			}
@@ -1008,10 +995,12 @@ ui_strlenc(struct Window *window, char *s, int *lines) {
 				s += 1;
 			break;
 		default:
-			/* naive utf-8 handling:
-			 * the 2-nth byte always
-			 * follows 10xxxxxxx, so
-			 * don't count it. */
+			/* Naive utf-8 handling: the 2-nth byte always follows
+			 * 10xxxxxxx, so don't count it.
+			 *
+			 * I figured it would be better to do it this way than
+			 * to use widechars, as then there would need to be a
+			 * conversion for each call. */
 			if ((*s & 0xC0) != 0x80)
 				cc++;
 			ret++;
