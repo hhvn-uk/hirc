@@ -272,6 +272,7 @@ struct Selected {
 struct Keybind {
 	struct Keybind *prev;
 	char *binding;
+	wchar_t *wbinding;
 	char *cmd;
 	struct Keybind *next;
 };

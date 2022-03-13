@@ -28,11 +28,15 @@
 	/* real maximum = HIST_MAX * (channels + servers + queries) */
 #define strcmp_n(s1, s2) (s1 == s2 ? 0 : (s1 ? s2 ? strcmp(s1, s2) : -1 : -1))
 
-/* strlcpy.c */
+/* strlcpy/wcslcpy.c */
 #ifdef HIRC_STRLCPY
 #undef strlcpy
-size_t		strlcpy(char *dst, const char *src, size_t dsize);
+size_t		strlcpy(char *, const char *, size_t);
 #endif /* HIST_STRLCPY */
+#ifdef HIRC_WCSLCPY
+#undef wcslcpy
+size_t		wcslcpy(wchar_t *, const wchar_t *, size_t);
+#endif /* HIST_WCSLCPY */
 
 /* main.c */
 void *		emalloc(size_t size);
@@ -40,6 +44,9 @@ void *		erealloc(void *ptr, size_t size);
 char *		estrdup(const char *str);
 void *		talloc(size_t size);
 char *		tstrdup(const char *str);
+wchar_t * 	ewcsdup(const wchar_t *str);
+wchar_t * 	stowc(char *str);
+char * 		wctos(wchar_t *str);
 void		cleanup(char *quitmsg);
 void		param_free(char **params);
 int		param_len(char **params);

@@ -100,6 +100,39 @@ talloc(size_t size) {
 	return mem;
 }
 
+wchar_t *
+ewcsdup(const wchar_t *str) {
+	wchar_t *ret;
+	if ((ret = wcsdup(str)) == NULL) {
+		endwin();
+		perror("wcsdup()");
+		exit(EXIT_FAILURE);
+	}
+	return ret;
+}
+
+wchar_t *
+stowc(char *str) {
+	wchar_t *ret;
+	size_t len;
+
+	len = mbstowcs(NULL, str, 0) + 1;
+	ret = emalloc(len * sizeof(wchar_t));
+	mbstowcs(ret, str, len);
+	return ret;
+}
+
+char *
+wctos(wchar_t *str) {
+	char *ret;
+	size_t len;
+
+	len = wcstombs(NULL, str, 0) + 1;
+	ret = emalloc(len);
+	wcstombs(ret, str, len);
+	return ret;
+}
+
 /* strdup using talloc */
 char *
 tstrdup(const char *str) {
