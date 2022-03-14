@@ -499,6 +499,11 @@ struct Config config[] = {
 		.strhandle = config_redraws,
 		.description = {
 		"Format of an invitation being received.", NULL}},
+	{"format.pong", 1, Val_string,
+		.str = "PONG from %{nick:${nick}}${nick}%{o}: ${2}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of replies to /ping", NULL}},
 	/* Generic numerics (bit boring) */
 	{"format.rpl.welcome", 1, Val_string,
 		.str = "${2-}",
