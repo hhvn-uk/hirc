@@ -356,7 +356,7 @@ struct Config config[] = {
 		.description = {
 		"Format of footer of /alias output", NULL}},
 	{"format.ui.help", 1, Val_string,
-		.str = "${1}",
+		.str = " ${1}",
 		.strhandle = config_redraws,
 		.description = {
 		"Format of /alias output", NULL}},

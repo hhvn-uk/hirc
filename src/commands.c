@@ -1395,6 +1395,8 @@ command_help) {
 			hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_HELP_START :%s", commands[i].name);
 			for (j=0; commands[i].description[j]; j++)
 				hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_HELP :%s", commands[i].description[j]);
+			if (strcmp(commands[i].name, str) == 0)
+				goto end; /* only print one for an exact match, i,e, /help format should only print the command, not all formats. */
 		}
 	}
 
@@ -1404,11 +1406,14 @@ command_help) {
 				found = 1;
 				hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_HELP_START :%s", config[i].name);
 				for (j=0; config[i].description[j]; j++)
-					hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_UI :%s", config[i].description[j]);
+					hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_HELP :%s", config[i].description[j]);
+				if (strcmp(config[i].name, str) == 0)
+					goto end;
 			}
 		}
 	}
 
+end:
 	if (found)
 		hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_HELP_END :end of help");
 	else
