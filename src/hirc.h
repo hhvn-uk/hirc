@@ -139,6 +139,7 @@ void		handle(struct Server *server, char *msg);
 void		ui_init(void);
 #define		ui_deinit() endwin()
 void		ui_read(void);
+void		ui_complete(wchar_t *str, size_t size);
 int		ui_input_insert(char c, int counter);
 int		ui_input_delete(int num, int counter);
 void		ui_redraw(void);

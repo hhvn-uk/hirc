@@ -187,6 +187,12 @@ struct Config config[] = {
 		.strhandle = NULL,
 		.description = {
 		"Message to send on /kill", NULL}},
+	{"completion.hchar", 1, Val_string,
+		.str = ",",
+		.strhandle = NULL,
+		.description = {
+		"Character to place after hilightning a nick",
+		"(eg, \",\" -> \"hhvn, hi!\"", NULL}},
 	{"divider.toggle", 1, Val_bool,
 		.num = 1,
 		.numhandle = config_redrawl,

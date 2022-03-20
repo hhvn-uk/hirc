@@ -476,6 +476,9 @@ ui_read(void) {
 			if (input.string[input.counter])
 				input.counter++;
 			break;
+		case '\t':
+			ui_complete(input.string, sizeof(input.string));
+			break;
 		case KEY_ENTER:
 		case '\r':
 			if (*input.string != L'\0') {
@@ -496,10 +499,262 @@ ui_read(void) {
 							input.string + input.counter,
 							(wcslen(input.string + input.counter) + 1) * sizeof(wchar_t));
 					input.string[input.counter++] = (wchar_t)key;
-			input.string[input.counter] = 0;
+			}
 			break;
 		}
 	}
+}
+
+static void
+ui_complete_stitch(wchar_t *dest, size_t dsize, unsigned *counter, unsigned coff,
+		wchar_t **stoks, size_t slen,
+		wchar_t *str,
+		wchar_t **etoks, size_t elen,
+		int fullcomplete) {
+	wchar_t **wp;
+	size_t i, dc = 0;
+
+	for (wp = stoks, i = 0; i < slen; i++, wp++)
+		dc += swprintf(dest + dc, dsize - dc, L"%ls%s", *wp, (i != slen - 1 || str || elen) ? " " : "");
+
+	if (str)
+		dc += swprintf(dest + dc, dsize - dc, L"%ls%s", str, (fullcomplete || elen) ? " " : "");
+
+	if (!fullcomplete && elen)
+		coff -= 1;
+	*counter = dc + coff;
+
+	for (wp = etoks, i = 0; i < elen; i++, wp++)
+		dc += swprintf(dest + dc, dsize - dc, L"%ls%s", *wp, i != elen - 1 ? " " : "");
+}
+
+static void
+ui_complete_get_cmds(char *str, size_t len, char **ret, int *fullcomplete) {
+	int i, j;
+
+	for (i = 0; commands[i].name; i++) {
+		if (strncmp(commands[i].name, str, len) == 0) {
+			if ((*ret)) {
+				(*fullcomplete) = 0;
+				for (j = 0; (*ret)[j] && commands[i].name[j]; j++) {
+					if ((*ret)[j] != commands[i].name[j]) {
+						(*ret)[j] = '\0';
+						break;
+					}
+				}
+			} else (*ret) = estrdup(commands[i].name);
+		}
+	}
+}
+
+static void
+ui_complete_get_settings(char *str, size_t len, char **ret, int *fullcomplete) {
+	int i, j;
+
+	for (i = 0; config[i].name; i++) {
+		if (strncmp(config[i].name, str, len) == 0) {
+			if ((*ret)) {
+				(*fullcomplete) = 0;
+				for (j = 0; (*ret)[j] && config[i].name[j]; j++) {
+					if ((*ret)[j] != config[i].name[j]) {
+						(*ret)[j] = '\0';
+						break;
+					}
+				}
+			} else (*ret) = estrdup(config[i].name);
+		}
+	}
+}
+
+static void
+ui_complete_get_nicks(struct Channel *chan, char *str, size_t len, char **ret, int *fullcomplete) {
+	struct Nick *np;
+	int i, j;
+
+	for (np = chan->nicks; np; np = np->next) {
+		if (!np->self && strncmp(np->nick, str, len) == 0) {
+			if ((*ret)) {
+				(*fullcomplete) = 0;
+				for (j = 0; (*ret)[j] && np->nick[j]; j++) {
+					if ((*ret)[j] != np->nick[j]) {
+						(*ret)[j] = '\0';
+						break;
+					}
+				}
+			} else (*ret) = estrdup(np->nick);
+		}
+	}
+}
+
+void
+ui_complete(wchar_t *str, size_t size) {
+	wchar_t *wstem = NULL;
+	char *stem = NULL;
+	static int pctok, prcnt;
+	wchar_t **_toks;
+	wchar_t **toks;
+	wchar_t *cmd;
+	size_t tokn, i, j, len;
+	wchar_t *wp, *dup, *save;
+	char *found = NULL, *p;
+	int ctok = -1, rcnt = -1; /* toks[ctok] + rcnt == char before cursor */
+	unsigned coff = 0; /* str + coff == input.string */
+	int fullcomplete = 1;
+	int type;
+
+	/* start at 1: 'a b c' -> 2 spaces, but 3 tokens */
+	for (wp = str, tokn = 1, i = j = 0; wp && *wp; wp++, i++, j++) {
+		if (i == input.counter || (*(wp+1) == '\0' && rcnt == -1)) {
+			if (*wp == ' ' && *(wp+1) == '\0' && i + 1 == input.counter) {
+				ctok = tokn;
+				rcnt = 0;
+			} else {
+				ctok = tokn - 1;
+				rcnt = j;
+				if (i != input.counter)
+					rcnt++;
+			}
+		}
+		if (*wp == L' ') {
+			j = -1;
+			tokn++;
+		}
+	}
+
+	_toks = toks = emalloc(tokn * sizeof(wchar_t *));
+	dup = ewcsdup(str);
+	wp = NULL;
+	i = 0;
+	memset(toks, 0, tokn * sizeof(wchar_t *));
+	while ((wp = wcstok(!wp ? dup : NULL, L" ", &save)) && i < tokn)
+		*(_toks + i++) = wp;
+
+getcmd:
+	if (*str == L'/' && tokn)
+		cmd = toks[0] + 1;
+	else
+		cmd = NULL;
+
+	/* /server network /comman<cursor --> /comman<cursor> */
+	if (cmd && (wcscmp(cmd, L"server") == 0 ||
+			wcscmp(cmd, L"alias") == 0 ||
+			wcscmp(cmd, L"bind") == 0) && tokn >= 2) {
+		i = wcslen(toks[0]) + wcslen(toks[1]) + (tokn > 2 ? 2 : 1);
+		str += i;
+		coff += i;
+		size -= i;
+
+		toks += 2;
+		tokn -= 2;
+		ctok -= 2;
+		goto getcmd;
+	}
+
+	/* complete commands */
+	if (cmd && ctok == 0) {
+		wstem = toks[0] + 1;
+
+		stem = wctos(wstem);
+		len = strlen(stem);
+
+		ui_complete_get_cmds(stem, len, &found, &fullcomplete);
+		free(stem);
+
+		if (found) {
+			len = strlen(found) + 2;
+			p = emalloc(len);
+			snprintf(p, len, "/%s", found);
+			free(found);
+			found = p;
+
+			wp = stowc(found);
+			free(found);
+			ui_complete_stitch(str, size, &input.counter, coff,
+					NULL, 0,
+					wp,
+					toks + 1, tokn - 1,
+					fullcomplete);
+			free(wp);
+			goto end;
+		}
+		free(found);
+		found = NULL;
+	}
+
+	/* complete commands/variables as arguments */
+	type = 0;
+	if (cmd) {
+		if (wcscmp(cmd, L"help") == 0)
+			type = 1;
+		else if (wcscmp(cmd, L"set") == 0)
+			type = 2;
+		else if (wcscmp(cmd, L"format") == 0)
+			type = 3;
+		if (type && ctok == 1) {
+			wstem = toks[1];
+
+			p = wctos(wstem);
+			if (type == 3) {
+				len = strlen(p) + 8; /* format.\0 */
+				stem = emalloc(len);
+				snprintf(stem, len, "format.%s", p);
+			} else stem = p;
+			len = strlen(stem);
+
+			if (type == 1)
+				ui_complete_get_cmds(stem, len, &found, &fullcomplete);
+			ui_complete_get_settings(stem, len, &found, &fullcomplete);
+			free(stem);
+
+			if (found) {
+				if (type == 3)
+					p = found + 7; /* format. */
+				else
+					p = found;
+				wp = stowc(p);
+				ui_complete_stitch(str, size, &input.counter, coff,
+						toks, 1,
+						wp,
+						toks + 2, tokn - 2,
+						fullcomplete);
+				free(wp);
+				free(found);
+				goto end;
+			}
+			free(found);
+			found = NULL;
+		}
+	}
+
+	/* complete nicks */
+	if (selected.channel && ctok > -1 && toks[ctok] && *toks[ctok]) {
+		wstem = toks[ctok];
+		stem = wctos(wstem);
+		len = strlen(stem);
+
+		ui_complete_get_nicks(selected.channel, stem, len, &found, &fullcomplete);
+		free(stem);
+
+		if (found) {
+			wp = stowc(found);
+			ui_complete_stitch(str, size, &input.counter, coff,
+					toks, ctok,
+					wp,
+					toks + ctok + 1, tokn - ctok - 1,
+					fullcomplete);
+			free(wp);
+			free(found);
+			goto end;
+		}
+		free(found);
+		found = NULL;
+	}
+
+end:
+	free(_toks);
+	/* elements in _toks are pointers to dup */
+	free(dup);
+	return;
 }
 
 void
