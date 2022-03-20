@@ -15,7 +15,7 @@ LDFLAGS = -lncursesw
 
 include config.mk
 
-all: $(BIN) $(MAN)
+all: $(BIN) $(MAN) misc
 
 # Some make implementation will
 # use a target to create an include
@@ -39,6 +39,22 @@ $(MAN): $(BIN) $(MAN).header $(MAN).footer
 		cat $(MAN).header - $(MAN).footer | \
 		sed "s/COMMIT/$(COMMIT)/" > $(MAN)
 
+misc:
+	cd misc/ && make
+
+misc-install:
+	cd misc/ && make install \
+		CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)" \
+		PREFIX="$(PREFIX)" \
+		BINDIR="$(BINDIR)" \
+		MANDIR="$(MANDIR)"
+
+misc-uninstall:
+	cd misc/ && make uninstall \
+		PREFIX="$(PREFIX)" \
+		BINDIR="$(BINDIR)" \
+		MANDIR="$(MANDIR)"
+
 install: all
 	mkdir -p $(BINDIR) $(MANDIR)/man1
 	install -m0755 $(BIN) $(BINDIR)/$(BIN)
@@ -56,4 +72,4 @@ clean:
 .c.o:
 	$(CC) $(CFLAGS) -c $< -o $@
 
-.PHONY: clean install uninstall
+.PHONY: all misc clean install uninstall
