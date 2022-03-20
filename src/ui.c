@@ -596,7 +596,7 @@ ui_complete(wchar_t *str, size_t size) {
 	wchar_t *cmd;
 	size_t tokn, i, j, len;
 	wchar_t *wp, *dup, *save;
-	char *found = NULL, *p;
+	char *found = NULL, *p, *hchar;
 	int ctok = -1, rcnt = -1; /* toks[ctok] + rcnt == char before cursor */
 	unsigned coff = 0; /* str + coff == input.string */
 	int fullcomplete = 1;
@@ -736,6 +736,14 @@ getcmd:
 		free(stem);
 
 		if (found) {
+			if (ctok == 0) {
+				hchar = config_gets("completion.hchar");
+				len = strlen(found) + strlen(hchar) + 1;
+				p = emalloc(len);
+				snprintf(p, len, "%s%s", found, hchar);
+				free(found);
+				found = p;
+			}
 			wp = stowc(found);
 			ui_complete_stitch(str, size, &input.counter, coff,
 					toks, ctok,
