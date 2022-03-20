@@ -165,15 +165,11 @@ nick_add(struct Nick **head, char *prefix, char priv, struct Server *server) {
 	if ((nick = nick_create(prefix, priv, server)) == NULL)
 		return NULL;
 
-	if (!*head) {
-		*head = nick;
-		return nick;
-	}
-
-	p = *head;
-	for (; p && p->next; p = p->next);
-	p->next = nick;
-	nick->prev = p;
+	nick->next = *head;
+	nick->prev = NULL;
+	if (*head)
+		(*head)->prev = nick;
+	*head = nick;
 
 	return nick;
 }
@@ -221,33 +217,22 @@ nick_remove(struct Nick **head, char *nick) {
 }
 
 static inline void
-nick_swap(struct Nick **head, struct Nick *first, struct Nick *second) {
-	struct Nick *next[2];
-	struct Nick *prev[2];
+nick_dcpy(struct Nick *dest, struct Nick *origin) {
+	dest->priv   = origin->priv;
+	dest->prefix = origin->prefix;
+	dest->nick   = origin->nick;
+	dest->ident  = origin->ident;
+	dest->host   = origin->host;
+	dest->self   = origin->self;
+}
 
-	next[0] = first->next  != second ? first->next  : first;
-	next[1] = second->next != first  ? second->next : second;
-	prev[0] = first->prev  != second ? first->prev  : first;
-	prev[1] = second->prev != first  ? second->prev : second;
+static inline void
+nick_swap(struct Nick *first, struct Nick *second) {
+	struct Nick temp;
 
-	if (*head == first)
-		*head = second;
-	else if (*head == second)
-		*head = first;
-
-	first->next = next[1];
-	first->prev = prev[1];
-	if (first->next)
-		first->next->prev = first;
-	if (first->prev)
-		first->prev->next = first;
-
-	second->next = next[0];
-	second->prev = prev[0];
-	if (second->next)
-		second->next->prev = second;
-	if (second->prev)
-		second->prev->next = second;
+	nick_dcpy(&temp, first);
+	nick_dcpy(first, second);
+	nick_dcpy(second, &temp);
 }
 
 enum {
@@ -285,26 +270,14 @@ nick_sort(struct Nick **head, struct Server *server) {
 	if (!head || !*head)
 		return;
 
-	/*
-	supportedprivs = strchr(support_get(server, "PREFIX"), ')');
-	if (supportedprivs == NULL || supportedprivs[0] == '\0')
-		supportedprivs = "";
-	else
-		supportedprivs++;
-
-	for (i = strlen(supportedprivs); *supportedprivs; supportedprivs++, i--)
-		map[*supportedprivs] = S_ - i;
-	*/
-
 	/* TODO: something better than bubblesort */
 	do {
 		swapped = 0;
 		for (p = (*head)->next; p; p = next) {
 			next = p->next;
-			/* TODO: sort using privs here, without causing infinite loop */
 			for (s[0] = p->nick, s[1] = p->prev->nick; s[0] && s[1] && map[*s[0]] == map[*s[1]]; s[0]++, s[1]++);
 			if (s[0] && s[1] && map[*s[0]] < map[*s[1]]) {
-				nick_swap(head, p, p->prev);
+				nick_swap(p, p->prev);
 				swapped = 1;
 			}
 		}
