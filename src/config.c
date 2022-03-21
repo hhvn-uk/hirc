@@ -330,6 +330,11 @@ struct Config config[] = {
 		.strhandle = config_redraws,
 		.description = {
 		"Format of log restore footer.", NULL}},
+	{"format.ui.unread", 1, Val_string,
+		.str = "%{c:93}---%{=}%{c:93}%{b}${1}%{b} unread ---",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of unread message indicator.", NULL}},
 	{"format.ui.grep.start", 1, Val_string,
 		.str = "%{b}%{c:94}Results of ${1}:",
 		.strhandle = config_redraws,

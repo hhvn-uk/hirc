@@ -96,6 +96,7 @@ struct {
 	{"SELF_AUTOCMDS_LIST",	"format.ui.autocmds"},
 	{"SELF_AUTOCMDS_END",	"format.ui.autocmds.end"},
 	{"SELF_LOG_RESTORE",	"format.ui.logrestore"},
+	{"SELF_UNREAD",		"format.ui.unread"},
 	/* Real commands/numerics from server */
 	{"PRIVMSG", 		"format.privmsg"},
 	{"NOTICE",		"format.notice"},
@@ -1380,16 +1381,43 @@ ui_draw_main(void) {
 
 void
 ui_select(struct Server *server, struct Channel *channel) {
+	struct History *hp, *ind;
+	int i;
+
+	if (selected.history)
+		hist_purgeopt(selected.history, HIST_TMP);
+
 	selected.channel  = channel;
 	selected.server   = server;
 	selected.history  = channel ? channel->history : server ? server->history : main_buf;
 	selected.name     = channel ? channel->name    : server ? server->name    : "hirc";
 	selected.hasnicks = channel ? !channel->priv && !channel->old : 0;
 
+	if (selected.history->unread) {
+		for (i = 0, hp = selected.history->history; hp && hp->next; hp = hp->next, i++);
+		if (i == (HIST_MAX-1)) {
+			free(hp->next);
+			hp->next = NULL;
+		}
+
+		for (i = 0, hp = selected.history->history; hp && hp->next && i < selected.history->unread; hp = hp->next)
+			if (hp->options & HIST_SHOW)
+				i++;
+		if (hp) {
+			ind = hist_format(NULL, Activity_none, HIST_SHOW|HIST_TMP, "SELF_UNREAD %d :unread", selected.history->unread);
+			ind->origin = selected.history;
+			ind->next = hp;
+			ind->prev = hp->prev;
+			if (hp->prev)
+				hp->prev->next = ind;
+			hp->prev = ind;
+		}
+	}
+
+
 	selected.history->activity = Activity_none;
 	selected.history->unread = 0;
 
-	hist_purgeopt(selected.history, HIST_TMP);
 	if (!selected.hasnicks)
 		windows[Win_nicklist].location = HIDDEN;
 	else

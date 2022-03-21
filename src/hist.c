@@ -205,9 +205,10 @@ hist_format(struct HistInfo *histinfo, enum Activity activity, enum HistOpt opti
 	vsnprintf(msg, sizeof(msg), format, ap);
 	va_end(ap);
 
-	params = param_create(msg);
-
-	return hist_add(histinfo, msg, Activity_status, 0, options);
+	if (histinfo)
+		return hist_add(histinfo, msg, Activity_status, 0, options);
+	else
+		return hist_create(histinfo, NULL, msg, Activity_status, 0, options);
 }
 
 int
@@ -295,7 +296,6 @@ hist_loadlog(struct HistInfo *hist, char *server, char *channel) {
 	char *prefix;
 	size_t len;
 	struct Nick *from;
-	char *format;
 
 	if (!server || !hist)
 		return NULL;
@@ -369,11 +369,8 @@ hist_loadlog(struct HistInfo *hist, char *server, char *channel) {
 	fclose(f);
 
 	if (head) {
-		len = snprintf(format, 0, "SELF_LOG_RESTORE %lld :log restored up to", (long long)head->timestamp) + 1;
-		format = emalloc(len);
-		snprintf(format, len, "SELF_LOG_RESTORE %lld :log restored up to", (long long)head->timestamp);
-		p = hist_create(hist, NULL, format, Activity_status, time(NULL), HIST_SHOW|HIST_RLOG);
-		free(format);
+		p = hist_format(NULL, Activity_none, HIST_SHOW|HIST_RLOG, "SELF_LOG_RESTORE %lld :log restored up to", (long long)head->timestamp);
+		p->origin = hist;
 		p->next = head;
 		head->prev = p;
 		head = p;
