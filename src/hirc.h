@@ -56,6 +56,8 @@ char *		strntok(char *str, char *sep, int n);
 char *		strrdate(time_t secs);
 
 /* mem.c */
+void		pfree_(void **ptr);
+#define		pfree(ptr) pfree_((void **)ptr)
 void *		emalloc(size_t size);
 void *		erealloc(void *ptr, size_t size);
 char *		estrdup(const char *str);

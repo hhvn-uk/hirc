@@ -54,8 +54,8 @@ param_free(char **params) {
 	char **p;
 
 	for (p = params; p && *p; p++)
-		free(*p);
-	free(params);
+		pfree(&*p);
+	pfree(&params);
 }
 
 int
@@ -120,7 +120,7 @@ void
 ircread(struct Server *sp) {
 	char *line, *end;
 	char *err;
-	char *reason = "connection closed";
+	char *reason = NULL;
 	size_t len;
 	int ret;
 
@@ -133,14 +133,15 @@ ircread(struct Server *sp) {
 		case -1:
 			err = (char *)tls_error(sp->tls_ctx);
 			len = strlen("tls_read(): ") + strlen(err) + 1;
-			reason = talloc(len);
+			reason = emalloc(len);
 			snprintf(reason, len, "tls_read(): %s", err);
 			/* fallthrough */
 		case 0:
 			serv_disconnect(sp, 1, "EOF");
 			hist_format(sp->history, Activity_error, HIST_SHOW,
 					"SELF_CONNECTLOST %s %s %s :%s",
-					sp->name, sp->host, sp->port, reason);
+					sp->name, sp->host, sp->port, reason ? reason : "connection close");
+			pfree(&reason);
 			return;
 		case TLS_WANT_POLLIN:
 		case TLS_WANT_POLLOUT:
@@ -153,16 +154,18 @@ ircread(struct Server *sp) {
 #endif /* TLS */
 		switch (ret = read(sp->rfd, &sp->inputbuf[sp->inputlen], SERVER_INPUT_SIZE - sp->inputlen - 1)) {
 		case -1:
-			err = tstrdup(strerror(errno));
+			err = estrdup(strerror(errno));
 			len = strlen("read(): ") + strlen(err) + 1;
-			reason = talloc(len);
+			reason = emalloc(len);
 			snprintf(reason, len, "read(): %s", err);
+			pfree(&err);
 			/* fallthrough */
 		case 0:
 			serv_disconnect(sp, 1, "EOF");
 			hist_format(sp->history, Activity_error, HIST_SHOW,
 					"SELF_CONNECTLOST %s %s %s :%s",
-					sp->name, sp->host, sp->port, reason);
+					sp->name, sp->host, sp->port, reason ? reason : "connection closed");
+			pfree(&reason);
 			return;
 		default:
 			sp->inputlen += ret;
@@ -491,9 +494,6 @@ main(int argc, char *argv[]) {
 			wrefresh(windows[Win_input].window);
 
 		ui_read();
-
-		/* free temporary mem */
-		talloc(0);
 	}
 
 	return 0;

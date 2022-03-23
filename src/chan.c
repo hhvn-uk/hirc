@@ -24,12 +24,12 @@
 void
 chan_free(struct Channel *channel) {
 	if (channel) {
-		free(channel->name);
-		free(channel->mode);
+		pfree(&channel->name);
+		pfree(&channel->mode);
 		nick_free_list(&channel->nicks);
-		free(channel->nicks);
+		pfree(&channel->nicks);
 		hist_free_list(channel->history);
-		free(channel);
+		pfree(&channel);
 	}
 }
 

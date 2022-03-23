@@ -67,7 +67,9 @@ nick_getcolour(struct Nick *nick) {
 void
 prefix_tokenize(char *prefix, char **nick, char **ident, char **host) {
 	enum { ISNICK, ISIDENT, ISHOST } segment = ISNICK;
-	char *p = tstrdup(prefix);
+	char *p, *dup;
+
+	p = dup = estrdup(prefix);
 
 	if (*p == ':')
 		p++;
@@ -94,16 +96,17 @@ prefix_tokenize(char *prefix, char **nick, char **ident, char **host) {
 	if (nick && *nick)	*nick = estrdup(*nick);
 	if (ident && *ident)	*ident = estrdup(*ident);
 	if (host && *host)	*host = estrdup(*host);
+	pfree(&dup);
 }
 
 void
 nick_free(struct Nick *nick) {
 	if (nick) {
-		free(nick->prefix);
-		free(nick->nick);
-		free(nick->ident);
-		free(nick->host);
-		free(nick);
+		pfree(&nick->prefix);
+		pfree(&nick->nick);
+		pfree(&nick->ident);
+		pfree(&nick->host);
+		pfree(&nick);
 	}
 }
 

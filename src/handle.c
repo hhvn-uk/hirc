@@ -323,7 +323,7 @@ handle_RPL_ISUPPORT) {
 
 	/* skip the last param ".... :are supported by this server" */
 	for (; *params && *(params+1); params++) {
-		key = tstrdup(*params);
+		key = estrdup(*params);
 		if ((value = strchr(key, '=')) != NULL) {
 			*value = '\0';
 			if (*(value+1))
@@ -333,6 +333,7 @@ handle_RPL_ISUPPORT) {
 		}
 
 		support_set(server, key, value);
+		pfree(&key);
 	}
 }
 
@@ -359,7 +360,7 @@ handle_RPL_CHANNELMODEIS) {
 	if ((chan = chan_get(&server->channels, *(msg->params+2), -1)) == NULL)
 		chan = chan_add(server, &server->channels, *(msg->params+2), 0);
 
-	free(chan->mode);
+	pfree(&chan->mode);
 	chan->mode = estrdup(*(msg->params+3));
 
 	hist_addp(server->history, msg, Activity_status, HIST_LOG);
@@ -529,7 +530,7 @@ handle_TOPIC) {
 
 	if ((chan = chan_get(&server->channels, *(msg->params+1), -1)) != NULL) {
 		hist_addp(chan->history, msg, Activity_status, HIST_DFL);
-		free(chan->topic);
+		pfree(&chan->topic);
 		chan->topic = *(msg->params+2) ? estrdup(*(msg->params+2)) : NULL;
 	}
 }
@@ -572,7 +573,7 @@ handle_RPL_TOPIC) {
 	if ((chan = chan_get(&server->channels, target, -1)) == NULL)
 		return;
 
-	free(chan->topic);
+	pfree(&chan->topic);
 	chan->topic = topic ? estrdup(topic) : NULL;
 
 	if (strcmp_n(target, expect_get(server, Expect_topic)) == 0) {
@@ -645,7 +646,7 @@ handle(struct Server *server, char *msg) {
 	timestamp = time(NULL);
 	params = param_create(msg);
 	if (!*params) {
-		free(params);
+		pfree(&params);
 		return;
 	}
 

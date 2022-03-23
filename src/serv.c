@@ -38,27 +38,27 @@ serv_free(struct Server *server) {
 	if (!server)
 		return;
 
-	free(server->name);
-	free(server->username);
-	free(server->realname);
-	free(server->host);
-	free(server->port);
-	free(server->rpollfd);
+	pfree(&server->name);
+	pfree(&server->username);
+	pfree(&server->realname);
+	pfree(&server->host);
+	pfree(&server->port);
+	pfree(&server->rpollfd);
 	nick_free(server->self);
 	hist_free_list(server->history);
 	chan_free_list(&server->channels);
 	chan_free_list(&server->privs);
 	for (p = server->supports; p; p = p->next) {
-		free(p->prev);
-		free(p->key);
-		free(p->value);
+		pfree(&p->prev);
+		pfree(&p->key);
+		pfree(&p->value);
 	}
 #ifdef TLS
 	if (server->tls)
 		if (server->tls_ctx)
 			tls_free(server->tls_ctx);
 #endif /* TLS */
-	free(p);
+	pfree(&p);
 }
 
 struct Server *
@@ -208,9 +208,9 @@ serv_connect(struct Server *server) {
 
 	for (s = server->supports, prev = NULL; s; s = s->next) {
 		if (prev) {
-			free(prev->key);
-			free(prev->value);
-			free(prev);
+			pfree(&prev->key);
+			pfree(&prev->value);
+			pfree(&prev);
 		}
 		prev = s;
 	}
@@ -418,7 +418,7 @@ support_set(struct Server *server, char *key, char *value) {
 
 	for (p = server->supports; p && p->next; p = p->next) {
 		if (strcmp(p->key, key) == 0) {
-			free(p->value);
+			pfree(&p->value);
 			p->value = strdup(value);
 			return;
 		}
@@ -475,8 +475,8 @@ serv_auto_free(struct Server *server) {
 		return;
 
 	for (p = server->autocmds; *p; p++)
-		free(*p);
-	free(server->autocmds);
+		pfree(&*p);
+	pfree(&server->autocmds);
 	server->autocmds = NULL;
 }
 
@@ -544,7 +544,7 @@ schedule_pull(struct Server *server, char *tmsg) {
 
 	for (p = server->schedule; p; p = p->next) {
 		if (strcmp(p->tmsg, tmsg) == 0) {
-			free(p->tmsg);
+			pfree(&p->tmsg);
 
 			/* Don't free p->msg, instead save it to
 			 * a static pointer that we free the next
@@ -552,7 +552,7 @@ schedule_pull(struct Server *server, char *tmsg) {
 			 * schedule_pull will probably be used in
 			 * while loops until it equals NULL, this
 			 * will likely be set free quite quickly */
-			free(ret);
+			pfree(&ret);
 			ret = p->msg;
 
 			if (p->prev) p->prev->next = p->next;
@@ -561,12 +561,12 @@ schedule_pull(struct Server *server, char *tmsg) {
 			if (!p->prev)
 				server->schedule = p->next;
 
-			free(p);
+			pfree(&p);
 			return ret;
 		}
 	}
 
-	free(ret);
+	pfree(&ret);
 	ret = NULL;
 	return NULL;
 }
@@ -576,7 +576,7 @@ expect_set(struct Server *server, enum Expect cmd, char *about) {
 	if (cmd >= Expect_last || cmd < 0 || nouich)
 		return;
 
-	free(server->expect[cmd]);
+	pfree(&server->expect[cmd]);
 	server->expect[cmd] = about ? estrdup(about) : NULL;
 }
 

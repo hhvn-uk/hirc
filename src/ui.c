@@ -416,13 +416,12 @@ ui_read(void) {
 								&input.string[input.counter],
 								(wcslen(&input.string[input.counter]) + 1) * sizeof(wchar_t));
 						input.counter = savecounter;
-						free(str);
 						return;
 					}
 				}
 
 				if (input.histindex) {
-					free(backup);
+					pfree(&backup);
 					backup = NULL;
 					input.histindex = -1;
 				}
@@ -461,7 +460,7 @@ ui_read(void) {
 				if (input.histindex == -1) {
 					if (backup)
 						wcslcpy(input.string, backup, sizeof(input.string));
-					free(backup);
+					pfree(&backup);
 					backup = NULL;
 				} else {
 					mbstowcs(input.string, input.history[input.histindex], sizeof(input.string));
@@ -486,7 +485,7 @@ ui_read(void) {
 				/* no need to free str as assigned to input.history[0] */
 				str = wctos(input.string);
 				command_eval(selected.server, str);
-				free(input.history[INPUT_HIST_MAX - 1]);
+				pfree(&input.history[INPUT_HIST_MAX - 1]);
 				memmove(input.history + 1, input.history, (sizeof(input.history) / INPUT_HIST_MAX) * (INPUT_HIST_MAX - 1));
 				input.history[0] = str;
 				input.string[0] = '\0';
@@ -659,26 +658,26 @@ getcmd:
 		len = strlen(stem);
 
 		ui_complete_get_cmds(stem, len, &found, &fullcomplete);
-		free(stem);
+		pfree(&stem);
 
 		if (found) {
 			len = strlen(found) + 2;
 			p = emalloc(len);
 			snprintf(p, len, "/%s", found);
-			free(found);
+			pfree(&found);
 			found = p;
 
 			wp = stowc(found);
-			free(found);
+			pfree(&found);
 			ui_complete_stitch(str, size, &input.counter, coff,
 					NULL, 0,
 					wp,
 					toks + 1, tokn - 1,
 					fullcomplete);
-			free(wp);
+			pfree(&wp);
 			goto end;
 		}
-		free(found);
+		pfree(&found);
 		found = NULL;
 	}
 
@@ -705,7 +704,7 @@ getcmd:
 			if (type == 1)
 				ui_complete_get_cmds(stem, len, &found, &fullcomplete);
 			ui_complete_get_settings(stem, len, &found, &fullcomplete);
-			free(stem);
+			pfree(&stem);
 
 			if (found) {
 				if (type == 3)
@@ -718,11 +717,11 @@ getcmd:
 						wp,
 						toks + 2, tokn - 2,
 						fullcomplete);
-				free(wp);
-				free(found);
+				pfree(&wp);
+				pfree(&found);
 				goto end;
 			}
-			free(found);
+			pfree(&found);
 			found = NULL;
 		}
 	}
@@ -734,7 +733,7 @@ getcmd:
 		len = strlen(stem);
 
 		ui_complete_get_nicks(selected.channel, stem, len, &found, &fullcomplete);
-		free(stem);
+		pfree(&stem);
 
 		if (found) {
 			if (ctok == 0) {
@@ -742,7 +741,7 @@ getcmd:
 				len = strlen(found) + strlen(hchar) + 1;
 				p = emalloc(len);
 				snprintf(p, len, "%s%s", found, hchar);
-				free(found);
+				pfree(&found);
 				found = p;
 			}
 			wp = stowc(found);
@@ -751,18 +750,18 @@ getcmd:
 					wp,
 					toks + ctok + 1, tokn - ctok - 1,
 					fullcomplete);
-			free(wp);
-			free(found);
+			pfree(&wp);
+			pfree(&found);
 			goto end;
 		}
-		free(found);
+		pfree(&found);
 		found = NULL;
 	}
 
 end:
-	free(_toks);
+	pfree(&_toks);
 	/* elements in _toks are pointers to dup */
-	free(dup);
+	pfree(&dup);
 	return;
 }
 
@@ -865,7 +864,7 @@ ui_redraw(void) {
 	if (selected.history) {
 		for (p = selected.history->history; p; p = p->next) {
 			if (p->format) {
-				free(p->format);
+				pfree(&p->format);
 				p->format = NULL;
 			}
 		}
@@ -1134,7 +1133,7 @@ ui_wprintc(struct Window *window, int lines, char *format, ...) {
 	elc -= 1;
 
 	wcs = stowc(str);
-	free(str);
+	pfree(&str);
 
 	for (ret = cc = lc = 0, s = wcs; s && *s; s++) {
 		switch (*s) {
@@ -1396,7 +1395,7 @@ ui_select(struct Server *server, struct Channel *channel) {
 	if (selected.history->unread) {
 		for (i = 0, hp = selected.history->history; hp && hp->next; hp = hp->next, i++);
 		if (i == (HIST_MAX-1)) {
-			free(hp->next);
+			pfree(&hp->next);
 			hp->next = NULL;
 		}
 
@@ -1503,7 +1502,7 @@ ui_format_(struct Window *window, char *format, struct History *hist, int recurs
 		{NULL, NULL},
 	};
 
-	free(ret);
+	pfree(&ret);
 	ret = emalloc(rs);
 
 	subs[sub_channel].val = selected.channel ? selected.channel->name  : NULL;
@@ -1688,7 +1687,7 @@ outcont:
 					save = estrdup(ret);
 					rc = snprintf(ret, rs, "%1$*3$s%2$s", save, config_gets("divider.string"),
 							config_getl("divider.margin") + (strlen(ret) - ui_strlenc(window, ret, NULL)));
-					free(save);
+					pfree(&save);
 					format = strchr(format, '}') + 1;
 					continue;
 				} else if (*(content+1) == '\0') {
@@ -1710,11 +1709,11 @@ outcont:
 				ret = NULL;
 				ui_format_(NULL, content, hist, 1);
 				rc += snprintf(&save[rc], rs - rc, "%1$*2$s", ret, pn);
-				free(ret);
+				pfree(&ret);
 				ret = save;
 				format = strchr(format+2+strlen("pad:"), ',') + strlen(content) + 2;
 
-				free(content);
+				pfree(&content);
 				continue;
 			}
 
@@ -1727,9 +1726,9 @@ outcont:
 				rc += snprintf(&save[rc], rs - rc, "%s", strrdate((time_t)pn));
 				format += 3 + strlen("rdate:") + strlen(content);
 
-				free(ret);
+				pfree(&ret);
 				ret = save;
-				free(content);
+				pfree(&content);
 			}
 
 			if (strncmp(content, "time:", strlen("time:")) == 0 && strchr(content, ',')) {
@@ -1743,9 +1742,9 @@ outcont:
 				rc += strftime(&save[rc], rs - rc, p, gmtime((time_t *)&pn));
 				format = strchr(format+2+strlen("time:"), ',') + strlen(content) + 2;
 
-				free(ret);
+				pfree(&ret);
 				ret = save;
-				free(content);
+				pfree(&content);
 				continue;
 			}
 
@@ -1771,9 +1770,9 @@ outcont:
 					strchr(format+2+strlen("split:"), ',') + 1,
 					',') + strlen(content) + 2;
 
-				free(ret);
+				pfree(&ret);
 				ret = save;
-				free(content);
+				pfree(&content);
 				continue;
 			}
 
@@ -1786,10 +1785,10 @@ outcont:
 				rc += snprintf(&save[rc], rs - rc, "%c%02d", 3 /* ^C */, nick_getcolour(nick));
 				format += 3 + strlen("nick:") + strlen(content);
 
-				free(ret);
+				pfree(&ret);
 				ret = save;
 				nick_free(nick);
-				free(content);
+				pfree(&content);
 				continue;
 			}
 		}
@@ -1824,12 +1823,12 @@ outcont:
 	if (!recursive && divider && !rhs) {
 		save = estrdup(ret);
 		rc = snprintf(ret, rs, "%1$*4$s%2$s%3$s", "", config_gets("divider.string"), save, config_getl("divider.margin"));
-		free(save);
+		pfree(&save);
 	}
 
 	save = estrdup(ret);
 	rc = snprintf(ret, rs, "%s%s", ts, save);
-	free(save);
+	pfree(&save);
 
 	if (!recursive && window) {
 		for (p = ret, pc = 0; p && p <= (ret + rs); p++) {
@@ -1875,7 +1874,7 @@ outcont:
 						p += snprintf(p, rs - ((size_t)(p - ret)), "%1$*3$s %2$s", "", save, ui_strlenc(NULL, ts, NULL));
 					}
 
-					free(save);
+					pfree(&save);
 					pc = 0;
 				}
 			}
@@ -1883,9 +1882,9 @@ outcont:
 	}
 
 	if (subs[sub_time].val)
-		free(subs[sub_time].val);
+		pfree(&subs[sub_time].val);
 	if (ts[0] != '\0')
-		free(ts);
+		pfree(&ts);
 
 	return ret;
 }
@@ -1898,7 +1897,7 @@ ui_rectrl(char *str) {
 	char c;
 
 	if (rp) {
-		free(rp);
+		pfree(&rp);
 		rp = NULL;
 	}
 
@@ -1934,7 +1933,7 @@ ui_unctrl(char *str) {
 	int rc;
 
 	if (rp) {
-		free(rp);
+		pfree(&rp);
 		rp = NULL;
 	}
 
@@ -1997,10 +1996,10 @@ ui_unbind(char *binding) {
 			if (p->next)
 				p->next->prev = p->prev;
 
-			free(p->binding);
-			free(p->wbinding);
-			free(p->cmd);
-			free(p);
+			pfree(&p->binding);
+			pfree(&p->wbinding);
+			pfree(&p->cmd);
+			pfree(&p);
 			return 0;
 		}
 	}

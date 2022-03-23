@@ -1351,7 +1351,7 @@ config_sets(char *name, char *str) {
 				if (!config[i].strhandle(str))
 					return;
 			if (!config[i].isdef)
-				free(config[i].str);
+				pfree(&config[i].str);
 			else
 				config[i].isdef = 0;
 			config[i].str = estrdup(str);
@@ -1405,7 +1405,7 @@ config_set(char *name, char *val) {
 	else
 		config_get_print(name);
 
-	free(str);
+	pfree(&str);
 }
 
 void
@@ -1427,7 +1427,7 @@ config_read(char *filename) {
 		for (i = 0; i < btoffset; i++) {
 			if (strcmp(path, *(bt + i)) == 0) {
 				ui_error("recursive read of '%s' is not allowed", filename);
-				free(path);
+				pfree(&path);
 				return;
 			}
 		}
@@ -1458,10 +1458,10 @@ config_read(char *filename) {
 
 shrink:
 	/* Remove path from bt and shrink */
-	free(path);
+	pfree(&path);
 	btoffset--;
 	if (btoffset == 0) {
-		free(bt);
+		pfree(&bt);
 		bt = NULL;
 	} else {
 		bt = erealloc(bt, (sizeof(char *)) * btoffset);

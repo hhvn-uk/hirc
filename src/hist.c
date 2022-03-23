@@ -33,12 +33,12 @@ void
 hist_free(struct History *history) {
 	param_free(history->_params);
 	if (history->from) {
-		free(history->from->prefix);
-		free(history->from);
+		pfree(&history->from->prefix);
+		pfree(&history->from);
 	}
-	free(history->raw);
-	free(history->format);
-	free(history);
+	pfree(&history->raw);
+	pfree(&history->format);
+	pfree(&history);
 }
 
 void
@@ -141,7 +141,7 @@ hist_add(struct HistInfo *histinfo,
 
 	for (i=0, p = histinfo->history; p && p->next; p = p->next, i++);
 	if (i == (HIST_MAX-1)) {
-		free(p->next);
+		pfree(&p->next);
 		p->next = NULL;
 	}
 
@@ -191,7 +191,7 @@ hist_purgeopt(struct HistInfo *histinfo, enum HistOpt options) {
 			else if (!p->prev)
 				histinfo->history = NULL;
 
-			free(p);
+			pfree(&p);
 		}
 	}
 }
@@ -316,7 +316,7 @@ hist_loadlog(struct HistInfo *hist, char *server, char *channel) {
 	memset(lines, 0, sizeof(lines));
 
 	while (fgets(buf, sizeof(buf), f)) {
-		free(lines[HIST_MAX - 1]);
+		pfree(&lines[HIST_MAX - 1]);
 		memmove(lines + 1, lines, HIST_MAX - 1);
 		buf[strlen(buf) - 1] = '\0'; /* strip newline */
 		lines[0] = estrdup(buf);
@@ -363,7 +363,7 @@ hist_loadlog(struct HistInfo *hist, char *server, char *channel) {
 		prev = p;
 
 		nick_free(from);
-		free(lines[i]);
+		pfree(&lines[i]);
 	}
 
 	fclose(f);

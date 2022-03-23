@@ -989,9 +989,10 @@ command_format) {
 	}
 
 	len = strlen(str) + strlen("format.") + 1;
-	newstr = talloc(len);
+	newstr = emalloc(len);
 	snprintf(newstr, len, "format.%s", str);
 	command_set(server, channel, newstr);
+	pfree(&newstr);
 }
 
 COMMAND(
@@ -1811,7 +1812,7 @@ modelset(char *cmd, struct Server *server, struct Channel *channel,
 
 	/* 2 = null byte and +/- */
 	len = percmd + 2;
-	modes = talloc(len);
+	modes = emalloc(len);
 	*modes = remove ? '-' : '+';
 	for (i = 0; i < percmd; i++)
 		*(modes + i + 1) = mode;
@@ -1833,6 +1834,7 @@ modelset(char *cmd, struct Server *server, struct Channel *channel,
 	}
 
 	expect_set(server, Expect_nosuchnick, channel->name);
+	pfree(&modes);
 }
 
 COMMAND(
@@ -2011,9 +2013,9 @@ alias_remove(char *alias) {
 			if (p->next)
 				p->next->prev = p->prev;
 
-			free(p->alias);
-			free(p->cmd);
-			free(p);
+			pfree(&p->alias);
+			pfree(&p->cmd);
+			pfree(&p);
 			return 0;
 		}
 	}
@@ -2052,9 +2054,9 @@ command_eval(struct Server *server, char *str) {
 	struct Command *cmdp;
 	char msg[512];
 	char *cmd;
-	char *s;
+	char *s, *dup;
 
-	s = tstrdup(alias_eval(str));
+	s = dup = estrdup(alias_eval(str));
 
 	if (*s != '/' || strncmp(s, "/ /", sizeof("/ /")) == 0) {
 		/* Provide a way to escape commands
@@ -2070,7 +2072,7 @@ command_eval(struct Server *server, char *str) {
 		} else {
 			ui_error("channel not selected, message ignored", NULL);
 		}
-		return;
+		goto end;
 	} else {
 		s++;
 		cmd = s;
@@ -2093,10 +2095,13 @@ command_eval(struct Server *server, char *str) {
 				else
 					cmdp->func(server, selected.channel, s);
 
-				return;
+
+				goto end;
 			}
 		}
 
 		ui_error("no such command: '%s'", cmd);
 	}
+end:
+	pfree(&dup);
 }
