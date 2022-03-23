@@ -40,14 +40,6 @@ size_t		wcslcpy(wchar_t *, const wchar_t *, size_t);
 #endif /* HIST_WCSLCPY */
 
 /* main.c */
-void *		emalloc(size_t size);
-void *		erealloc(void *ptr, size_t size);
-char *		estrdup(const char *str);
-void *		talloc(size_t size);
-char *		tstrdup(const char *str);
-wchar_t * 	ewcsdup(const wchar_t *str);
-wchar_t * 	stowc(char *str);
-char * 		wctos(wchar_t *str);
 void		cleanup(char *quitmsg);
 void		param_free(char **params);
 int		param_len(char **params);
@@ -62,6 +54,16 @@ char *		struntil(char *str, char until);
 int		strisnum(char *str);
 char *		strntok(char *str, char *sep, int n);
 char *		strrdate(time_t secs);
+
+/* mem.c */
+void *		emalloc(size_t size);
+void *		erealloc(void *ptr, size_t size);
+char *		estrdup(const char *str);
+void *		talloc(size_t size);
+char *		tstrdup(const char *str);
+wchar_t * 	ewcsdup(const wchar_t *str);
+wchar_t * 	stowc(char *str);
+char * 		wctos(wchar_t *str);
 
 /* chan.c */
 void		chan_free(struct Channel *channel);
