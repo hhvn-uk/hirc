@@ -863,10 +863,10 @@ ui_redraw(void) {
 	 * or format.* settings are changed. */
 	if (selected.history) {
 		for (p = selected.history->history; p; p = p->next) {
-			if (p->format) {
+			if (p->format)
 				pfree(&p->format);
-				p->format = NULL;
-			}
+			if (p->rformat)
+				pfree(&p->rformat);
 		}
 	}
 }

@@ -114,4 +114,3 @@ wctos(wchar_t *str) {
 	wcstombs(ret, str, len);
 	return ret;
 }
-

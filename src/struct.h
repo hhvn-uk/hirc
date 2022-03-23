@@ -69,6 +69,7 @@ struct History {
 	char **_params; /* contains all params, free from here */
 	char **params;  /* contains params without perfix, don't free */
 	char *format;   /* cached ui_format */
+	char *rformat;  /* cached format without mirc codes */
 	struct HistInfo *origin;
 	struct Nick *from;
 	struct History *next;
