@@ -112,13 +112,15 @@ nick_free(struct Nick *nick) {
 
 void
 nick_free_list(struct Nick **head) {
-	struct Nick *p;
+	struct Nick *p, *prev;
 
 	if (!head || !*head)
 		return;
 
-	for (p = (*head)->next; p; p = p->next)
-		nick_free(p->prev);
+	for (prev = *head, p = prev->next; p; p = p->next) {
+		nick_free(prev);
+		prev = p;
+	}
 	*head = NULL;
 }
 

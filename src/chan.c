@@ -35,13 +35,15 @@ chan_free(struct Channel *channel) {
 
 void
 chan_free_list(struct Channel **head) {
-	struct Channel *p;
+	struct Channel *p, *prev;
 
 	if (!head || !*head)
 		return;
 
-	for (p = (*head)->next; p; p = p->next)
-		chan_free(p->prev);
+	for (prev = *head, p = prev->next; p; p = p->next) {
+		chan_free(prev);
+		prev = p;
+	}
 	*head = NULL;
 }
 

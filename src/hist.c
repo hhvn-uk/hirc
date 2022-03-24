@@ -44,13 +44,15 @@ hist_free(struct History *history) {
 
 void
 hist_free_list(struct HistInfo *histinfo) {
-	struct History *p;
+	struct History *p, *prev;
 
 	if (!histinfo->history)
 		return;
 
-	for (p = histinfo->history->next; p; p = p->next)
-		hist_free(p->prev);
+	for (prev = histinfo->history, p = prev->next; p; p = p->next) {
+		hist_free(prev);
+		prev = p;
+	}
 	histinfo->history = NULL;
 }
 
