@@ -188,7 +188,7 @@ struct Command commands[] = {
 		"                [-real <comment>] [-tls] [-verify] <host> [port]",
 		"Connect to a network/server", NULL}},
 	{"disconnect", command_disconnect, 0, {
-		"usage: /disconnect [network]",
+		"usage: /disconnect [network] [msg]",
 		"Disconnect from a network/server", NULL}},
 	{"names", command_names, 1, {
 		"usage: /names <channel>",
