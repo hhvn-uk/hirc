@@ -935,11 +935,7 @@ command_select) {
 			return;
 		}
 
-		for (sp = servers; sp; sp = sp->next)
-			if (strcmp(sp->name, tserver) == 0)
-				break;
-
-		if (!sp) {
+		if (!(sp = serv_get(&servers, tserver))) {
 			ui_error("could not find server '%s'", tserver);
 			return;
 		}
