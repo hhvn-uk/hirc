@@ -152,21 +152,6 @@ serv_get(struct Server **head, char *name) {
 	return NULL;
 }
 
-struct Server *
-serv_get_byrfd(struct Server **head, int rfd) {
-	struct Server *p;
-
-	if (!head || !*head)
-		return NULL;
-
-	for (p = *head; p; p = p->next) {
-		if (p->rfd == rfd)
-			return p;
-	}
-
-	return NULL;
-}
-
 int
 serv_remove(struct Server **head, char *name) {
 	struct Server *p;
