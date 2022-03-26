@@ -515,6 +515,12 @@ struct Config config[] = {
 		.strhandle = config_redraws,
 		.description = {
 		"Format of replies to /ping", NULL}},
+	{"format.error", 1, Val_string,
+		.str = "%{c:28}ERROR:%{o} ${1}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of generic ERROR messages.",
+		"Most commonly seen when being /kill'd.", NULL}},
 	/* Generic numerics (bit boring) */
 	{"format.rpl.welcome", 1, Val_string,
 		.str = "${2-}",

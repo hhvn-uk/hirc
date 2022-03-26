@@ -108,6 +108,7 @@ struct {
 	{"TOPIC",		"format.topic"},
 	{"INVITE",		"format.invite"},
 	{"PONG",		"format.pong"},
+	{"ERROR",		"format.error"},
 	/* START: misc/rpl-ui-gen.awk */
 	{"200",			"format.rpl.tracelink"},
 	{"201",			"format.rpl.traceconnecting"},
