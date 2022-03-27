@@ -54,7 +54,7 @@ ${CC} -o test test.c >/dev/null 2>/dev/null && ./test >/dev/null 2>/dev/null && 
 	cat >> config.mk <<- EOF
 		# linking an included version of strlcpy, as your system doesn't have it
 		CFLAGS	+= -DHIRC_STRLCPY
-		SRC	+= src/strlcpy.c
+		SRC	+= src/openbsd/strlcpy.c
 	EOF
 }
 
@@ -70,6 +70,6 @@ ${CC} -o test test.c >/dev/null 2>/dev/null && ./test >/dev/null 2>/dev/null && 
 	cat >> config.mk <<- EOF
 		# linking an included version of wcslcpy, as your system doesn't have it
 		CFLAGS	+= -DHIRC_WCSLCPY
-		SRC	+= src/wcslcpy.c
+		SRC	+= src/openbsd/wcslcpy.c
 	EOF
 }
