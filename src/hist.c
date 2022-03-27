@@ -74,7 +74,7 @@ hist_create(struct HistInfo *histinfo, struct Nick *from, char *msg,
 	new->origin = histinfo;
 
 	if (from) {
-		new->from = nick_dup(from, histinfo->server);
+		new->from = nick_dup(from);
 	} else if (**new->_params == ':') {
 		np = NULL;
 		if (histinfo->channel) {
@@ -83,11 +83,23 @@ hist_create(struct HistInfo *histinfo, struct Nick *from, char *msg,
 		}
 
 		if (np)
-			new->from = nick_dup(np, histinfo->server);
+			new->from = nick_dup(np);
 		else
 			new->from = nick_create(*new->_params, ' ', histinfo->server);
 	} else {
 		new->from = NULL;
+	}
+
+	/* Update histinfo->server->self */
+	if (new->from && new->from->self && histinfo->server) {
+		if (new->from->ident && strcmp_n(new->from->ident, histinfo->server->self->ident) != 0) {
+			free(histinfo->server->self->ident);
+			histinfo->server->self->ident = strdup(new->from->ident);
+		}
+		if (new->from->host && strcmp_n(new->from->host, histinfo->server->self->host) != 0) {
+			free(histinfo->server->self->host);
+			histinfo->server->self->host = strdup(new->from->host);
+		}
 	}
 
 	if (**new->_params == ':')

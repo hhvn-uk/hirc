@@ -180,8 +180,19 @@ nick_add(struct Nick **head, char *prefix, char priv, struct Server *server) {
 }
 
 struct Nick *
-nick_dup(struct Nick *nick, struct Server *server) {
-	return nick_create(nick->prefix, nick->priv, server);
+nick_dup(struct Nick *nick) {
+	struct Nick *ret;
+	if (!nick)
+		return NULL;
+	ret = emalloc(sizeof(struct Nick));
+	ret->prev = ret->next = NULL;
+	ret->priv   = nick->priv;
+	ret->prefix = nick->prefix ? strdup(nick->prefix) : NULL;
+	ret->nick   = nick->nick ? strdup(nick->nick) : NULL;
+	ret->ident  = nick->ident ? strdup(nick->ident) : NULL;
+	ret->host   = nick->host ? strdup(nick->host) : NULL;
+	ret->self   = nick->self;
+	return ret;
 }
 
 struct Nick *

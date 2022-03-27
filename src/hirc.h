@@ -87,7 +87,7 @@ void		nick_free_list(struct Nick **head);
 struct Nick *	nick_create(char *prefix, char priv, struct Server *server);
 struct Nick *	nick_get(struct Nick **head, char *nick);
 struct Nick *	nick_add(struct Nick **head, char *prefix, char priv, struct Server *server);
-struct Nick *	nick_dup(struct Nick *nick, struct Server *server);
+struct Nick *	nick_dup(struct Nick *nick);
 int		nick_isself(struct Nick *nick);
 int		nick_isself_server(struct Nick *nick, struct Server *server);
 int		nick_remove(struct Nick **head, char *nick);
