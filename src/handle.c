@@ -274,7 +274,7 @@ handle_PRIVMSG) {
 	if (strchr(nick->nick, '.')) {
 		/* it's a server */
 		hist_addp(server->history, msg, Activity_status, HIST_DFL);
-	} else if (strcmp(target, server->self->nick) == 0) {
+	} else if (strcmp_n(target, server->self->nick) == 0) {
 		/* it's messaging me */
 		if ((priv = chan_get(&server->privs, nick->nick, -1)) == NULL)
 			priv = chan_add(server, &server->privs, nick->nick, 1);
@@ -497,7 +497,7 @@ handle_NICK) {
 	hist_addp(server->history, msg, Activity_status, HIST_DFL);
 	newnick = *(msg->params+1);
 
-	if (strcmp(nick->nick, newnick) == 0)
+	if (strcmp_n(nick->nick, newnick) == 0)
 		return;
 
 	if (nick_isself(nick)) {

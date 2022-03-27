@@ -154,7 +154,7 @@ nick_isself_server(struct Nick *nick, struct Server *server) {
 	if (!nick || !server || !nick->nick)
 		return 0;
 
-	if (strcmp(server->self->nick, nick->nick) == 0)
+	if (strcmp_n(server->self->nick, nick->nick) == 0)
 		return 1;
 	else
 		return 0;
@@ -190,7 +190,7 @@ nick_get(struct Nick **head, char *nick) {
 
 	p = *head;
 	for (; p; p = p->next) {
-		if (strcmp(p->nick, nick) == 0)
+		if (strcmp_n(p->nick, nick) == 0)
 			return p;
 	}
 
