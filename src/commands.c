@@ -869,8 +869,9 @@ command_connect) {
 COMMAND(
 command_disconnect) {
 	struct Server *sp;
+	struct Channel *chp;
 	int len;
-	char *msg;
+	char *msg = NULL;
 
 	if (str) {
 		len = strcspn(str, " ");
@@ -886,13 +887,21 @@ command_disconnect) {
 		if (sp == NULL) {
 			sp = server;
 			msg = str;
-			return;
 		}
 	} else sp = server;
 
 	if (!msg || !*msg)
-		msg = config_gets("def.quitmessage");
+		msg = config_gets("misc.quitmessage");
 
+	/* Add fake quit messages to history.
+	 * Theoretically, we could send QUIT and then wait for a
+	 * reply, but I don't see the advantage. (Unless the
+	 * server fucks with our quit messages somehow).
+	 *
+	 * Since HIST_SELF is used, there is no need to fake a prefix. */
+	hist_format(sp->history, Activity_self, HIST_DFL|HIST_SELF, "QUIT :%s", msg);
+	for (chp = sp->channels; chp; chp = chp->next)
+		hist_format(chp->history, Activity_self, HIST_DFL|HIST_SELF, "QUIT :%s", msg);
 	serv_disconnect(sp, 0, msg);
 }
 
