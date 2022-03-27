@@ -494,7 +494,7 @@ handle_NICK) {
 		return;
 
 	nick = msg->from;
-	hist_addp(server->history, msg, Activity_status, HIST_DFL);
+	hist_addp(server->history, msg, Activity_status, msg->from->self ? HIST_DFL : HIST_LOG);
 	newnick = *(msg->params+1);
 
 	if (strcmp_n(nick->nick, newnick) == 0)
