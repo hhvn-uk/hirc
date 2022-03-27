@@ -691,7 +691,7 @@ getcmd:
 			type = 2;
 		else if (wcscmp(cmd, L"format") == 0)
 			type = 3;
-		if (type && ctok == 1) {
+		if (type && ctok == 1 && toks[1]) {
 			wstem = toks[1];
 
 			p = wctos(wstem);

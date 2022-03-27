@@ -98,6 +98,8 @@ stowc(char *str) {
 	wchar_t *ret;
 	size_t len;
 
+	if (!str) return NULL;
+
 	len = mbstowcs(NULL, str, 0) + 1;
 	ret = emalloc(len * sizeof(wchar_t));
 	mbstowcs(ret, str, len);
@@ -108,6 +110,8 @@ char *
 wctos(wchar_t *str) {
 	char *ret;
 	size_t len;
+
+	if (!str) return NULL;
 
 	len = wcstombs(NULL, str, 0) + 1;
 	ret = emalloc(len);
