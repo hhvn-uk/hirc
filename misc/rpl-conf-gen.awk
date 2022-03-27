@@ -1,5 +1,6 @@
 #!/bin/awk -f
 # Parses RFC1459 for config[]
+# This file is placed in the public domain.
 
 $1 ~ /^[0-9][0-9][0-9]$/ && ($2 ~ /RPL_/ || $2 ~ /ERR_/) {
 	rpl = tolower($2);
