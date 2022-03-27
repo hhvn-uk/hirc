@@ -1066,12 +1066,12 @@ command_server) {
 		break;
 	case opt_auto:
 		if (!arg || !*arg) {
-			hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_AUTOCMDS_START %s :Autocmds for %s:",
+			hist_format(selected.history, Activity_none, HIST_UI, "SELF_AUTOCMDS_START %s :Autocmds for %s:",
 					nserver->name, nserver->name);
 			for (acmds = nserver->autocmds; acmds && *acmds; acmds++)
-				hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_AUTOCMDS_LIST %s :%s",
+				hist_format(selected.history, Activity_none, HIST_UI, "SELF_AUTOCMDS_LIST %s :%s",
 						nserver->name, *acmds);
-			hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_AUTOCMDS_END %s :End of autocmds for %s",
+			hist_format(selected.history, Activity_none, HIST_UI, "SELF_AUTOCMDS_END %s :End of autocmds for %s",
 					nserver->name, nserver->name);
 		} else {
 			if (*arg == '/') {
@@ -1295,16 +1295,16 @@ command_bind) {
 	}
 
 	if (!binding) {
-		hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_KEYBIND_START :Keybindings:");
+		hist_format(selected.history, Activity_none, HIST_UI, "SELF_KEYBIND_START :Keybindings:");
 		for (p = keybinds; p; p = p->next)
-			hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_KEYBIND_LIST %s :%s", ui_unctrl(p->binding), p->cmd);
-		hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_KEYBIND_END :End of keybindings");
+			hist_format(selected.history, Activity_none, HIST_UI, "SELF_KEYBIND_LIST %s :%s", ui_unctrl(p->binding), p->cmd);
+		hist_format(selected.history, Activity_none, HIST_UI, "SELF_KEYBIND_END :End of keybindings");
 	} else if (!cmd) {
 		for (p = keybinds; p; p = p->next) {
 			if (strcmp(p->binding, binding) == 0) {
-				hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_KEYBIND_START :Keybindings:");
-				hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_KEYBIND_LIST %s :%s", ui_unctrl(p->binding), p->cmd);
-				hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_KEYBIND_END :End of keybindings");
+				hist_format(selected.history, Activity_none, HIST_UI, "SELF_KEYBIND_START :Keybindings:");
+				hist_format(selected.history, Activity_none, HIST_UI, "SELF_KEYBIND_LIST %s :%s", ui_unctrl(p->binding), p->cmd);
+				hist_format(selected.history, Activity_none, HIST_UI, "SELF_KEYBIND_END :End of keybindings");
 				return;
 			}
 		}
@@ -1346,16 +1346,16 @@ command_alias) {
 	}
 
 	if (!alias) {
-		hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_ALIAS_START :Aliases:");
+		hist_format(selected.history, Activity_none, HIST_UI, "SELF_ALIAS_START :Aliases:");
 		for (p = aliases; p; p = p->next)
-			hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_ALIAS_LIST %s :%s", p->alias, p->cmd);
-		hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_ALIAS_END :End of aliases");
+			hist_format(selected.history, Activity_none, HIST_UI, "SELF_ALIAS_LIST %s :%s", p->alias, p->cmd);
+		hist_format(selected.history, Activity_none, HIST_UI, "SELF_ALIAS_END :End of aliases");
 	} else if (!cmd) {
 		for (p = aliases; p; p = p->next) {
 			if (strcmp(p->alias, alias) == 0) {
-				hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_ALIAS_START :Aliases:");
-				hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_ALIAS_LIST %s :%s", p->alias, p->cmd);
-				hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_ALIAS_END :End of aliases");
+				hist_format(selected.history, Activity_none, HIST_UI, "SELF_ALIAS_START :Aliases:");
+				hist_format(selected.history, Activity_none, HIST_UI, "SELF_ALIAS_LIST %s :%s", p->alias, p->cmd);
+				hist_format(selected.history, Activity_none, HIST_UI, "SELF_ALIAS_END :End of aliases");
 				return;
 			}
 		}
@@ -1379,18 +1379,18 @@ command_help) {
 	}
 
 	if (strcmp(str, "commands") == 0) {
-		hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_HELP_START :%s", str);
+		hist_format(selected.history, Activity_none, HIST_UI, "SELF_HELP_START :%s", str);
 		for (i=0; commands[i].name && commands[i].func; i++)
-			hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_HELP : /%s", commands[i].name);
-		hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_HELP_END :end of help");
+			hist_format(selected.history, Activity_none, HIST_UI, "SELF_HELP : /%s", commands[i].name);
+		hist_format(selected.history, Activity_none, HIST_UI, "SELF_HELP_END :end of help");
 		return;
 	}
 
 	if (strcmp(str, "variables") == 0) {
-		hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_HELP_START :%s", str);
+		hist_format(selected.history, Activity_none, HIST_UI, "SELF_HELP_START :%s", str);
 		for (i=0; config[i].name; i++)
-			hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_UI : %s", config[i].name);
-		hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_HELP_END :end of help");
+			hist_format(selected.history, Activity_none, HIST_UI, "SELF_UI : %s", config[i].name);
+		hist_format(selected.history, Activity_none, HIST_UI, "SELF_HELP_END :end of help");
 		return;
 	}
 
@@ -1402,9 +1402,9 @@ command_help) {
 	for (i=0; commands[i].name && commands[i].func; i++) {
 		if (strncmp(commands[i].name, str, strlen(str)) == 0) {
 			found = 1;
-			hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_HELP_START :%s", commands[i].name);
+			hist_format(selected.history, Activity_none, HIST_UI, "SELF_HELP_START :%s", commands[i].name);
 			for (j=0; commands[i].description[j]; j++)
-				hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_HELP :%s", commands[i].description[j]);
+				hist_format(selected.history, Activity_none, HIST_UI, "SELF_HELP :%s", commands[i].description[j]);
 			if (strcmp(commands[i].name, str) == 0)
 				goto end; /* only print one for an exact match, i,e, /help format should only print the command, not all formats. */
 		}
@@ -1414,9 +1414,9 @@ command_help) {
 		for (i=0; config[i].name; i++) {
 			if (strncmp(config[i].name, str, strlen(str)) == 0) {
 				found = 1;
-				hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_HELP_START :%s", config[i].name);
+				hist_format(selected.history, Activity_none, HIST_UI, "SELF_HELP_START :%s", config[i].name);
 				for (j=0; config[i].description[j]; j++)
-					hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_HELP :%s", config[i].description[j]);
+					hist_format(selected.history, Activity_none, HIST_UI, "SELF_HELP :%s", config[i].description[j]);
 				if (strcmp(config[i].name, str) == 0)
 					goto end;
 			}
@@ -1425,7 +1425,7 @@ command_help) {
 
 end:
 	if (found)
-		hist_format(selected.history, Activity_none, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_HELP_END :end of help");
+		hist_format(selected.history, Activity_none, HIST_UI, "SELF_HELP_END :end of help");
 	else
 		ui_error("no help on '%s'", str);
 }

@@ -284,14 +284,14 @@ ui_error_(char *file, int line, const char *func, char *format, ...) {
 	vsnprintf(msg, sizeof(msg), format, ap);
 	va_end(ap);
 
-	hist_format(selected.history, Activity_error, HIST_SHOW|HIST_TMP|HIST_MAIN|HIST_ERR,
+	hist_format(selected.history, Activity_error, HIST_UI|HIST_ERR,
 			"SELF_ERROR %s %d %s :%s",
 			file, line, func, msg);
 }
 
 void
 ui_perror_(char *file, int line, const char *func, char *str) {
-	hist_format(selected.history, Activity_error, HIST_SHOW|HIST_TMP|HIST_MAIN|HIST_ERR,
+	hist_format(selected.history, Activity_error, HIST_UI|HIST_ERR,
 			"SELF_ERROR %s %d %s :%s: %s",
 			file, line, func, str, strerror(errno));
 }
@@ -299,14 +299,14 @@ ui_perror_(char *file, int line, const char *func, char *str) {
 #ifdef TLS
 void
 ui_tls_config_error_(char *file, int line, const char *func, struct tls_config *config, char *str) {
-	hist_format(selected.history, Activity_error, HIST_SHOW|HIST_TMP|HIST_MAIN|HIST_ERR,
+	hist_format(selected.history, Activity_error, HIST_UI|HIST_ERR,
 			"SELF_ERROR %s %d %s :%s: %s",
 			file, line, func, str, tls_config_error(config));
 }
 
 void
 ui_tls_error_(char *file, int line, const char *func, struct tls *ctx, char *str) {
-	hist_format(selected.history, Activity_error, HIST_SHOW|HIST_TMP|HIST_MAIN|HIST_ERR,
+	hist_format(selected.history, Activity_error, HIST_UI|HIST_ERR,
 			"SELF_ERROR %s %d %s :%s: %s",
 			file, line, func, str, tls_error(ctx));
 }
