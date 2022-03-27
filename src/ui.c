@@ -737,7 +737,7 @@ getcmd:
 		pfree(&stem);
 
 		if (found) {
-			if (ctok == 0) {
+			if (ctok == 0 && fullcomplete) {
 				hchar = config_gets("completion.hchar");
 				len = strlen(found) + strlen(hchar) + 1;
 				p = emalloc(len);
