@@ -1273,13 +1273,13 @@ config_get_print(char *name) {
 	for (i = found = 0; config[i].name; i++) {
 		if (strncmp(config[i].name, name, strlen(name)) == 0) {
 			if (config[i].valtype == Val_string)
-				hist_format(main_buf, Activity_status, HIST_SHOW, "SELF_UI :%s: %s",
+				hist_format(selected.history, Activity_status, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_UI :%s: %s",
 						config[i].name, config[i].str);
 			else if (config[i].valtype == Val_pair || config[i].valtype == Val_colourpair)
-				hist_format(main_buf, Activity_status, HIST_SHOW, "SELF_UI :%s: {%ld, %ld}",
+				hist_format(selected.history, Activity_status, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_UI :%s: {%ld, %ld}",
 						config[i].name, config[i].pair[0], config[i].pair[1]);
 			else
-				hist_format(main_buf, Activity_status, HIST_SHOW, "SELF_UI :%s: %ld",
+				hist_format(selected.history, Activity_status, HIST_SHOW|HIST_TMP|HIST_MAIN, "SELF_UI :%s: %ld",
 						config[i].name, config[i].num);
 			found = 1;
 		}
