@@ -257,7 +257,7 @@ handle_MODE) {
 
 HANDLER(
 handle_PRIVMSG) {
-	int act_direct = Activity_hilight, act_regular = Activity_message;
+	int act_direct = Activity_hilight, act_regular = Activity_message, act;
 	struct Channel *chan;
 	struct Channel *priv;
 	struct Nick *nick;
@@ -293,7 +293,11 @@ handle_PRIVMSG) {
 		if ((chan = chan_get(&server->channels, target, -1)) == NULL)
 			chan = chan_add(server, &server->channels, target, 0);
 
-		hist_addp(chan->history, msg, nick_isself(nick) ? act_direct : act_regular, HIST_DFL);
+		if (strstr(*(msg->params+2), server->self->nick))
+			act = act_direct;
+		else
+			act = act_regular;
+		hist_addp(chan->history, msg, act, HIST_DFL);
 	}
 }
 
