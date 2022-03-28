@@ -61,7 +61,7 @@ chan_create(struct Server *server, char *name, int priv) {
 	channel->server = server;
 	channel->history = emalloc(sizeof(struct HistInfo));
 	channel->history->activity = Activity_ignore;
-	channel->history->unread = 0;
+	channel->history->unread = channel->history->ignored = 0;
 	channel->history->server = server;
 	channel->history->channel = channel;
 	if (server)

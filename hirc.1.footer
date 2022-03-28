@@ -23,6 +23,9 @@ Bind alt-1 so that it selects buffer 1.
 .Dl /alias /unalias /alias -delete
 Alias '/unalias' to '/alias -delete',
 so that '/unalias /command` is translated to `/alias -delete /command`
+
+.Dl /server hlircnet /ignore -E -server ^:[^ ]* (JOIN|PART|QUIT).*
+Ignore join, part and quit messages on server 'hlircnet'.
 .Sh SEE ALSO
 .Xr irssi 1
 .Sh AUTHOR

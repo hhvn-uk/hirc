@@ -406,7 +406,7 @@ main(int argc, char *argv[]) {
 
 	main_buf = emalloc(sizeof(struct HistInfo));
 	main_buf->activity = Activity_ignore;
-	main_buf->unread = 0;
+	main_buf->unread = main_buf->ignored = 0;
 	main_buf->server = NULL;
 	main_buf->channel = NULL;
 	main_buf->history = NULL;

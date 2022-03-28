@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <regex.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
@@ -119,7 +120,11 @@ hist_add(struct HistInfo *histinfo,
 		time_t timestamp, enum HistOpt options) {
 	struct Nick *from = NULL;
 	struct History *new, *p;
+	struct Ignore *ign;
 	int i;
+
+	if (!histinfo)
+		return NULL;
 
 	if (options & HIST_MAIN) {
 		if (options & HIST_TMP && histinfo == main_buf) {
@@ -133,6 +138,15 @@ hist_add(struct HistInfo *histinfo,
 		}
 	}
 
+	for (ign = ignores; ign; ign = ign->next) {
+		if (!ign->server || (histinfo->server && strcmp_n(ign->server, histinfo->server->name))) {
+			if (regexec(&ign->regex, msg, 0, NULL, 0) == 0) {
+				options |= HIST_IGN;
+				break;
+			}
+		}
+	}
+
 	if (options & HIST_SELF && histinfo->server) {
 		if (histinfo->channel && histinfo->channel->nicks)
 			from = nick_get(&histinfo->channel->nicks, histinfo->server->self->nick);
@@ -141,13 +155,6 @@ hist_add(struct HistInfo *histinfo,
 	}
 
 	new = hist_create(histinfo, from, msg, activity, timestamp, options);
-
-	if (histinfo && options & HIST_SHOW && activity > histinfo->activity && histinfo != selected.history) {
-		histinfo->activity = activity;
-		windows[Win_buflist].refresh = 1;
-	}
-	if (histinfo && options & HIST_SHOW && histinfo != selected.history)
-		histinfo->unread++;
 
 	if (!histinfo->history) {
 		histinfo->history = new;
@@ -165,6 +172,18 @@ hist_add(struct HistInfo *histinfo,
 	histinfo->history = new;
 
 ui:
+	if (histinfo && options & HIST_SHOW && activity > histinfo->activity && histinfo != selected.history) {
+		histinfo->activity = activity;
+		windows[Win_buflist].refresh = 1;
+	}
+
+	if (histinfo && options & HIST_SHOW && histinfo != selected.history) {
+		if (options & HIST_IGN)
+			histinfo->ignored++;
+		else
+			histinfo->unread++;
+	}
+
 	if (options & HIST_LOG) {
 		if (histinfo->server)
 			hist_log(new);

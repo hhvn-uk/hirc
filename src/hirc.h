@@ -197,6 +197,9 @@ void		config_read(char *filename);
 extern struct Server *servers;
 extern struct HistInfo *main_buf;
 
+/* handle.c */
+extern struct Ignore *ignores;
+
 /* ui.c */
 extern struct Selected selected;
 extern struct Keybind *keybinds;

@@ -50,6 +50,7 @@ HANDLER(handle_ERR_NOSUCHNICK);
 HANDLER(handle_ERR_NICKNAMEINUSE);
 HANDLER(handle_RPL_AWAY);
 
+struct Ignore *ignores = NULL;
 struct Handler handlers[] = {
 	{ "ERROR",	handle_ERROR			},
 	{ "PING", 	handle_PING			},

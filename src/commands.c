@@ -112,6 +112,7 @@ COMMAND(command_scroll);
 COMMAND(command_source);
 COMMAND(command_dump);
 COMMAND(command_close);
+COMMAND(command_ignore);
 
 static char *command_optarg;
 enum {
@@ -364,6 +365,21 @@ struct Command commands[] = {
 	{"close", command_close, 0, {
 		"usage: /close [id]",
 		"Forget about selected buffer, or a buffer by id.", NULL}},
+	{"ignore", command_ignore, 0, {
+		"usage: /ignore [[-server] regex]",
+		"       /ignore -delete id",
+		"       /ignore -hide|-show",
+		"Hide future messages matching regex.",
+		"Regexes should match a raw IRC message.",
+		"Display all rules if no argument given.",
+		" -show   show ignored messages",
+		" -hide   hide ignored messages",
+		" -delete delete rule with specified ID",
+		" -E      use extended POSIX regex",
+		" -i      case insensitive match",
+		" -server only ignore for the current server",
+		"	  or server provided by /server.",
+		"See also: regex.extended, regex.icase", NULL}},
 	{NULL, NULL},
 };
 
@@ -1816,6 +1832,88 @@ command_close) {
 			serv_remove(&servers, sp->name);
 		}
 		ui_select(NULL, NULL);
+	}
+}
+
+COMMAND(
+command_ignore) {
+	struct Ignore *ign, *p;
+	char errbuf[BUFSIZ];
+	int ret, raw = 0, i, regopt = 0, serv = 0;
+	enum { opt_show, opt_hide, opt_extended, opt_icase, opt_server };
+	static struct CommandOpts opts[] = {
+		{"E", CMD_NARG, opt_extended},
+		{"i", CMD_NARG, opt_icase},
+		{"show", CMD_NARG, opt_show},
+		{"hide", CMD_NARG, opt_hide},
+		{"server", CMD_NARG, opt_server},
+		{NULL, 0, 0},
+	};
+
+	if (!str) {
+		hist_format(selected.history, Activity_none, HIST_UI, "SELF_IGNORES_START :Ignoring:");
+		for (p = ignores, i = 1; p; p = p->next, i++)
+			if (!serv || !p->server || strcmp(server->name, p->server) == 0)
+				hist_format(selected.history, Activity_none, HIST_UI, "SELF_IGNORES_LIST %d %s :%s",
+						i, p->server ? p->server : "ANY", p->text);
+		hist_format(selected.history, Activity_none, HIST_UI, "SELF_IGNORES_END :End of ignore list");
+		return;
+	}
+
+	while ((ret = command_getopt(&str, opts)) != opt_done) {
+		switch (ret) {
+		case opt_error:
+			return;
+		case opt_show: case opt_hide:
+			if (*str) {
+				command_toomany("ignore");
+			} else {
+				selected.showign = ret == opt_show;
+				windows[Win_main].refresh = 1;
+			}
+			return;
+		case opt_extended:
+			regopt |= REG_EXTENDED;
+			break;
+		case opt_icase:
+			regopt |= REG_ICASE;
+			break;
+		case opt_server:
+			serv = 1;
+			break;
+		}
+	}
+
+	if (config_getl("regex.extended"))
+		regopt |= REG_EXTENDED;
+	if (config_getl("regex.icase"))
+		regopt |= REG_ICASE;
+
+	if (!*str) {
+		command_toofew("ignore");
+		return;
+	}
+
+	ign = emalloc(sizeof(struct Ignore));
+	ign->next = NULL;
+	if ((ret = regcomp(&ign->regex, str, regopt)) != 0) {
+		regerror(ret, &ign->regex, errbuf, sizeof(errbuf));
+		ui_error("%s: %s", errbuf, str);
+		free(ign);
+		return;
+	}
+	ign->text = strdup(str);
+	ign->regopt = regopt;
+	ign->server = serv ? strdup(server->name) : NULL;
+
+	hist_format(selected.history, Activity_none, HIST_UI, "SELF_IGNORES_ADDED %s :%s", serv ? server->name : "ANY", str);
+
+	if (!ignores) {
+		ignores = ign;
+	} else {
+		for (p = ignores; p && p->next; p = p->next);
+		ign->prev = p;
+		p->next = ign;
 	}
 }
 

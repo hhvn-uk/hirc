@@ -97,6 +97,10 @@ struct {
 	{"SELF_AUTOCMDS_END",	"format.ui.autocmds.end"},
 	{"SELF_LOG_RESTORE",	"format.ui.logrestore"},
 	{"SELF_UNREAD",		"format.ui.unread"},
+	{"SELF_IGNORES_START",	"format.ui.ignores.start"},
+	{"SELF_IGNORES_LIST",	"format.ui.ignores"},
+	{"SELF_IGNORES_ADDED",	"format.ui.ignores.added"},
+	{"SELF_IGNORES_END",	"format.ui.ignores.end"},
 	/* Real commands/numerics from server */
 	{"PRIVMSG", 		"format.privmsg"},
 	{"NOTICE",		"format.notice"},
@@ -1339,7 +1343,7 @@ ui_draw_main(void) {
 	werase(windows[Win_main].window);
 
 	for (i=0, p = selected.history->history, hp = NULL; p; p = p->next) {
-		if (!(p->options & HIST_SHOW))
+		if (!(p->options & HIST_SHOW) || ((p->options & HIST_IGN) && !selected.showign))
 			continue;
 		if (windows[Win_main].scroll > 0 && !hp && !p->next)
 			hp = p;
@@ -1358,7 +1362,7 @@ ui_draw_main(void) {
 		hp = selected.history->history;
 
 	for (y = windows[Win_main].h; hp && y > 0; hp = hp->next) {
-		if (!(hp->options & HIST_SHOW) || !hp->format)
+		if (!(hp->options & HIST_SHOW) || !hp->format || ((hp->options & HIST_IGN) && !selected.showign))
 			continue;
 		if (ui_strlenc(&windows[Win_main], hp->format, &lines) <= 0)
 			continue;
@@ -1382,7 +1386,7 @@ ui_draw_main(void) {
 void
 ui_select(struct Server *server, struct Channel *channel) {
 	struct History *hp, *ind;
-	int i;
+	int i, total;
 
 	if (selected.history)
 		hist_purgeopt(selected.history, HIST_TMP);
@@ -1392,19 +1396,23 @@ ui_select(struct Server *server, struct Channel *channel) {
 	selected.history  = channel ? channel->history : server ? server->history : main_buf;
 	selected.name     = channel ? channel->name    : server ? server->name    : "hirc";
 	selected.hasnicks = channel ? !channel->priv && !channel->old : 0;
+	selected.showign  = 0;
 
-	if (selected.history->unread) {
+	if (selected.history->unread || selected.history->ignored) {
 		for (i = 0, hp = selected.history->history; hp && hp->next; hp = hp->next, i++);
 		if (i == (HIST_MAX-1)) {
 			pfree(&hp->next);
 			hp->next = NULL;
 		}
 
-		for (i = 0, hp = selected.history->history; hp && hp->next && i < selected.history->unread; hp = hp->next)
+		total = selected.history->unread + selected.history->ignored;
+
+		for (i = 0, hp = selected.history->history; hp && hp->next && i < total; hp = hp->next)
 			if (hp->options & HIST_SHOW)
 				i++;
 		if (hp) {
-			ind = hist_format(NULL, Activity_none, HIST_SHOW|HIST_TMP, "SELF_UNREAD %d :unread", selected.history->unread);
+			ind = hist_format(NULL, Activity_none, HIST_SHOW|HIST_TMP, "SELF_UNREAD %d %d :unread, ignored",
+					selected.history->unread, selected.history->ignored);
 			ind->origin = selected.history;
 			ind->next = hp;
 			ind->prev = hp->prev;
@@ -1416,7 +1424,7 @@ ui_select(struct Server *server, struct Channel *channel) {
 
 
 	selected.history->activity = Activity_none;
-	selected.history->unread = 0;
+	selected.history->unread = selected.history->ignored = 0;
 
 	if (!selected.hasnicks)
 		windows[Win_nicklist].location = HIDDEN;

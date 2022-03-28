@@ -331,10 +331,30 @@ struct Config config[] = {
 		.description = {
 		"Format of log restore footer.", NULL}},
 	{"format.ui.unread", 1, Val_string,
-		.str = "%{c:93}---%{=}%{c:93}%{b}${1}%{b} unread ---",
+		.str = "%{c:93}---%{=}%{c:93}%{b}${1}%{b} unread (%{b}${2}%{b} ignored) ---",
 		.strhandle = config_redraws,
 		.description = {
 		"Format of unread message indicator.", NULL}},
+	{"format.ui.ignores.start", 1, Val_string,
+		.str = "Ignoring:",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of ignore list header.", NULL}},
+	{"format.ui.ignores", 1, Val_string,
+		.str = " %{pad:-3,${1}} ${2}: ${3}",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of ignore list messages.", NULL}},
+	{"format.ui.ignores.end", 1, Val_string,
+		.str = "",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of ignore list footer.", NULL}},
+	{"format.ui.ignores.added", 1, Val_string,
+		.str = "Ignore added: ${2} (server: ${1})",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of new ignores.", NULL}},
 	{"format.ui.grep.start", 1, Val_string,
 		.str = "%{b}%{c:94}Results of ${1}:",
 		.strhandle = config_redraws,
