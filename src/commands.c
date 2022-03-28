@@ -2073,7 +2073,7 @@ command_getopt(char **str, struct CommandOpts *opts) {
 	char *opt;
 
 	if (!str || !*str || **str != '-') {
-		if (**str == '\\' && *((*str)+1) == '-')
+		if (str && *str && **str == '\\' && *((*str)+1) == '-')
 			(*str)++;
 		return opt_done;
 	}
