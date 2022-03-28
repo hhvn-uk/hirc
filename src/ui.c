@@ -541,12 +541,8 @@ ui_complete_get_cmds(char *str, size_t len, char **ret, int *fullcomplete) {
 		if (strncmp(commands[i].name, str, len) == 0) {
 			if ((*ret)) {
 				(*fullcomplete) = 0;
-				for (j = 0; (*ret)[j] && commands[i].name[j]; j++) {
-					if ((*ret)[j] != commands[i].name[j]) {
-						(*ret)[j] = '\0';
-						break;
-					}
-				}
+				for (j = 0; (*ret)[j] && commands[i].name[j] && (*ret)[j] == commands[i].name[j]; j++);
+				(*ret)[j] = '\0';
 			} else (*ret) = estrdup(commands[i].name);
 		}
 	}
@@ -560,12 +556,8 @@ ui_complete_get_settings(char *str, size_t len, char **ret, int *fullcomplete) {
 		if (strncmp(config[i].name, str, len) == 0) {
 			if ((*ret)) {
 				(*fullcomplete) = 0;
-				for (j = 0; (*ret)[j] && config[i].name[j]; j++) {
-					if ((*ret)[j] != config[i].name[j]) {
-						(*ret)[j] = '\0';
-						break;
-					}
-				}
+				for (j = 0; (*ret)[j] && config[i].name[j] && (*ret)[j] == config[i].name[j]; j++);
+				(*ret)[j] = '\0';
 			} else (*ret) = estrdup(config[i].name);
 		}
 	}
@@ -580,12 +572,8 @@ ui_complete_get_nicks(struct Channel *chan, char *str, size_t len, char **ret, i
 		if (!np->self && strncmp(np->nick, str, len) == 0) {
 			if ((*ret)) {
 				(*fullcomplete) = 0;
-				for (j = 0; (*ret)[j] && np->nick[j]; j++) {
-					if ((*ret)[j] != np->nick[j]) {
-						(*ret)[j] = '\0';
-						break;
-					}
-				}
+				for (j = 0; (*ret)[j] && np->nick[j] && (*ret)[j] == np->nick[j]; j++);
+				(*ret)[j] = '\0';
 			} else (*ret) = estrdup(np->nick);
 		}
 	}
