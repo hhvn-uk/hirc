@@ -1736,7 +1736,7 @@ outcont:
 				pn = strtoll(ret, NULL, 10);
 				p = struntil(format+2+strlen("time:"), ',');
 
-				rc += strftime(&save[rc], rs - rc, p, gmtime((time_t *)&pn));
+				rc += strftime(&save[rc], rs - rc, p, localtime((time_t *)&pn));
 				format = strchr(format+2+strlen("time:"), ',') + strlen(content) + 2;
 
 				pfree(&ret);
