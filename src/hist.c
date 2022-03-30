@@ -78,9 +78,10 @@ hist_create(struct HistInfo *histinfo, struct Nick *from, char *msg,
 		new->from = nick_dup(from);
 	} else if (**new->_params == ':') {
 		np = NULL;
-		if (histinfo->channel) {
+		if (histinfo->channel && histinfo->channel->nicks) {
 			prefix_tokenize(*new->_params, &nick, NULL, NULL);
 			np = nick_get(&histinfo->channel->nicks, nick);
+			free(nick);
 		}
 
 		if (np)
