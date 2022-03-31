@@ -1726,6 +1726,7 @@ outcont:
 				pfree(&ret);
 				ret = save;
 				pfree(&content);
+				continue;
 			}
 
 			if (strncmp(content, "time:", strlen("time:")) == 0 && strchr(content, ',')) {
