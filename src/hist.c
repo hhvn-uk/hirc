@@ -173,6 +173,9 @@ hist_add(struct HistInfo *histinfo,
 	histinfo->history = new;
 
 ui:
+	if (options & HIST_SHOW && activity >= Activity_hilight && config_getl("misc.bell"))
+		beep();
+
 	if (histinfo && options & HIST_SHOW && activity > histinfo->activity && histinfo != selected.history) {
 		histinfo->activity = activity;
 		windows[Win_buflist].refresh = 1;

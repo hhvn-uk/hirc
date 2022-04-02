@@ -187,6 +187,12 @@ struct Config config[] = {
 		.strhandle = NULL,
 		.description = {
 		"Message to send on /kill", NULL}},
+	{"misc.bell", 1, Val_bool,
+		.num = 1,
+		.numhandle = config_redrawl,
+		.description = {
+		"Send an audible bell on highlights or messages.",
+		"Often triggers some other form of action in graphical environments.", NULL}},
 	{"completion.hchar", 1, Val_string,
 		.str = ",",
 		.strhandle = NULL,
