@@ -1,4 +1,0 @@
-<line>        ::= [<timestamp> ' '] [<prefix> ' '] <msg>
-<timestamp>   ::= '!' <time>
-<time>        ::= (string representation of long long)
-<prefix>      ::= ':' <servername> | ':' <nick> ['!' <user>] ['@' <host>]
