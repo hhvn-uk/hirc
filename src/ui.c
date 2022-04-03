@@ -25,6 +25,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <locale.h>
+#include <dirent.h>
+#include <libgen.h>
 #include <ncurses.h>
 #ifdef TLS
 #include <tls.h>
@@ -534,49 +536,62 @@ ui_complete_stitch(wchar_t *dest, size_t dsize, unsigned *counter, unsigned coff
 }
 
 static void
-ui_complete_get_cmds(char *str, size_t len, char **ret, int *fullcomplete) {
-	int i, j;
+ui_complete_add(char **ret, char *str, int *fullcomplete) {
+	int i;
 
-	for (i = 0; commands[i].name; i++) {
-		if (strncmp(commands[i].name, str, len) == 0) {
-			if ((*ret)) {
-				(*fullcomplete) = 0;
-				for (j = 0; (*ret)[j] && commands[i].name[j] && (*ret)[j] == commands[i].name[j]; j++);
-				(*ret)[j] = '\0';
-			} else (*ret) = estrdup(commands[i].name);
-		}
-	}
+	if ((*ret)) {
+		(*fullcomplete) = 0;
+		for (i = 0; (*ret)[i] && str[i] && (*ret)[i] == str[i]; i++);
+		(*ret)[i] = '\0';
+	} else (*ret) = estrdup(str);
 }
 
 static void
-ui_complete_get_settings(char *str, size_t len, char **ret, int *fullcomplete) {
-	int i, j;
-
-	for (i = 0; config[i].name; i++) {
-		if (strncmp(config[i].name, str, len) == 0) {
-			if ((*ret)) {
-				(*fullcomplete) = 0;
-				for (j = 0; (*ret)[j] && config[i].name[j] && (*ret)[j] == config[i].name[j]; j++);
-				(*ret)[j] = '\0';
-			} else (*ret) = estrdup(config[i].name);
-		}
-	}
+ui_complete_cmds(char *str, size_t len, char **ret, int *fullcomplete) {
+	int i;
+	for (i = 0; commands[i].name; i++)
+		if (strncmp(commands[i].name, str, len) == 0)
+			ui_complete_add(ret, commands[i].name, fullcomplete);
 }
 
 static void
-ui_complete_get_nicks(struct Channel *chan, char *str, size_t len, char **ret, int *fullcomplete) {
+ui_complete_settings(char *str, size_t len, char **ret, int *fullcomplete) {
+	int i;
+	for (i = 0; config[i].name; i++)
+		if (strncmp(config[i].name, str, len) == 0)
+			ui_complete_add(ret, config[i].name, fullcomplete);
+}
+
+static void
+ui_complete_nicks(struct Channel *chan, char *str, size_t len, char **ret, int *fullcomplete) {
 	struct Nick *np;
-	int i, j;
+	for (np = chan->nicks; np; np = np->next)
+		if (!np->self && strncmp(np->nick, str, len) == 0)
+			ui_complete_add(ret, np->nick, fullcomplete);
+}
 
-	for (np = chan->nicks; np; np = np->next) {
-		if (!np->self && strncmp(np->nick, str, len) == 0) {
-			if ((*ret)) {
-				(*fullcomplete) = 0;
-				for (j = 0; (*ret)[j] && np->nick[j] && (*ret)[j] == np->nick[j]; j++);
-				(*ret)[j] = '\0';
-			} else (*ret) = estrdup(np->nick);
+static void
+ui_complete_files(char *str, size_t len, char **ret, int *fullcomplete) {
+	char *cpy[2], *dir, *file;
+	struct dirent **dirent;
+	int dirs, i;
+
+	cpy[0] = estrdup(str);
+	cpy[1] = estrdup(str);
+	dir = dirname(cpy[0]);
+	file = basename(cpy[1]);
+
+	if ((dirs = scandir(dir, &dirent, NULL, alphasort)) >= 0) {
+		for (i = 0; i < dirs; i++) {
+			if (strncmp(dirent[i]->d_name, str, len) == 0)
+				ui_complete_add(ret, dirent[i]->d_name, fullcomplete);
+			free(dirent[i]);
 		}
+		free(dirent);
 	}
+
+	free(cpy[0]);
+	free(cpy[1]);
 }
 
 void
@@ -650,7 +665,7 @@ getcmd:
 		stem = wctos(wstem);
 		len = strlen(stem);
 
-		ui_complete_get_cmds(stem, len, &found, &fullcomplete);
+		ui_complete_cmds(stem, len, &found, &fullcomplete);
 		pfree(&stem);
 
 		if (found) {
@@ -671,7 +686,6 @@ getcmd:
 			goto end;
 		}
 		pfree(&found);
-		found = NULL;
 	}
 
 	/* complete commands/variables as arguments */
@@ -695,8 +709,8 @@ getcmd:
 			len = strlen(stem);
 
 			if (type == 1)
-				ui_complete_get_cmds(stem, len, &found, &fullcomplete);
-			ui_complete_get_settings(stem, len, &found, &fullcomplete);
+				ui_complete_cmds(stem, len, &found, &fullcomplete);
+			ui_complete_settings(stem, len, &found, &fullcomplete);
 			pfree(&stem);
 
 			if (found) {
@@ -715,7 +729,6 @@ getcmd:
 				goto end;
 			}
 			pfree(&found);
-			found = NULL;
 		}
 	}
 
@@ -725,7 +738,7 @@ getcmd:
 		stem = wctos(wstem);
 		len = strlen(stem);
 
-		ui_complete_get_nicks(selected.channel, stem, len, &found, &fullcomplete);
+		ui_complete_nicks(selected.channel, stem, len, &found, &fullcomplete);
 		pfree(&stem);
 
 		if (found) {
@@ -748,7 +761,30 @@ getcmd:
 			goto end;
 		}
 		pfree(&found);
-		found = NULL;
+	}
+
+	/* complete filenames with /source and /dump */
+	if (cmd && (wcscmp(cmd, L"source") == 0 || wcscmp(cmd, L"dump") == 0) && ctok > 0 &&
+			toks[ctok] && *toks[ctok] && *toks[ctok] != L'-' && ctok == tokn - 1) {
+		wstem = toks[ctok];
+		stem = wctos(wstem);
+		len = strlen(stem);
+
+		ui_complete_files(stem, len, &found, &fullcomplete);
+		pfree(&stem);
+
+		if (found) {
+			wp = stowc(found);
+			ui_complete_stitch(str, size, &input.counter, coff,
+					toks, tokn - 1,
+					wp,
+					NULL, 0,
+					fullcomplete);
+			pfree(&wp);
+			pfree(&found);
+			goto end;
+		}
+		pfree(&found);
 	}
 
 end:
