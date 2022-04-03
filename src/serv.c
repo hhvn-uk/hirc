@@ -162,15 +162,12 @@ serv_remove(struct Server **head, char *name) {
 	if ((p = serv_get(head, name)) == NULL)
 		return 0;
 
-	if (p->prev == NULL) {
+	if (*head == p)
 		*head = p->next;
-		serv_free(p);
-		return 1;
-	}
-
-	p->prev->next = p->next;
-	if (p->next != NULL)
+	if (p->next)
 		p->next->prev = p->prev;
+	if (p->prev)
+		p->prev->next = p->next;
 	serv_free(p);
 	return 1;
 }

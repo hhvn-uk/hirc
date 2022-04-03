@@ -144,15 +144,12 @@ chan_remove(struct Channel **head, char *name) {
 	if ((p = chan_get(head, name, -1)) == NULL)
 		return 0;
 
-	if (p->prev == NULL) {
+	if (*head == p)
 		*head = p->next;
-		chan_free(p);
-		return 1;
-	}
-
-	p->prev->next = p->next;
-	if (p->next != NULL)
+	if (p->next)
 		p->next->prev = p->prev;
+	if (p->prev)
+		p->prev->next = p->next;
 	chan_free(p);
 	return 1;
 }
