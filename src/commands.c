@@ -1817,7 +1817,7 @@ command_close) {
 	}
 
 	if (chp) {
-		if (serv_ischannel(sp, chp->name)) {
+		if (serv_ischannel(sp, chp->name) && !chp->old) {
 			ircprintf(sp, "PART %s\r\n", chp->name);
 			chan_remove(&sp->channels, chp->name);
 		} else {
