@@ -193,6 +193,9 @@ void		config_sets(char *name, char *str);
 void		config_setr(char *name, long a, long b);
 void		config_read(char *filename);
 
+/* complete.c */
+void		complete(wchar_t *str, size_t size, unsigned *counter);
+
 /* main.c */
 extern struct Server *servers;
 extern struct HistInfo *main_buf;
