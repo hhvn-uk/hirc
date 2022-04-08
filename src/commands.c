@@ -1647,11 +1647,14 @@ narg:
 
 COMMAND(
 command_source) {
+	char *p;
 	if (!str) {
 		command_toofew("source");
 		return;
 	}
-
+	p = strrchr(str, ' ');
+	if (*(p+1) == '\0')
+		*p = '\0'; /* remove trailing spaces */
 	config_read(str);
 }
 
@@ -1661,7 +1664,7 @@ command_dump) {
 	int selected = 0;
 	int def = 0, ret;
 	int i;
-	char **aup;
+	char **aup, *p;
 	struct Server *sp;
 	struct Channel *chp;
 	struct Alias *ap;
@@ -1716,6 +1719,9 @@ command_dump) {
 		command_toofew("dump");
 		return;
 	}
+	p = strrchr(str, ' ');
+	if (*(p+1) == '\0')
+		*p = '\0';
 
 	if ((file = fopen(str, "wb")) == NULL) {
 		ui_error("cannot open file '%s': %s", str, strerror(errno));
