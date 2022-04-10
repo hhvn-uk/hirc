@@ -129,21 +129,23 @@ hist_add(struct HistInfo *histinfo,
 
 	if (options & HIST_MAIN) {
 		if (options & HIST_TMP && histinfo == main_buf) {
-			hist_add(main_buf, msg, activity, timestamp, HIST_SHOW);
+			hist_add(main_buf, msg, activity, timestamp, options & ~(HIST_MAIN|HIST_TMP|HIST_LOG));
 			new = NULL;
 			goto ui;
 		} else if (histinfo != main_buf) {
-			hist_add(main_buf, msg, activity, timestamp, HIST_SHOW);
+			hist_add(main_buf, msg, activity, timestamp, options & ~(HIST_MAIN|HIST_TMP|HIST_LOG));
 		} else {
 			ui_error("HIST_MAIN specified, but history is &main_buf", NULL);
 		}
 	}
 
-	for (ign = ignores; ign; ign = ign->next) {
-		if (!ign->server || (histinfo->server && strcmp_n(ign->server, histinfo->server->name))) {
-			if (regexec(&ign->regex, msg, 0, NULL, 0) == 0) {
-				options |= HIST_IGN;
-				break;
+	if (!(options & HIST_NIGN)) {
+		for (ign = ignores; ign; ign = ign->next) {
+			if (!ign->server || (histinfo->server && strcmp_n(ign->server, histinfo->server->name))) {
+				if (regexec(&ign->regex, msg, 0, NULL, 0) == 0) {
+					options |= HIST_IGN;
+					break;
+				}
 			}
 		}
 	}

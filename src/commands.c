@@ -1860,7 +1860,7 @@ command_ignore) {
 		hist_format(selected.history, Activity_none, HIST_UI, "SELF_IGNORES_START :Ignoring:");
 		for (p = ignores, i = 1; p; p = p->next, i++)
 			if (!serv || !p->server || strcmp(server->name, p->server) == 0)
-				hist_format(selected.history, Activity_none, HIST_UI, "SELF_IGNORES_LIST %d %s :%s",
+				hist_format(selected.history, Activity_none, HIST_UI|HIST_NIGN, "SELF_IGNORES_LIST %d %s :%s",
 						i, p->server ? p->server : "ANY", p->text);
 		hist_format(selected.history, Activity_none, HIST_UI, "SELF_IGNORES_END :End of ignore list");
 		return;
@@ -1901,7 +1901,7 @@ command_ignore) {
 	}
 
 	ign = emalloc(sizeof(struct Ignore));
-	ign->next = NULL;
+	ign->next = ign->prev = NULL;
 	if ((ret = regcomp(&ign->regex, str, regopt)) != 0) {
 		regerror(ret, &ign->regex, errbuf, sizeof(errbuf));
 		ui_error("%s: %s", errbuf, str);
