@@ -1844,15 +1844,17 @@ command_close) {
 COMMAND(
 command_ignore) {
 	struct Ignore *ign, *p;
-	char errbuf[BUFSIZ];
+	char errbuf[BUFSIZ], *s;
+	long id;
 	int ret, raw = 0, i, regopt = 0, serv = 0;
-	enum { opt_show, opt_hide, opt_extended, opt_icase, opt_server };
+	enum { opt_show, opt_hide, opt_extended, opt_icase, opt_server, opt_delete };
 	static struct CommandOpts opts[] = {
 		{"E", CMD_NARG, opt_extended},
 		{"i", CMD_NARG, opt_icase},
 		{"show", CMD_NARG, opt_show},
 		{"hide", CMD_NARG, opt_hide},
 		{"server", CMD_NARG, opt_server},
+		{"delete", CMD_NARG, opt_delete},
 		{NULL, 0, 0},
 	};
 
@@ -1877,6 +1879,34 @@ command_ignore) {
 				selected.showign = ret == opt_show;
 				windows[Win_main].refresh = 1;
 			}
+			return;
+		case opt_delete:
+			for (s = str; s && *s; s++) {
+				if (!isdigit(*s)) {
+					ui_error("invalid id: %s", str);
+					return;
+				}
+			}
+			id = strtol(str, NULL, 10);
+			if (id > INT_MAX || id < INT_MIN)
+				goto idlarge;
+			for (p = ignores, i = 1; p; p = p->next, i++) {
+				if (i == id) {
+					if (i == 1)
+						ignores = p->next;
+					if (p->next)
+						p->next->prev = p->prev;
+					if (p->prev)
+						p->prev->next = p->next;
+					regfree(&p->regex);
+					pfree(&p->text);
+					pfree(&p->server);
+					free(p);
+					return;
+				}
+			}
+idlarge:
+			ui_error("id too large: %s", str);
 			return;
 		case opt_extended:
 			regopt |= REG_EXTENDED;
