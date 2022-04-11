@@ -357,6 +357,7 @@ struct Command commands[] = {
 		" -servers  dump /server commands",
 		" -channels dump /join commands for respective servers",
 		" -queries  dump /query commands for respective servers",
+		" -ignores  dump /ignore commands",
 		" -default  dump default settings (dump non-default otherwise)",
 		"If none (excluding -default) of the above are selected, it is",
 		"treated as though all are selected.",
@@ -1653,7 +1654,7 @@ command_source) {
 		return;
 	}
 	p = strrchr(str, ' ');
-	if (*(p+1) == '\0')
+	if (p && *(p+1) == '\0')
 		*p = '\0'; /* remove trailing spaces */
 	config_read(str);
 }
@@ -1669,6 +1670,7 @@ command_dump) {
 	struct Channel *chp;
 	struct Alias *ap;
 	struct Keybind *kp;
+	struct Ignore *ip;
 	enum {
 		opt_aliases = 1,
 		opt_bindings = 2,
@@ -1678,7 +1680,8 @@ command_dump) {
 		opt_channels = 32,
 		opt_queries = 64,
 		opt_autocmds = 128,
-		opt_default = 256,
+		opt_ignores = 256,
+		opt_default = 512,
 	};
 	static struct CommandOpts opts[] = {
 		{"aliases", CMD_NARG, opt_aliases},
@@ -1689,6 +1692,7 @@ command_dump) {
 		{"autocmds", CMD_NARG, opt_autocmds},
 		{"channels", CMD_NARG, opt_channels},
 		{"queries", CMD_NARG, opt_queries},
+		{"ignores", CMD_NARG, opt_ignores},
 		{"default", CMD_NARG, opt_default},
 		{NULL, 0, 0},
 	};
@@ -1704,6 +1708,7 @@ command_dump) {
 		case opt_servers:
 		case opt_channels:
 		case opt_autocmds:
+		case opt_ignores:
 			selected |= ret;
 			break;
 		case opt_default:
@@ -1720,7 +1725,7 @@ command_dump) {
 		return;
 	}
 	p = strrchr(str, ' ');
-	if (*(p+1) == '\0')
+	if (p && *(p+1) == '\0')
 		*p = '\0';
 
 	if ((file = fopen(str, "wb")) == NULL) {
@@ -1765,7 +1770,7 @@ command_dump) {
 	}
 
 	if (selected & opt_aliases) {
-		fprintf(file, "ALiases\n");
+		fprintf(file, "Aliases\n");
 		for (ap = aliases; ap; ap = ap->next)
 			fprintf(file, "/alias %s %s\n", ap->alias, ap->cmd);
 		fprintf(file, "\n");
@@ -1793,6 +1798,22 @@ command_dump) {
 						fprintf(file, "/set %s %ld\n", config[i].name, config[i].num);
 				}
 			}
+		}
+		fprintf(file, "\n");
+	}
+
+	if (selected & opt_ignores) {
+		fprintf(file, "Ignore rules\n");
+		for (ip = ignores; ip; ip = ip->next) {
+			if (ip->server)
+				fprintf(file, "/server %s /ignore -server ", ip->server);
+			else
+				fprintf(file, "/ignore ");
+
+			if (ip->format)
+				fprintf(file, "-format %s ", ip->format);
+
+			fprintf(file, "%s\n", ip->text);
 		}
 		fprintf(file, "\n");
 	}
