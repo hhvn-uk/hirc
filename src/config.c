@@ -1319,6 +1319,9 @@ char *
 config_gets(char *name) {
 	int i;
 
+	if (!name)
+		return NULL;
+
 	for (i=0; config[i].name; i++) {
 		if (strcmp(config[i].name, name) == 0 &&
 				config[i].valtype == Val_string)

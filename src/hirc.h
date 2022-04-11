@@ -149,7 +149,6 @@ void		ui_redraw(void);
 void		ui_draw_input(void);
 void		ui_draw_nicklist(void);
 void		ui_draw_buflist(void);
-char *		ui_hformat(struct Window *window, struct History *hist);
 void		ui_draw_main(void);
 int		ui_buflist_count(int *ret_servers, int *ret_channels, int *ret_privs);
 int		ui_buflist_get(int num, struct Server **server, struct Channel **chan);
@@ -157,8 +156,6 @@ int		ui_get_pair(short fg, short bg);
 int		ui_wprintc(struct Window *window, int lines, char *format, ...);
 int		ui_strlenc(struct Window *window, char *s, int *lines);
 void		ui_select(struct Server *server, struct Channel *channel);
-char *		ui_format_(struct Window *window, char *format, struct History *hist, int recursive);
-#define		ui_format(window, format, hist) ui_format_(window, format, hist, 0)
 char *		ui_rectrl(char *str);
 char *		ui_unctrl(char *str);
 int		ui_bind(char *binding, char *cmd);
@@ -174,6 +171,12 @@ void		ui_tls_config_error_(char *file, int line, const char *func, struct tls_co
 void		ui_tls_error_(char *file, int line, const char *func, struct tls *ctx, char *str);
 #define		ui_tls_error(ctx, str) ui_tls_error_(__FILE__, __LINE__, __func__, ctx, str)
 #endif /* TLS */
+
+/* format.c */
+char *		format_get_bufact(int activity);
+char *		format_get(struct Window *window, struct History *hist);
+char *		format_(struct Window *window, char *format, struct History *hist, int recursive);
+#define		format(window, format, hist) format_(window, format, hist, 0)
 
 /* commands.c */
 void		command_eval(struct Server *server, char *str);
