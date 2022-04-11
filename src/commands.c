@@ -1981,7 +1981,8 @@ idlarge:
 	ign->regopt = regopt;
 	ign->server = serv ? strdup(server->name) : NULL;
 
-	hist_format(selected.history, Activity_none, HIST_UI, "SELF_IGNORES_ADDED %s %s :%s", serv ? server->name : "ANY", format ? format : "ANY", str);
+	if (!nouich)
+		hist_format(selected.history, Activity_none, HIST_UI, "SELF_IGNORES_ADDED %s %s :%s", serv ? server->name : "ANY", format ? format : "ANY", str);
 
 	if (!ignores) {
 		ignores = ign;
