@@ -139,17 +139,6 @@ hist_add(struct HistInfo *histinfo,
 		}
 	}
 
-	if (!(options & HIST_NIGN)) {
-		for (ign = ignores; ign; ign = ign->next) {
-			if (!ign->server || (histinfo->server && strcmp_n(ign->server, histinfo->server->name))) {
-				if (regexec(&ign->regex, msg, 0, NULL, 0) == 0) {
-					options |= HIST_IGN;
-					break;
-				}
-			}
-		}
-	}
-
 	if (options & HIST_SELF && histinfo->server) {
 		if (histinfo->channel && histinfo->channel->nicks)
 			from = nick_get(&histinfo->channel->nicks, histinfo->server->self->nick);
@@ -158,6 +147,18 @@ hist_add(struct HistInfo *histinfo,
 	}
 
 	new = hist_create(histinfo, from, msg, activity, timestamp, options);
+
+	if (!(options & HIST_NIGN)) {
+		for (ign = ignores; ign; ign = ign->next) {
+			if (!ign->server || (histinfo->server && strcmp_n(ign->server, histinfo->server->name))) {
+				if ((!ign->format || strcmp_n(format_get(new), ign->format) == 0) && regexec(&ign->regex, msg, 0, NULL, 0) == 0) {
+					options |= HIST_IGN;
+					new->options = options;
+					break;
+				}
+			}
+		}
+	}
 
 	if (!histinfo->history) {
 		histinfo->history = new;

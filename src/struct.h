@@ -294,6 +294,7 @@ struct Alias {
 #include <regex.h>
 struct Ignore {
 	struct Ignore *prev;
+	char *format;
 	char *text;
 	regex_t regex;
 	int regopt;

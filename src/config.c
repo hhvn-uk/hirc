@@ -347,7 +347,7 @@ struct Config config[] = {
 		.description = {
 		"Format of ignore list header.", NULL}},
 	{"format.ui.ignores", 1, Val_string,
-		.str = " %{pad:-3,${1}} ${2}: ${3}",
+		.str = " %{pad:-3,${1}} (server: ${2}, format: ${3}) ${4}",
 		.strhandle = config_redraws,
 		.description = {
 		"Format of ignore list messages.", NULL}},
@@ -357,7 +357,7 @@ struct Config config[] = {
 		.description = {
 		"Format of ignore list footer.", NULL}},
 	{"format.ui.ignores.added", 1, Val_string,
-		.str = "Ignore added: ${2} (server: ${1})",
+		.str = "Ignore added: ${3} (server: ${1}, format: ${2})",
 		.strhandle = config_redraws,
 		.description = {
 		"Format of new ignores.", NULL}},

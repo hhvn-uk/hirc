@@ -366,7 +366,7 @@ struct Command commands[] = {
 		"usage: /close [id]",
 		"Forget about selected buffer, or a buffer by id.", NULL}},
 	{"ignore", command_ignore, 0, {
-		"usage: /ignore [[-server] regex]",
+		"usage: /ignore [[-server] [-format format] regex]",
 		"       /ignore -delete id",
 		"       /ignore -hide|-show",
 		"Hide future messages matching regex.",
@@ -1844,10 +1844,11 @@ command_close) {
 COMMAND(
 command_ignore) {
 	struct Ignore *ign, *p;
-	char errbuf[BUFSIZ], *s;
+	char errbuf[BUFSIZ], *s, *format = NULL;
+	size_t len;
 	long id;
 	int ret, raw = 0, i, regopt = 0, serv = 0;
-	enum { opt_show, opt_hide, opt_extended, opt_icase, opt_server, opt_delete };
+	enum { opt_show, opt_hide, opt_extended, opt_icase, opt_server, opt_delete, opt_format };
 	static struct CommandOpts opts[] = {
 		{"E", CMD_NARG, opt_extended},
 		{"i", CMD_NARG, opt_icase},
@@ -1855,6 +1856,7 @@ command_ignore) {
 		{"hide", CMD_NARG, opt_hide},
 		{"server", CMD_NARG, opt_server},
 		{"delete", CMD_NARG, opt_delete},
+		{"format", CMD_ARG, opt_format},
 		{NULL, 0, 0},
 	};
 
@@ -1862,8 +1864,8 @@ command_ignore) {
 		hist_format(selected.history, Activity_none, HIST_UI, "SELF_IGNORES_START :Ignoring:");
 		for (p = ignores, i = 1; p; p = p->next, i++)
 			if (!serv || !p->server || strcmp(server->name, p->server) == 0)
-				hist_format(selected.history, Activity_none, HIST_UI|HIST_NIGN, "SELF_IGNORES_LIST %d %s :%s",
-						i, p->server ? p->server : "ANY", p->text);
+				hist_format(selected.history, Activity_none, HIST_UI|HIST_NIGN, "SELF_IGNORES_LIST %d %s %s :%s",
+						i, p->server ? p->server : "ANY", p->format ? p->format : "ANY", p->text);
 		hist_format(selected.history, Activity_none, HIST_UI, "SELF_IGNORES_END :End of ignore list");
 		return;
 	}
@@ -1908,6 +1910,21 @@ command_ignore) {
 idlarge:
 			ui_error("id too large: %s", str);
 			return;
+		case opt_format:
+			if (strncmp(command_optarg, "format.", 7) == 0) {
+				format = strdup(command_optarg);
+			} else {
+				len = strlen(command_optarg) + 8;
+				format = emalloc(len);
+				snprintf(format, len, "format.%s", command_optarg);
+			}
+
+			if (!config_gets(format)) {
+				ui_error("no such format: %s", format + 7);
+				free(format);
+				return;
+			}
+			break;
 		case opt_extended:
 			regopt |= REG_EXTENDED;
 			break;
@@ -1938,11 +1955,12 @@ idlarge:
 		free(ign);
 		return;
 	}
-	ign->text = strdup(str);
+	ign->text   = strdup(str);
+	ign->format = format;
 	ign->regopt = regopt;
 	ign->server = serv ? strdup(server->name) : NULL;
 
-	hist_format(selected.history, Activity_none, HIST_UI, "SELF_IGNORES_ADDED %s :%s", serv ? server->name : "ANY", str);
+	hist_format(selected.history, Activity_none, HIST_UI, "SELF_IGNORES_ADDED %s %s :%s", serv ? server->name : "ANY", format ? format : "ANY", str);
 
 	if (!ignores) {
 		ignores = ign;

@@ -228,7 +228,7 @@ format_get_bufact(int activity) {
 }
 
 char *
-format_get(struct Window *window, struct History *hist) {
+format_get(struct History *hist) {
 	char *cmd, *p1, *p2;
 	int i;
 
@@ -348,7 +348,7 @@ format_(struct Window *window, char *format, struct History *hist, int recursive
 	};
 
 	if (!format)
-		format = config_gets(format_get(window, hist));
+		format = config_gets(format_get(hist));
 	if (!format)
 		return NULL;
 
