@@ -282,7 +282,7 @@ handle_PRIVMSG) {
 		chan_setold(priv, 0);
 
 		hist_addp(priv->history, msg, act_direct, HIST_DFL);
-	} else if (nick_isself(nick) && !chrcmp(*target, "#&!+")) {
+	} else if (nick_isself(nick) && !strchr("#&!+", *target)) {
 		/* i'm messaging someone */
 		if ((priv = chan_get(&server->privs, target, -1)) == NULL)
 			priv = chan_add(server, &server->privs, target, 1);
@@ -426,9 +426,9 @@ handle_RPL_NAMREPLY) {
 	for (; *nicks && **nicks; nicks++) {
 		priv = ' ';
 		nick = *nicks;
-		if (chrcmp(**nicks, supportedprivs)) {
+		if (strchr(supportedprivs, **nicks)) {
 			priv = **nicks;
-			while (chrcmp(*nick, supportedprivs))
+			while (strchr(supportedprivs, *nick))
 				nick++;
 		}
 		if ((oldnick = nick_get(&chan->nicks, nick)) == NULL)

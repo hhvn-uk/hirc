@@ -48,8 +48,9 @@ char **		param_dup(char **p);
 int		read_line(int fd, char *buf, size_t buf_len);
 int		ircgets(struct Server *server, char *buf, size_t buf_len);
 int		ircprintf(struct Server *server, char *format, ...);
+
+/* str.c */
 char *		homepath(char *path);
-char		chrcmp(char c, char *s);
 char *		struntil(char *str, char until);
 int		strisnum(char *str, int allowneg);
 char *		strntok(char *str, char *sep, int n);
