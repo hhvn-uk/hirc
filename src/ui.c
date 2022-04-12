@@ -754,6 +754,7 @@ ui_wprintc(struct Window *window, int lines, char *format, ...) {
 	}
 
 end:
+	pfree(&wcs);
 	colour = 0;
 	bold = 0;
 	underline =0;
