@@ -1865,7 +1865,7 @@ command_close) {
 COMMAND(
 command_ignore) {
 	struct Ignore *ign, *p;
-	char errbuf[BUFSIZ], *s, *format = NULL;
+	char errbuf[BUFSIZ], *format = NULL;
 	size_t len;
 	long id;
 	int ret, raw = 0, i, regopt = 0, serv = 0;
@@ -1904,15 +1904,13 @@ command_ignore) {
 			}
 			return;
 		case opt_delete:
-			for (s = str; s && *s; s++) {
-				if (!isdigit(*s)) {
-					ui_error("invalid id: %s", str);
-					return;
-				}
+			if (!strisnum(str, 0)) {
+				ui_error("invalid id: %s", str);
+				return;
 			}
 			id = strtol(str, NULL, 10);
-			if (id > INT_MAX || id < INT_MIN)
-				goto idlarge;
+			if (!id || id > INT_MAX || id < INT_MIN)
+				goto idrange;
 			for (p = ignores, i = 1; p; p = p->next, i++) {
 				if (i == id) {
 					if (i == 1)
@@ -1928,8 +1926,8 @@ command_ignore) {
 					return;
 				}
 			}
-idlarge:
-			ui_error("id too large: %s", str);
+idrange:
+			ui_error("id out of range: %s", str);
 			return;
 		case opt_format:
 			if (strncmp(command_optarg, "format.", 7) == 0) {

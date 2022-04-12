@@ -1437,9 +1437,9 @@ config_set(char *name, char *val) {
 	tok[1] = strtok_r(NULL, " ", &save);
 	tok[2] = strtok_r(NULL, " ", &save);
 
-	if (strisnum(tok[0]) && strisnum(tok[1]) && !tok[2])
+	if (strisnum(tok[0], 1) && strisnum(tok[1], 1) && !tok[2])
 		config_setr(name, strtol(tok[0], NULL, 10), strtol(tok[1], NULL, 10));
-	else if (strisnum(tok[0]) && !tok[1])
+	else if (strisnum(tok[0], 1) && !tok[1])
 		config_setl(name, strtol(tok[0], NULL, 10));
 	else if (tok[0] && strcmp(tok[0], "true") == 0)
 		config_setl(name, 1);

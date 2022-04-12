@@ -260,11 +260,11 @@ struntil(char *str, char until) {
 }
 
 int
-strisnum(char *str) {
+strisnum(char *str, int allowneg) {
 	if (!str)
 		return 0;
 
-	if (*str == '-' || *str == '+')
+	if ((allowneg && *str == '-') || *str == '+')
 		str += 1;
 
 	for (; *str; str++)

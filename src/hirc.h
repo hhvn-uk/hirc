@@ -51,7 +51,7 @@ int		ircprintf(struct Server *server, char *format, ...);
 char *		homepath(char *path);
 char		chrcmp(char c, char *s);
 char *		struntil(char *str, char until);
-int		strisnum(char *str);
+int		strisnum(char *str, int allowneg);
 char *		strntok(char *str, char *sep, int n);
 char *		strrdate(time_t secs);
 
