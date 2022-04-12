@@ -217,7 +217,7 @@ struct Command commands[] = {
 	{"kill", command_kill, 1, {
 		"usage: /kill <nick> [reason]",
 		"Forcefully disconnect a nick from a server.",
-		"Uses misc.killmessage if no reason provided.", NULL}},
+		"Uses def.killmessage if no reason provided.", NULL}},
 	{"links", command_links, 1, {
 		"usage: /links [[server] mask]",
 		"Request list of linked servers from the veiwpoint",
@@ -539,7 +539,7 @@ command_query) {
 
 COMMAND(
 command_quit) {
-	cleanup(str ? str : config_gets("misc.quitmessage"));
+	cleanup(str ? str : config_gets("def.quitmessage"));
 	exit(EXIT_SUCCESS);
 }
 
@@ -592,7 +592,7 @@ command_part) {
 		}
 	}
 
-	snprintf(msg, sizeof(msg), "PART %s :%s\r\n", chan, reason ? reason : config_gets("misc.partmessage"));
+	snprintf(msg, sizeof(msg), "PART %s :%s\r\n", chan, reason ? reason : config_gets("def.partmessage"));
 
 	ircprintf(server, "%s", msg);
 	expect_set(server, Expect_part, chan);
@@ -908,7 +908,7 @@ command_disconnect) {
 	} else sp = server;
 
 	if (!msg || !*msg)
-		msg = config_gets("misc.quitmessage");
+		msg = config_gets("def.quitmessage");
 
 	/* Add fake quit messages to history.
 	 * Theoretically, we could send QUIT and then wait for a
@@ -1277,7 +1277,7 @@ command_kill) {
 
 	nick = strtok_r(str, " ", &reason);
 	if (!reason)
-		reason = config_gets("misc.killmessage");
+		reason = config_gets("def.killmessage");
 	ircprintf(server, "KILL %s :%s\r\n", nick, reason);
 }
 

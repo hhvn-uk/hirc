@@ -73,6 +73,21 @@ struct Config config[] = {
 		.strhandle = NULL,
 		.description = {
 		"Default \"realname\", seen in /whois", NULL}},
+	{"def.quitmessage", 1, Val_string,
+		.str = "quit",
+		.strhandle = NULL,
+		.description = {
+		"Message to send on /quit", NULL}},
+	{"def.partmessage", 1, Val_string,
+		.str = "part",
+		.strhandle = NULL,
+		.description = {
+		"Message to send on /part", NULL}},
+	{"def.killmessage", 1, Val_string,
+		.str = "no reason",
+		.strhandle = NULL,
+		.description = {
+		"Message to send on /kill", NULL}},
 	{"def.chantypes", 1, Val_string,
 		.str = "#&!+",
 		.strhandle = NULL,
@@ -172,21 +187,6 @@ struct Config config[] = {
 		"from server to send PING. If ping.wait seconds",
 		"elapses since sending a PING, hirc will consider",
 		"the server disconnected.", NULL}},
-	{"misc.quitmessage", 1, Val_string,
-		.str = "pain is temporary",
-		.strhandle = NULL,
-		.description = {
-		"Message to send on /quit", NULL}},
-	{"misc.partmessage", 1, Val_string,
-		.str = "pain is temporary",
-		.strhandle = NULL,
-		.description = {
-		"Message to send on /part", NULL}},
-	{"misc.killmessage", 1, Val_string,
-		.str = "no reason",
-		.strhandle = NULL,
-		.description = {
-		"Message to send on /kill", NULL}},
 	{"misc.bell", 1, Val_bool,
 		.num = 1,
 		.numhandle = config_redrawl,
