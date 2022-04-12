@@ -643,7 +643,10 @@ ui_wprintc(struct Window *window, int lines, char *format, ...) {
 
 	va_start(ap, format);
 	ret = vsnprintf(str, 0, format, ap) + 1;
+	va_end(ap);
 	str = emalloc(ret);
+
+	va_start(ap, format);
 	ret = vsnprintf(str, ret, format, ap);
 	va_end(ap);
 	if (ret < 0)
