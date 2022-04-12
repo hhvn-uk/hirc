@@ -18,6 +18,7 @@
  */
 
 #include <string.h>
+#include <stdlib.h>
 #include "hirc.h"
 
 char *
