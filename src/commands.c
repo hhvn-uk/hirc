@@ -1386,6 +1386,7 @@ command_alias) {
 
 COMMAND(
 command_help) {
+	char *p;
 	int cmdonly = 0;
 	int found = 0;
 	int i, j;
@@ -1394,6 +1395,10 @@ command_help) {
 		command_help(server, channel, "/help");
 		return;
 	}
+
+	p = strrchr(str, ' ');
+	if (p && *(p+1) == '\0')
+		*p = '\0';
 
 	if (strcmp(str, "commands") == 0) {
 		hist_format(selected.history, Activity_none, HIST_UI, "SELF_HELP_START :%s", str);
