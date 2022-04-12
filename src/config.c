@@ -1304,6 +1304,9 @@ config_get_print(char *name) {
 			else if (config[i].valtype == Val_pair || config[i].valtype == Val_colourpair)
 				hist_format(selected.history, Activity_status, HIST_UI, "SELF_UI :%s: {%ld, %ld}",
 						config[i].name, config[i].pair[0], config[i].pair[1]);
+			else if (config[i].valtype == Val_bool)
+				hist_format(selected.history, Activity_status, HIST_UI, "SELF_UI :%s: %s",
+						config[i].name, config[i].num ? "true" : "false");
 			else
 				hist_format(selected.history, Activity_status, HIST_UI, "SELF_UI :%s: %ld",
 						config[i].name, config[i].num);
@@ -1323,9 +1326,12 @@ config_gets(char *name) {
 		return NULL;
 
 	for (i=0; config[i].name; i++) {
-		if (strcmp(config[i].name, name) == 0 &&
-				config[i].valtype == Val_string)
-			return config[i].str;
+		if (strcmp(config[i].name, name) == 0) {
+			if (config[i].valtype == Val_string)
+				return config[i].str;
+			else if (config[i].valtype == Val_bool)
+				return config[i].num ? "true" : "false";
+		}
 	}
 
 	return NULL;
@@ -1435,6 +1441,10 @@ config_set(char *name, char *val) {
 		config_setr(name, strtol(tok[0], NULL, 10), strtol(tok[1], NULL, 10));
 	else if (strisnum(tok[0]) && !tok[1])
 		config_setl(name, strtol(tok[0], NULL, 10));
+	else if (tok[0] && strcmp(tok[0], "true") == 0)
+		config_setl(name, 1);
+	else if (tok[0] && strcmp(tok[0], "false") == 0)
+		config_setl(name, 0);
 	else if (tok[0])
 		config_sets(name, str);
 	else
