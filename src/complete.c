@@ -243,7 +243,7 @@ getcmd:
 
 			p = wctos(wstem);
 			if (type == 3) {
-				len = strlen(p) + 8; /* format.\0 */
+				len = strlen(p) + CONSTLEN("format.") + 1;
 				stem = emalloc(len);
 				snprintf(stem, len, "format.%s", p);
 			} else stem = p;
@@ -256,7 +256,7 @@ getcmd:
 
 			if (found) {
 				if (type == 3)
-					p = found + 7; /* format. */
+					p = found + CONSTLEN("format.");
 				else
 					p = found;
 				wp = stowc(p);

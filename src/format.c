@@ -270,7 +270,7 @@ format_get(struct History *hist) {
 			cmd = "MODE-NICK";
 	} else if (strcmp_n(cmd, "PRIVMSG") == 0) {
 		/* ascii 1 is ^A */
-		if (*p2 == 1 && strncmp(p2 + 1, "ACTION", strlen("ACTION")) == 0)
+		if (*p2 == 1 && strncmp(p2 + 1, "ACTION", CONSTLEN("ACTION")) == 0)
 			cmd = "PRIVMSG-ACTION";
 		else if (*p2 == 1)
 			cmd = "PRIVMSG-CTCP";
@@ -433,7 +433,7 @@ outcont:
 			if (!*p && hist) {
 				pn = strtol(content, NULL, 10) - 1;
 				if (pn >= 0 && param_len(params) > pn) {
-					if (**(params+pn) == 1 && strncmp((*(params+pn))+1, "ACTION", strlen("ACTION")) == 0 && strchr(*(params+pn), ' '))
+					if (**(params+pn) == 1 && strncmp((*(params+pn))+1, "ACTION", CONSTLEN("ACTION")) == 0 && strchr(*(params+pn), ' '))
 						rc += snprintf(&ret[rc], rs - rc, "%s", struntil(strchr(*(params+pn), ' ') + 1, 1));
 					else if (**(params+pn) == 1)
 						rc += snprintf(&ret[rc], rs - rc, "%s", struntil((*(params+pn)) + 1, 1));
@@ -448,7 +448,7 @@ outcont:
 				pn = strtol(content, NULL, 10) - 1;
 				if (pn >= 0 && param_len(params) > pn) {
 					for (; *(params+pn) != NULL; pn++) {
-						if (**(params+pn) == 1 && strncmp((*(params+pn))+1, "ACTION", strlen("ACTION")) == 0 && strchr(*(params+pn), ' ')) {
+						if (**(params+pn) == 1 && strncmp((*(params+pn))+1, "ACTION", CONSTLEN("ACTION")) == 0 && strchr(*(params+pn), ' ')) {
 							rc += snprintf(&ret[rc], rs - rc, "%s%s",
 									struntil(strchr(*(params+pn), ' ') + 1, 1),
 									*(params+pn+1) ? " " : "");
@@ -571,29 +571,29 @@ outcont:
 			 *
 			 * These styling formatters are quite ugly and repetitive. 
 			 * %{nick:...} was implemented first, and has the most (all of them :)) comments */
-			if (strncmp(content, "pad:", strlen("pad:")) == 0 && strchr(content, ',')) {
-				pn = strtol(content + strlen("pad:"), NULL, 10);
-				content = estrdup(format_get_content(strchr(format+2+strlen("pad:"), ',') + 1, 1));
+			if (strncmp(content, "pad:", CONSTLEN("pad:")) == 0 && strchr(content, ',')) {
+				pn = strtol(content + CONSTLEN("pad:"), NULL, 10);
+				content = estrdup(format_get_content(strchr(format+2+CONSTLEN("pad:"), ',') + 1, 1));
 				save = ret;
 				ret = NULL;
 				format_(NULL, content, hist, 1);
 				rc += snprintf(&save[rc], rs - rc, "%1$*2$s", ret, pn);
 				pfree(&ret);
 				ret = save;
-				format = strchr(format+2+strlen("pad:"), ',') + strlen(content) + 2;
+				format = strchr(format+2+CONSTLEN("pad:"), ',') + strlen(content) + 2;
 
 				pfree(&content);
 				continue;
 			}
 
-			if (strncmp(content, "rdate:", strlen("rdate:")) == 0) {
-				content = estrdup(format_get_content(format+2+strlen("rdate:"), 1));
+			if (strncmp(content, "rdate:", CONSTLEN("rdate:")) == 0) {
+				content = estrdup(format_get_content(format+2+CONSTLEN("rdate:"), 1));
 				save = ret;
 				ret = NULL;
 				format_(NULL, content, hist, 1);
 				pn = strtoll(ret, NULL, 10);
 				rc += snprintf(&save[rc], rs - rc, "%s", strrdate((time_t)pn));
-				format += 3 + strlen("rdate:") + strlen(content);
+				format += 3 + CONSTLEN("rdate:") + strlen(content);
 
 				pfree(&ret);
 				ret = save;
@@ -601,16 +601,16 @@ outcont:
 				continue;
 			}
 
-			if (strncmp(content, "time:", strlen("time:")) == 0 && strchr(content, ',')) {
-				content = estrdup(format_get_content(strchr(format+2+strlen("time:"), ',') + 1, 1));
+			if (strncmp(content, "time:", CONSTLEN("time:")) == 0 && strchr(content, ',')) {
+				content = estrdup(format_get_content(strchr(format+2+CONSTLEN("time:"), ',') + 1, 1));
 				save = ret;
 				ret = NULL;
 				format_(NULL, content, hist, 1);
 				pn = strtoll(ret, NULL, 10);
-				p = struntil(format+2+strlen("time:"), ',');
+				p = struntil(format+2+CONSTLEN("time:"), ',');
 
 				rc += strftime(&save[rc], rs - rc, p, localtime((time_t *)&pn));
-				format = strchr(format+2+strlen("time:"), ',') + strlen(content) + 2;
+				format = strchr(format+2+CONSTLEN("time:"), ',') + strlen(content) + 2;
 
 				pfree(&ret);
 				ret = save;
@@ -623,13 +623,13 @@ outcont:
 			p = strchr(content, ',');
 			if (p)
 				p2 = strchr(p + 1, ',');
-			if (strncmp(content, "split:", strlen("split:")) == 0 && p2 - p == 2) {
-				pn = strtol(content + strlen("split:"), NULL, 10);
+			if (strncmp(content, "split:", CONSTLEN("split:")) == 0 && p2 - p == 2) {
+				pn = strtol(content + CONSTLEN("split:"), NULL, 10);
 				chs[0] = *(strchr(content, ',') + 1);
 				chs[1] = '\0';
 				content = estrdup(format_get_content(
 							strchr(
-								strchr(format+2+strlen("split:"), ',') + 1,
+								strchr(format+2+CONSTLEN("split:"), ',') + 1,
 								',') + 1,
 							1));
 				save = ret;
@@ -637,7 +637,7 @@ outcont:
 				format_(NULL, content, hist, 1);
 				rc += snprintf(&save[rc], rs - rc, "%s", strntok(ret, chs, pn));
 				format = strchr(
-					strchr(format+2+strlen("split:"), ',') + 1,
+					strchr(format+2+CONSTLEN("split:"), ',') + 1,
 					',') + strlen(content) + 2;
 
 				pfree(&ret);
@@ -646,14 +646,14 @@ outcont:
 				continue;
 			}
 
-			if (hist && !recursive && strncmp(content, "nick:", strlen("nick:")) == 0) {
-				content = estrdup(format_get_content(format+2+strlen("nick:"), 1));
+			if (hist && !recursive && strncmp(content, "nick:", CONSTLEN("nick:")) == 0) {
+				content = estrdup(format_get_content(format+2+CONSTLEN("nick:"), 1));
 				save = ret;
 				ret = NULL;
 				format_(NULL, content, hist, 1);
 				nick = nick_create(ret, ' ', hist->origin ? hist->origin->server : NULL);
 				rc += snprintf(&save[rc], rs - rc, "%c%02d", 3 /* ^C */, nick_getcolour(nick));
-				format += 3 + strlen("nick:") + strlen(content);
+				format += 3 + CONSTLEN("nick:") + strlen(content);
 
 				pfree(&ret);
 				ret = save;

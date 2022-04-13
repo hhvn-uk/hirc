@@ -132,7 +132,7 @@ ircread(struct Server *sp) {
 		switch (ret = tls_read(sp->tls_ctx, &sp->inputbuf[sp->inputlen], SERVER_INPUT_SIZE - sp->inputlen - 1)) {
 		case -1:
 			err = (char *)tls_error(sp->tls_ctx);
-			len = strlen("tls_read(): ") + strlen(err) + 1;
+			len = CONSTLEN("tls_read(): ") + strlen(err) + 1;
 			reason = emalloc(len);
 			snprintf(reason, len, "tls_read(): %s", err);
 			/* fallthrough */
@@ -155,7 +155,7 @@ ircread(struct Server *sp) {
 		switch (ret = read(sp->rfd, &sp->inputbuf[sp->inputlen], SERVER_INPUT_SIZE - sp->inputlen - 1)) {
 		case -1:
 			err = estrdup(strerror(errno));
-			len = strlen("read(): ") + strlen(err) + 1;
+			len = CONSTLEN("read(): ") + strlen(err) + 1;
 			reason = emalloc(len);
 			snprintf(reason, len, "read(): %s", err);
 			pfree(&err);

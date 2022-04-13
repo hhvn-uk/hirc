@@ -1014,7 +1014,7 @@ command_format) {
 		return;
 	}
 
-	len = strlen(str) + strlen("format.") + 1;
+	len = strlen(str) + CONSTLEN("format.") + 1;
 	newstr = emalloc(len);
 	snprintf(newstr, len, "format.%s", str);
 	command_set(server, channel, newstr);
@@ -1792,9 +1792,9 @@ command_dump) {
 		fprintf(file, "Configuration variables\n");
 		for (i = 0; config[i].name; i++) {
 			if (!config[i].isdef || def) {
-				if (selected & opt_formats && strncmp(config[i].name, "format.", strlen("format.")) == 0) {
-					fprintf(file, "/format %s %s\n", config[i].name + strlen("format."), config[i].str);
-				} else if (selected & opt_config && strncmp(config[i].name, "format.", strlen("format.")) != 0) {
+				if (selected & opt_formats && strncmp(config[i].name, "format.", CONSTLEN("format.")) == 0) {
+					fprintf(file, "/format %s %s\n", config[i].name + CONSTLEN("format."), config[i].str);
+				} else if (selected & opt_config && strncmp(config[i].name, "format.", CONSTLEN("format.")) != 0) {
 					if (config[i].valtype == Val_string)
 						fprintf(file, "/set %s %s\n", config[i].name, config[i].str);
 					else if (config[i].valtype == Val_pair || config[i].valtype == Val_colourpair)
@@ -1935,7 +1935,7 @@ idrange:
 			ui_error("id out of range: %s", str);
 			return;
 		case opt_format:
-			if (strncmp(command_optarg, "format.", 7) == 0) {
+			if (strncmp(command_optarg, "format.", CONSTLEN("format.")) == 0) {
 				format = strdup(command_optarg);
 			} else {
 				len = strlen(command_optarg) + 8;
@@ -1944,7 +1944,7 @@ idrange:
 			}
 
 			if (!config_gets(format)) {
-				ui_error("no such format: %s", format + 7);
+				ui_error("no such format: %s", format + CONSTLEN("format"));
 				free(format);
 				return;
 			}

@@ -28,6 +28,8 @@
 #define HIST_MAX 8192
 	/* real maximum = HIST_MAX * (channels + servers + queries) */
 #define strcmp_n(s1, s2) (s1 == s2 ? 0 : (s1 ? s2 ? strcmp(s1, s2) : -1 : -1))
+#define CONSTLEN(str) ((size_t)((sizeof(str) - sizeof(str[0])) / sizeof(str[0])))
+	/* compile-time char/wchar_t literals */
 
 /* strlcpy/wcslcpy.c */
 #ifdef HIRC_STRLCPY

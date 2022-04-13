@@ -486,8 +486,8 @@ serv_auto_haschannel(struct Server *server, char *chan) {
 		return 0;
 
 	for (p = server->autocmds; *p; p++)
-		if (strncmp(*p, "/join ", strlen("/join ")) == 0 &&
-				strcmp((*p) + strlen("/join "), chan) == 0)
+		if (strncmp(*p, "/join ", CONSTLEN("/join ")) == 0 &&
+				strcmp((*p) + CONSTLEN("/join "), chan) == 0)
 			return 1;
 	return 0;
 }
