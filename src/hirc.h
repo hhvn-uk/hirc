@@ -27,7 +27,6 @@
 #define INPUT_HIST_MAX 64
 #define HIST_MAX 8192
 	/* real maximum = HIST_MAX * (channels + servers + queries) */
-#define strcmp_n(s1, s2) (s1 == s2 ? 0 : (s1 ? s2 ? strcmp(s1, s2) : -1 : -1))
 #define CONSTLEN(str) ((size_t)((sizeof(str) - sizeof(str[0])) / sizeof(str[0])))
 	/* compile-time char/wchar_t literals */
 
@@ -53,6 +52,7 @@ int		ircprintf(struct Server *server, char *format, ...);
 
 /* str.c */
 char *		homepath(char *path);
+int		strcmp_n(const char *s1, const char *s2);
 char *		struntil(char *str, char until);
 int		strisnum(char *str, int allowneg);
 char *		strntok(char *str, char *sep, int n);

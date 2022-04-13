@@ -19,6 +19,7 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <limits.h>
 #include "hirc.h"
 
 char *
@@ -31,6 +32,18 @@ homepath(char *path) {
 	}
 
 	return path;
+}
+
+int
+strcmp_n(const char *s1, const char *s2) {
+	if (!s1 && !s2)
+		return 0;
+	else if (!s1)
+		return INT_MIN;
+	else if (!s2)
+		return INT_MAX;
+	else
+		return strcmp(s1, s2);
 }
 
 char *
