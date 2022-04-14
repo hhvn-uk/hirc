@@ -87,4 +87,4 @@ clean:
 .c.o:
 	$(CC) $(CFLAGS) -c $< -o $@
 
-.PHONY: all misc clean install uninstall
+.PHONY: all misc clean install uninstall misc misc-install misc-uninstall
