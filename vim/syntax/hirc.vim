@@ -12,8 +12,6 @@ syn match hircComment "^[^/].*"
 syn region hircFormatA start="^/format" end=/$/ contains=hircStyle,hircVariable,hircNickStyle
 syn region hircFormatB start="^/set format." end=/$/ contains=hircStyle,hircVariable,hircNickStyle
 syn match hircStyle "%{[^}]*}" contained
-" hircNickStyle is a bit hacky and should be replaced 
-" by a region, but I don't know syn enough for that
 syn region hircNickStyle matchgroup=hircStyle start='%{nick:' end='}' contains=hircStyle,hircVariable
 syn match hircVariable "\${[^}]*}" contained
 
