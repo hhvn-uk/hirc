@@ -64,6 +64,9 @@ hist_create(struct HistInfo *histinfo, struct Nick *from, char *msg,
 	struct Nick *np;
 	char *nick;
 
+	if (!msg)
+		return NULL;
+
 	new = emalloc(sizeof(struct History));
 	new->prev = new->next = NULL;
 	new->timestamp = timestamp ? timestamp : time(NULL);
@@ -124,7 +127,7 @@ hist_add(struct HistInfo *histinfo,
 	struct Ignore *ign;
 	int i;
 
-	if (!histinfo)
+	if (!histinfo || !msg)
 		return NULL;
 
 	if (options & HIST_MAIN) {
@@ -304,12 +307,12 @@ hist_log(struct History *hist) {
 		raw = hist->raw;
 
 	ret = fprintf(f,
-			"%lld\t%d\t%d\t%d\t%c\t%s\t%s\t%s\t%s\n",
+			"v2\t%lld\t%d\t%d\t%d\t%c\t%s\t%s\t%s\t%s\n",
 			(long long)hist->timestamp,
 			hist->activity,
-			(hist->options & HIST_SHOW) ? 1 : 0,
-			hist->from ? hist->from->self   : 0, /* If from does not exist, it's probably not from us */
-			hist->from ? hist->from->priv   : ' ',
+			hist->options, /* write all options - only options ANDing with HIST_LOGACCEPT are read later */
+			hist->from ? hist->from->self : 0, /* If from does not exist, it's probably not from us */
+			hist->from ? hist->from->priv : ' ',
 			nick, ident, host, raw);
 
 	if (ret < 0) {
@@ -330,10 +333,12 @@ hist_loadlog(struct HistInfo *hist, char *server, char *channel) {
 	char *lines[HIST_MAX];
 	char buf[2048];
 	int i, j;
-	char *tok[9];
-	char *save;
+	char *version;
+	char *tok[8];
+	char *msg;
 	time_t timestamp;
 	enum Activity activity;
+	enum HistOpt options;
 	char *prefix;
 	size_t len;
 	struct Nick *from;
@@ -364,17 +369,23 @@ hist_loadlog(struct HistInfo *hist, char *server, char *channel) {
 	}
 
 	for (i = 0, prev = NULL; i < HIST_MAX && lines[i]; i++) {
-		tok[0] = strtok_r(lines[i], "\t", &save);
-		for (j = 1; j < 9; j++)
-			tok[j] = strtok_r(NULL, "\t", &save);
+		if (*lines[i] == 'v')
+			version = strtok_r(lines[i], "\t", &msg) + 1; /* in future versioning could allow for back-compat */
+		else
+			version = NULL;
+		tok[0] = strtok_r(lines[i], "\t", &msg);
+		for (j = 1; j < (sizeof(tok) / sizeof(tok[0])); j++)
+			tok[j] = strtok_r(NULL, "\t", &msg); /* strtok_r will store remaining text after the tokens in msg.
+							      * This is used instead of a tok[8] as messages can contain tabs. */
 
 		if (!tok[0] || !tok[1] || !tok[2] ||
 				!tok[3] || !tok[4] || !tok[5] ||
-				!tok[6] || !tok[7] || !tok[8])
+				!tok[6] || !tok[7] || !msg)
 			continue;
 
 		timestamp = (time_t)strtoll(tok[0], NULL, 10);
 		activity = (int)strtol(tok[1], NULL, 10);
+		options = HIST_RLOG|(strtol(tok[2], NULL, 10) & HIST_LOGACCEPT);
 
 		len = 1;
 		if (*tok[5] != ' ')
@@ -392,7 +403,7 @@ hist_loadlog(struct HistInfo *hist, char *server, char *channel) {
 		if (from)
 			from->self = *tok[3] == '1';
 
-		p = hist_create(hist, from, tok[8], activity, timestamp, HIST_RLOG|(*tok[2] == '1' ? HIST_SHOW : 0));
+		p = hist_create(hist, from, msg, activity, timestamp, options);
 
 		if (!head)
 			head = p;
