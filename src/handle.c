@@ -206,7 +206,26 @@ handle_KICK) {
 
 HANDLER(
 handle_ERROR) {
-	serv_disconnect(server, 0, NULL);
+	char *lowered, *p;
+	int recon = 1;
+
+	if (param_len(msg->params) > 1) {
+		lowered = estrdup(*(msg->params+1));
+		for (p = lowered; *p; p++)
+			*p = tolower(*p);
+		if (strstr(lowered, "unauthorized") ||
+				strstr(lowered, "invalid") ||
+				strstr(lowered, "kill") ||
+				strstr(lowered, "ban") ||
+				strstr(lowered, "kline") ||
+				strstr(lowered, "gline") ||
+				strstr(lowered, "k-line") ||
+				strstr(lowered, "g-line"))
+			recon = 0;
+		pfree(&lowered);
+	}
+
+	serv_disconnect(server, recon, NULL);
 	hist_addp(server->history, msg, Activity_status, HIST_DFL);
 }
 
