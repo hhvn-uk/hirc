@@ -157,6 +157,7 @@ hist_add(struct HistInfo *histinfo,
 				if ((!ign->format || strcmp_n(format_get(new), ign->format) == 0) && regexec(&ign->regex, msg, 0, NULL, 0) == 0) {
 					options |= HIST_IGN;
 					new->options = options;
+					activity = Activity_ignore;
 					break;
 				}
 			}

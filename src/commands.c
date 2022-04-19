@@ -379,7 +379,7 @@ struct Command commands[] = {
 		" -E      use extended POSIX regex",
 		" -i      case insensitive match",
 		" -server only ignore for the current server",
-		"	  or server provided by /server.",
+		"         or server provided by /server.",
 		"See also: regex.extended, regex.icase", NULL}},
 	{NULL, NULL},
 };
