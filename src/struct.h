@@ -302,6 +302,7 @@ struct Ignore {
 	char *text;
 	regex_t regex;
 	int regopt;
+	int noact;
 	char *server;
 	struct Ignore *next;
 };

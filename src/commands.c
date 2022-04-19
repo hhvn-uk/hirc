@@ -367,7 +367,7 @@ struct Command commands[] = {
 		"usage: /close [id]",
 		"Forget about selected buffer, or a buffer by id.", NULL}},
 	{"ignore", command_ignore, 0, {
-		"usage: /ignore [[-server] [-format format] regex]",
+		"usage: /ignore [[-server] [-noact] [-format format] regex]",
 		"       /ignore -delete id",
 		"       /ignore -hide|-show",
 		"Hide future messages matching regex.",
@@ -380,6 +380,9 @@ struct Command commands[] = {
 		" -i      case insensitive match",
 		" -server only ignore for the current server",
 		"         or server provided by /server.",
+		" -noact  set activity to Activity_ignore,",
+		"         but don't hide the message.",
+		" -format only ignore messages with >format<",
 		"See also: regex.extended, regex.icase", NULL}},
 	{NULL, NULL},
 };
@@ -1873,14 +1876,16 @@ command_ignore) {
 	char errbuf[BUFSIZ], *format = NULL;
 	size_t len;
 	long id;
-	int ret, raw = 0, i, regopt = 0, serv = 0;
-	enum { opt_show, opt_hide, opt_extended, opt_icase, opt_server, opt_delete, opt_format };
+	int ret, noact = 0, i, regopt = 0, serv = 0;
+	enum { opt_show, opt_hide, opt_extended, opt_icase,
+		opt_server, opt_delete, opt_format, opt_noact };
 	static struct CommandOpts opts[] = {
 		{"E", CMD_NARG, opt_extended},
 		{"i", CMD_NARG, opt_icase},
 		{"show", CMD_NARG, opt_show},
 		{"hide", CMD_NARG, opt_hide},
 		{"server", CMD_NARG, opt_server},
+		{"noact", CMD_NARG, opt_noact},
 		{"delete", CMD_NARG, opt_delete},
 		{"format", CMD_ARG, opt_format},
 		{NULL, 0, 0},
@@ -1890,8 +1895,8 @@ command_ignore) {
 		hist_format(selected.history, Activity_none, HIST_UI, "SELF_IGNORES_START :Ignoring:");
 		for (p = ignores, i = 1; p; p = p->next, i++)
 			if (!serv || !p->server || strcmp(server->name, p->server) == 0)
-				hist_format(selected.history, Activity_none, HIST_UI|HIST_NIGN, "SELF_IGNORES_LIST %d %s %s :%s",
-						i, p->server ? p->server : "ANY", p->format ? p->format : "ANY", p->text);
+				hist_format(selected.history, Activity_none, HIST_UI|HIST_NIGN, "SELF_IGNORES_LIST %d %s %s %s :%s",
+						i, p->server ? p->server : "ANY", noact ? "yes" : "no", p->format ? p->format : "ANY", p->text);
 		hist_format(selected.history, Activity_none, HIST_UI, "SELF_IGNORES_END :End of ignore list");
 		return;
 	}
@@ -1949,6 +1954,9 @@ idrange:
 				return;
 			}
 			break;
+		case opt_noact:
+			noact = 1;
+			break;
 		case opt_extended:
 			regopt |= REG_EXTENDED;
 			break;
@@ -1982,10 +1990,12 @@ idrange:
 	ign->text   = strdup(str);
 	ign->format = format;
 	ign->regopt = regopt;
+	ign->noact  = noact;
 	ign->server = serv ? strdup(server->name) : NULL;
 
 	if (!nouich)
-		hist_format(selected.history, Activity_none, HIST_UI, "SELF_IGNORES_ADDED %s %s :%s", serv ? server->name : "ANY", format ? format : "ANY", str);
+		hist_format(selected.history, Activity_none, HIST_UI, "SELF_IGNORES_ADDED %s %s %s :%s",
+				serv ? server->name : "ANY", noact ? "yes" : "no", format ? format : "ANY", str);
 
 	if (!ignores) {
 		ignores = ign;
