@@ -34,7 +34,18 @@ install:
 			> $(MANDIR)/man1/$$f; \
 	done
 
+uninstall:
+	for f in $(BINS); do \
+		rm -f $(BINDIR)/$$f; \
+	done
+	for f in $(MANS); do \
+		rm -f $(MANDIR)/man1/$$f; \
+	done
+
+clean:
+	rm -f $(BINS)
+
 .c:
 	cc -o $(<:.c=) $<
 
-.PHONY: install uninstall
+.PHONY: install uninstall clean

@@ -71,6 +71,9 @@ misc-uninstall:
 		BINDIR="$(BINDIR)" \
 		MANDIR="$(MANDIR)"
 
+misc-clean:
+	cd misc/ && make clean
+
 install: all
 	mkdir -p $(BINDIR) $(MANDIR)/man1
 	install -m0755 $(BIN) $(BINDIR)/$(BIN)
@@ -82,10 +85,10 @@ uninstall:
 	-rm -f $(BINDIR)/$(BIN)
 	-rm -f $(MANDIR)/man1/$(MAN)
 
-clean:
+clean: misc-clean
 	-rm -f $(OBJ) $(MAN) $(BIN)
 
 .c.o:
 	$(CC) $(CFLAGS) -c $< -o $@
 
-.PHONY: all misc clean install uninstall misc misc-install misc-uninstall
+.PHONY: all misc clean install uninstall misc misc-install misc-uninstall misc-clean
