@@ -236,8 +236,8 @@ main(int argc, char *argv[]) {
 	char *tmp;
 
 	if (argc > 2) {
-		fprintf(stderr, "usage: %s [configfile]", dirname(argv[0]));
-		fprintf(stderr, "       %s -d", dirname(argv[0]));
+		fprintf(stderr, "usage: %s [configfile]\n", basename(argv[0]));
+		fprintf(stderr, "       %s -d\n", basename(argv[0]));
 		return EXIT_FAILURE;
 	}
 
