@@ -977,13 +977,18 @@ ui_unctrl(char *str) {
 int
 ui_bind(char *binding, char *cmd) {
 	struct Keybind *p;
-	char *tmp;
+	char *tmp, *b;
 
 	if (!binding || !cmd)
 		return -1;
+	b = ui_rectrl(binding);
+
+	for (p = keybinds; p; p = p->next)
+		if (strcmp(p->binding, b) == 0)
+			return -1;
 
 	p = emalloc(sizeof(struct Keybind));
-	p->binding = estrdup(ui_rectrl(binding));
+	p->binding = estrdup(b);
 	p->wbinding = stowc(p->binding);
 	if (*cmd != '/') {
 		tmp = emalloc(strlen(cmd) + 2);
@@ -1004,12 +1009,14 @@ ui_bind(char *binding, char *cmd) {
 int
 ui_unbind(char *binding) {
 	struct Keybind *p;
+	char *b;
 
 	if (!binding)
 		return -1;
+	b = ui_rectrl(binding);
 
 	for (p=keybinds; p; p = p->next) {
-		if (strcmp(p->binding, binding) == 0) {
+		if (strcmp(p->binding, b) == 0) {
 			if (p->prev)
 				p->prev->next = p->next;
 			else

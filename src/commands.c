@@ -1331,7 +1331,8 @@ command_bind) {
 
 		ui_error("no such keybind: '%s'", binding);
 	} else {
-		ui_bind(binding, cmd);
+		if (ui_bind(binding, cmd) == -1)
+			ui_error("keybind already exists: '%s'", binding);
 	}
 }
 
