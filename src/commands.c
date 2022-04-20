@@ -347,7 +347,7 @@ struct Command commands[] = {
 		"Read a config file. Can be used inside config files.", NULL}},
 	{"dump", command_dump, 0, {
 		"usage: /dump [-all] [-aliases] [-bindings] [-formats] [-config]",
-		"             [-default] [-servers] [-channels] [-queries] <file>",
+		"             [-default] [-servers] [-channels] [-queries] [-ignores] <file>",
 		"Dumps configuration details into a file.",
 		" -autocmds dump commands specified with /server -auto",
 		" -aliases  dump /alias commands",
@@ -1728,7 +1728,7 @@ command_dump) {
 	}
 
 	if (!selected)
-		selected = opt_default - 1;
+		selected = opt_default;
 
 	if (!str || !*str) {
 		command_toofew("dump");
@@ -1743,24 +1743,24 @@ command_dump) {
 		return;
 	}
 
-	if (selected & (opt_servers|opt_channels|opt_queries|opt_autocmds)) {
+	if (selected & (opt_servers|opt_channels|opt_queries|opt_autocmds) && servers) {
 		if (selected & opt_servers)
 			fprintf(file, "Network connections\n");
 
 		for (sp = servers; sp; sp = sp->next) {
 			if (selected & opt_servers) {
-				fprintf(file, "/connect -network %s -nick %s -user %s -real %s %s%s %s\n",
-						sp->name,
-						sp->self->nick,
-						sp->username,
-						sp->realname,
+				fprintf(file, "/connect -network %s ", sp->name);
+				if (strcmp_n(sp->self->nick, config_gets("def.nick")) != 0)
+					fprintf(file, "-nick %s ", sp->self->nick);
+				if (strcmp_n(sp->username, config_gets("def.user")) != 0)
+					fprintf(file, "-user %s ", sp->username);
+				if (strcmp_n(sp->realname, config_gets("def.real")) != 0)
+					fprintf(file, "-real %s ", sp->realname);
 #ifdef TLS
-						sp->tls ? "-tls " : "",
-#else
-						"",
+				if (sp->tls)
+					fprintf(file, "-tls ");
 #endif /* TLS */
-						sp->host,
-						sp->port);
+				fprintf(file, "%s %s\n", sp->host, sp->port);
 			}
 			if (selected & opt_autocmds) {
 				for (aup = sp->autocmds; *aup; aup++)
@@ -1779,14 +1779,14 @@ command_dump) {
 		}
 	}
 
-	if (selected & opt_aliases) {
+	if (selected & opt_aliases && aliases) {
 		fprintf(file, "Aliases\n");
 		for (ap = aliases; ap; ap = ap->next)
 			fprintf(file, "/alias %s %s\n", ap->alias, ap->cmd);
 		fprintf(file, "\n");
 	}
 
-	if (selected & opt_bindings) {
+	if (selected & opt_bindings && keybinds) {
 		fprintf(file, "Keybindings\n");
 		for (kp = keybinds; kp; kp = kp->next)
 			fprintf(file, "/bind %s %s\n", ui_unctrl(kp->binding), kp->cmd);
@@ -1807,7 +1807,7 @@ command_dump) {
 		fprintf(file, "\n");
 	}
 
-	if (selected & opt_ignores) {
+	if (selected & opt_ignores && ignores) {
 		fprintf(file, "Ignore rules\n");
 		for (ip = ignores; ip; ip = ip->next) {
 			if (ip->server)
