@@ -1,5 +1,5 @@
 misc/irccat
+doc/hirc.1
 hirc
-hirc.1
 *.o
 config.mk
