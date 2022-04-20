@@ -23,7 +23,7 @@ SRC	= src/main.c src/mem.c src/handle.c src/hist.c \
 	  src/format.c src/complete.c src/commands.c \
 	  src/config.c src/str.c
 OBJ	= $(SRC:.c=.o)
-MAN	= hirc.1
+MAN	= doc/hirc.1
 COMMIT	= $(shell git log HEAD...HEAD~1 --pretty=format:%h)
 CFLAGS	= -g -O0 $(CTLS)
 LDFLAGS = -lncursesw
@@ -55,11 +55,12 @@ $(MAN): $(BIN) $(MAN).header $(MAN).footer
 		sed "s/COMMIT/$(COMMIT)/" > $(MAN)
 
 misc:
-	cd misc/ && make
+	cd misc/ && make \
+		CFLAGS="$(CFLAGS)"
 
 misc-install:
 	cd misc/ && make install \
-		CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)" \
+		CFLAGS="$(CFLAGS)"
 		PREFIX="$(PREFIX)" \
 		BINDIR="$(BINDIR)" \
 		MANDIR="$(MANDIR)"
