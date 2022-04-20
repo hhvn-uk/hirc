@@ -34,15 +34,20 @@ static int config_nickcolour_range(long a, long b);
 static int config_redrawl(long num);
 static int config_redraws(char *str);
 
-char *valname[] = {
-	[Val_string] = "a string",
-	[Val_bool] = "boolean",
-	[Val_colour] = "a number from 0 to 99",
-	[Val_signed] = "a numeric value",
-	[Val_unsigned] = "positive",
-	[Val_nzunsigned] = "greater than zero",
-	[Val_pair] = "a pair",
-	[Val_colourpair] = "pair with numbers from 0 to 99",
+static char *strbool[] = { "true", "false", NULL };
+
+static struct {
+	char *name;
+	long min, max;
+} vals[] = {
+	[Val_string]		= {"a string"},
+	[Val_bool]		= {"boolean (true/false)",		0, 1},
+	[Val_colour]		= {"a number from 0 to 99",		0, 99},
+	[Val_signed]		= {"a numeric value",			LONG_MIN, LONG_MAX},
+	[Val_unsigned]		= {"positive",				0, LONG_MAX},
+	[Val_nzunsigned]	= {"greater than zero",			1, LONG_MAX},
+	[Val_pair]		= {"a pair",				LONG_MIN, LONG_MAX},
+	[Val_colourpair]	= {"pair with numbers from 0 to 99",	0, 99},
 };
 
 struct Config config[] = {
@@ -1275,21 +1280,14 @@ struct Config config[] = {
 	{NULL},
 };
 
-long
-config_getl(char *name) {
+struct Config *
+config_getp(char *name) {
 	int i;
 
-	for (i=0; config[i].name; i++) {
-		if (strcmp(config[i].name, name) == 0 && (
-				config[i].valtype == Val_bool ||
-				config[i].valtype == Val_colour ||
-				config[i].valtype == Val_signed ||
-				config[i].valtype == Val_unsigned ||
-				config[i].valtype == Val_nzunsigned))
-			return config[i].num;
-	}
-
-	return 0;
+	for (i = 0; config[i].name; i++)
+		if (strcmp(config[i].name, name) == 0)
+			return &config[i];
+	return NULL;
 }
 
 void
@@ -1306,7 +1304,7 @@ config_get_print(char *name) {
 						config[i].name, config[i].pair[0], config[i].pair[1]);
 			else if (config[i].valtype == Val_bool)
 				hist_format(selected.history, Activity_status, HIST_UI, "SELF_UI :%s: %s",
-						config[i].name, config[i].num ? "true" : "false");
+						config[i].name, strbool[config[i].num]);
 			else
 				hist_format(selected.history, Activity_status, HIST_UI, "SELF_UI :%s: %ld",
 						config[i].name, config[i].num);
@@ -1318,139 +1316,131 @@ config_get_print(char *name) {
 		ui_error("no such configuration variable: '%s'", name);
 }
 
+long
+config_getl(char *name) {
+	struct Config *conf = config_getp(name);
+	if (conf && (conf->valtype == Val_bool ||
+			conf->valtype == Val_colour ||
+			conf->valtype == Val_signed ||
+			conf->valtype == Val_unsigned ||
+			conf->valtype == Val_nzunsigned))
+		return conf->num;
+
+	return 0;
+}
+
 char *
 config_gets(char *name) {
-	int i;
-
-	if (!name)
-		return NULL;
-
-	for (i=0; config[i].name; i++) {
-		if (strcmp(config[i].name, name) == 0) {
-			if (config[i].valtype == Val_string)
-				return config[i].str;
-			else if (config[i].valtype == Val_bool)
-				return config[i].num ? "true" : "false";
-		}
-	}
+	struct Config *conf = config_getp(name);
+	if (conf && conf->valtype == Val_string)
+		return conf->str;
 
 	return NULL;
 }
 
 void
 config_getr(char *name, long *a, long *b) {
-	int i;
-
-	for (i=0; config[i].name; i++) {
-		if (strcmp(config[i].name, name) == 0 && (
-				config[i].valtype == Val_pair ||
-				config[i].valtype == Val_colourpair)) {
-			if (a) *a = config[i].pair[0];
-			if (b) *b = config[i].pair[1];
-			return;
-		}
+	struct Config *conf = config_getp(name);
+	if (conf && (conf->valtype == Val_pair || conf->valtype == Val_colourpair)) {
+		if (a) *a = conf->pair[0];
+		if (b) *b = conf->pair[1];
 	}
+
+	/* return an int for success? */
 }
 
 void
-config_setl(char *name, long num) {
-	int i;
-
-	for (i=0; config[i].name; i++) {
-		if (strcmp(config[i].name, name) == 0) {
-			if ((config[i].valtype == Val_bool && (num == 1 || num == 0)) ||
-					(config[i].valtype == Val_colour && num <= 99 && num >= 0) ||
-					(config[i].valtype == Val_signed) ||
-					(config[i].valtype == Val_unsigned && num >= 0) ||
-					(config[i].valtype == Val_nzunsigned && num > 0)) {
-				if (config[i].numhandle)
-					if (!config[i].numhandle(num))
-						return;
-				config[i].isdef = 0;
-				config[i].num = num;
-			} else {
-				ui_error("%s must be %s", name, valname[config[i].valtype]);
-			}
-			return;
-		}
-	}
-
-	ui_error("no such configuration variable: '%s'", name);
-}
-
-void
-config_sets(char *name, char *str) {
-	int i;
-
-	for (i=0; config[i].name; i++) {
-		if (strcmp(config[i].name, name) == 0) {
-			if (config[i].valtype != Val_string) {
-				ui_error("%s must be %s", name, valname[config[i].valtype]);
+config_setl(struct Config *conf, long num) {
+	if (!conf)
+		return;
+	if (num >= vals[conf->valtype].min && num <= vals[conf->valtype].max && (
+			conf->valtype == Val_bool ||
+			conf->valtype == Val_colour ||
+			conf->valtype == Val_signed ||
+			conf->valtype == Val_unsigned ||
+			conf->valtype == Val_nzunsigned)) {
+		if (conf->numhandle)
+			if (!conf->numhandle(num))
 				return;
-			}
-			if (config[i].strhandle)
-				if (!config[i].strhandle(str))
-					return;
-			if (!config[i].isdef)
-				pfree(&config[i].str);
-			else
-				config[i].isdef = 0;
-			config[i].str = estrdup(str);
-			return;
-		}
+		conf->isdef = 0;
+		conf->num = num;
+	} else {
+		ui_error("%s must be %s", conf->name, vals[conf->valtype].name);
 	}
-
-	ui_error("no such configuration variable: '%s'", name);
 }
 
 void
-config_setr(char *name, long a, long b) {
-	int i;
-
-	for (i=0; config[i].name; i++) {
-		if (strcmp(config[i].name, name) == 0 ) {
-			if ((config[i].valtype != Val_pair && config[i].valtype != Val_colourpair)||
-					(config[i].valtype == Val_colourpair &&
-					(a > 99 || a < 0 || b > 99 || b < 0))) {
-				ui_error("%s must be %s", name, valname[config[i].valtype]);
-				return;
-			}
-			if (config[i].pairhandle)
-				if (!config[i].pairhandle(a, b))
-					return;
-			config[i].isdef = 0;
-			config[i].pair[0] = a;
-			config[i].pair[1] = b;
-			return;
-		}
+config_sets(struct Config *conf, char *str) {
+	if (!conf)
+		return;
+	if (conf->valtype != Val_string) {
+		ui_error("%s must be %s", conf->name, vals[conf->valtype].name);
+		return;
 	}
+	if (conf->strhandle)
+		if (!conf->strhandle(str))
+			return;
+	if (!conf->isdef)
+		pfree(&conf->str);
+	else
+		conf->isdef = 0;
+	conf->str = estrdup(str);
+}
 
-	ui_error("no such configuration variable: '%s'", name);
+void
+config_setr(struct Config *conf, long a, long b) {
+	if (!conf)
+		return;
+	if (a >= vals[conf->valtype].min && b <= vals[conf->valtype].max &&
+			(conf->valtype == Val_pair || conf->valtype == Val_colourpair)) {
+		if (conf->pairhandle)
+			if (!conf->pairhandle(a, b))
+				return;
+		conf->isdef = 0;
+		conf->pair[0] = a;
+		conf->pair[1] = b;
+	} else {
+		ui_error("%s must be %s", conf->name, vals[conf->valtype].name);
+	}
 }
 
 void
 config_set(char *name, char *val) {
 	char *str = val ? estrdup(val) : NULL;
 	char *tok[3], *save, *p;
+	struct Config *conf;
+
+	if (!(conf = config_getp(name))) {
+		ui_error("no such configuration variable", NULL);
+		goto end;
+	}
 
 	tok[0] = strtok_r(val,  " ", &save);
 	tok[1] = strtok_r(NULL, " ", &save);
 	tok[2] = strtok_r(NULL, " ", &save);
 
-	if (strisnum(tok[0], 1) && strisnum(tok[1], 1) && !tok[2])
-		config_setr(name, strtol(tok[0], NULL, 10), strtol(tok[1], NULL, 10));
-	else if (strisnum(tok[0], 1) && !tok[1])
-		config_setl(name, strtol(tok[0], NULL, 10));
-	else if (tok[0] && strcmp(tok[0], "true") == 0)
-		config_setl(name, 1);
-	else if (tok[0] && strcmp(tok[0], "false") == 0)
-		config_setl(name, 0);
-	else if (tok[0])
-		config_sets(name, str);
-	else
+	if (strisnum(tok[0], 1) && strisnum(tok[1], 1) && !tok[2]) {
+		config_setr(conf, strtol(tok[0], NULL, 10), strtol(tok[1], NULL, 10));
+	} else if (strisnum(tok[0], 1) && !tok[1]) {
+		config_setl(conf, strtol(tok[0], NULL, 10));
+	} else if (conf->valtype == Val_bool && tok[0] && !tok[1]) {
+		if (strcmp(tok[0], "true") == 0)
+			config_setl(conf, 1);
+		else if (strcmp(tok[0], "false") == 0)
+			config_setl(conf, 0);
+	} else if (tok[0]) {
+		config_sets(conf, str);
+	} else {
 		config_get_print(name);
+	}
 
+end:
 	pfree(&str);
+	return;
+
+inval:
+	ui_error("%s must be %s", name, vals[conf->valtype].name);
+	goto end;
 }
 
 void

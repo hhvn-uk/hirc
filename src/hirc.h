@@ -193,10 +193,11 @@ void		config_get_print(char *name);
 long		config_getl(char *name);
 char *		config_gets(char *name);
 void		config_getr(char *name, long *a, long *b);
+struct Config *	config_getp(char *name);
 void		config_set(char *name, char *str);
-void		config_setl(char *name, long num);
-void		config_sets(char *name, char *str);
-void		config_setr(char *name, long a, long b);
+void		config_setl(struct Config *conf, long num);
+void		config_sets(struct Config *conf, char *str);
+void		config_setr(struct Config *conf, long a, long b);
 void		config_read(char *filename);
 
 /* complete.c */
