@@ -1383,7 +1383,8 @@ command_alias) {
 
 		ui_error("no such alias: '%s'", alias);
 	} else {
-		alias_add(alias, cmd);
+		if (alias_add(alias, cmd) == -1)
+			ui_error("alias already exists: '%s'", alias);
 	}
 }
 
@@ -2209,12 +2210,21 @@ alias_add(char *alias, char *cmd) {
 	if (!alias || !cmd)
 		return -1;
 
-	p = emalloc(sizeof(struct Alias));
 	if (*alias != '/') {
 		tmp = emalloc(strlen(alias) + 2);
 		snprintf(tmp, strlen(alias) + 2, "/%s", alias);
+	}
+
+	for (p = aliases; p; p = p->next)
+		if (strcmp(p->alias, tmp) == 0)
+			return -1;
+
+	p = emalloc(sizeof(struct Alias));
+	if (*alias != '/')
 		p->alias = tmp;
-	} else p->alias = estrdup(alias);
+	else
+		p->alias = estrdup(alias);
+
 	if (*cmd != '/') {
 		tmp = emalloc(strlen(cmd) + 2);
 		snprintf(tmp, strlen(cmd) + 2, "/%s", cmd);
