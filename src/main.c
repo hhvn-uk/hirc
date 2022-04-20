@@ -246,14 +246,7 @@ main(int argc, char *argv[]) {
 		for (i=0; config[i].name; i++) {
 			printf(".It %s\n", config[i].name);
 			printf(".Bd -literal -compact\n");
-			if (config[i].valtype == Val_string)
-				printf("Default value: %s\n", config[i].str);
-			else if (config[i].valtype == Val_pair || config[i].valtype == Val_colourpair)
-				printf("Default value: {%02ld, %02ld}\n", config[i].pair[0], config[i].pair[1]);
-			else if (config[i].valtype == Val_bool)
-				printf("Default value: %s\n", config[i].num ? "true" : "false");
-			else
-				printf("Default value: %ld\n", config[i].num);
+			printf("Default value: %s\n", config_get_pretty(&config[i], 1));
 			for (j=0; config[i].description[j]; j++)
 				printf("%s\n", config[i].description[j]);
 			printf(".Ed\n");

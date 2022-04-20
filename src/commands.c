@@ -1800,12 +1800,7 @@ command_dump) {
 				if (selected & opt_formats && strncmp(config[i].name, "format.", CONSTLEN("format.")) == 0) {
 					fprintf(file, "/format %s %s\n", config[i].name + CONSTLEN("format."), config[i].str);
 				} else if (selected & opt_config && strncmp(config[i].name, "format.", CONSTLEN("format.")) != 0) {
-					if (config[i].valtype == Val_string)
-						fprintf(file, "/set %s %s\n", config[i].name, config[i].str);
-					else if (config[i].valtype == Val_pair || config[i].valtype == Val_colourpair)
-						fprintf(file, "/set %s %ld %ld\n", config[i].name, config[i].pair[0], config[i].pair[1]);
-					else
-						fprintf(file, "/set %s %ld\n", config[i].name, config[i].num);
+					fprintf(file, "/set %s %s\n", config[i].name, config_get_pretty(&config[i], 0));
 				}
 			}
 		}

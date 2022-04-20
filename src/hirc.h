@@ -189,7 +189,7 @@ int		alias_remove(char *binding);
 char *		alias_eval(char *cmd);
 
 /* config.c */
-void		config_get_print(char *name);
+char *		config_get_pretty(struct Config *conf, int pairbrace);
 long		config_getl(char *name);
 char *		config_gets(char *name);
 void		config_getr(char *name, long *a, long *b);
