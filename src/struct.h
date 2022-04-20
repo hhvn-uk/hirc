@@ -228,6 +228,7 @@ enum Valtype {
 	Val_nzunsigned,
 	Val_pair,
 	Val_colourpair,
+	Val_location,
 };
 
 struct Config {
@@ -244,9 +245,9 @@ struct Config {
 };
 
 enum WindowLocation {
-	HIDDEN,
-	LEFT,
-	RIGHT,
+	Location_hidden,
+	Location_left,
+	Location_right,
 };
 
 #include <ncurses.h>

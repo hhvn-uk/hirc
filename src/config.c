@@ -35,6 +35,12 @@ static int config_redrawl(long num);
 static int config_redraws(char *str);
 
 static char *strbool[] = { "true", "false", NULL };
+static char *strlocation[] = {
+	[Location_hidden] = "hidden",
+	[Location_left] = "left",
+	[Location_right] = "right",
+	NULL
+};
 
 static struct {
 	char *name;
@@ -48,6 +54,7 @@ static struct {
 	[Val_nzunsigned]	= {"greater than zero",			1, LONG_MAX},
 	[Val_pair]		= {"a pair",				LONG_MIN, LONG_MAX},
 	[Val_colourpair]	= {"pair with numbers from 0 to 99",	0, 99},
+	[Val_location]		= {"a location (hidden/left/right)",	Location_hidden, Location_right},
 };
 
 struct Config config[] = {
@@ -153,27 +160,21 @@ struct Config config[] = {
 		"Must be 0, 99 or anywhere between. 99 is no colour",
 		"Giving a single value or two identical values will",
 		"use that colour only", NULL}},
-	{"nicklist.location", 1, Val_unsigned,
-		.num = RIGHT,
+	{"nicklist.location", 1, Val_location,
+		.num = Location_right,
 		.numhandle = config_nicklist_location,
 		.description = {
-		"Location of nicklist. May be:",
-		" 0 - Hidden",
-		" 1 - Left",
-		" 2 - Right", NULL}},
+		"Location of nicklist", NULL}},
 	{"nicklist.width", 1, Val_nzunsigned,
 		.num = 15,
 		.numhandle = config_nicklist_width,
 		.description = {
 		"Number of columns nicklist will take up.", NULL}},
-	{"buflist.location", 1, Val_unsigned,
-		.num = LEFT,
+	{"buflist.location", 1, Val_location,
+		.num = Location_left,
 		.numhandle = config_buflist_location,
 		.description = {
-		"Location of nicklist. May be:",
-		" 0 - Hidden",
-		" 1 - Left",
-		" 2 - Right", NULL}},
+		"Location of nicklist", NULL}},
 	{"buflist.width", 1, Val_nzunsigned,
 		.num = 25,
 		.numhandle = config_buflist_width,
@@ -1302,6 +1303,9 @@ config_get_print(char *name) {
 			else if (config[i].valtype == Val_pair || config[i].valtype == Val_colourpair)
 				hist_format(selected.history, Activity_status, HIST_UI, "SELF_UI :%s: {%ld, %ld}",
 						config[i].name, config[i].pair[0], config[i].pair[1]);
+			else if (config[i].valtype == Val_location)
+				hist_format(selected.history, Activity_status, HIST_UI, "SELF_UO :%s: %s",
+						config[i].name, strlocation[config[i].num]);
 			else if (config[i].valtype == Val_bool)
 				hist_format(selected.history, Activity_status, HIST_UI, "SELF_UI :%s: %s",
 						config[i].name, strbool[config[i].num]);
@@ -1323,7 +1327,8 @@ config_getl(char *name) {
 			conf->valtype == Val_colour ||
 			conf->valtype == Val_signed ||
 			conf->valtype == Val_unsigned ||
-			conf->valtype == Val_nzunsigned))
+			conf->valtype == Val_nzunsigned ||
+			conf->valtype == Val_location))
 		return conf->num;
 
 	return 0;
@@ -1358,7 +1363,8 @@ config_setl(struct Config *conf, long num) {
 			conf->valtype == Val_colour ||
 			conf->valtype == Val_signed ||
 			conf->valtype == Val_unsigned ||
-			conf->valtype == Val_nzunsigned)) {
+			conf->valtype == Val_nzunsigned ||
+			conf->valtype == Val_location)) {
 		if (conf->numhandle)
 			if (!conf->numhandle(num))
 				return;
@@ -1428,6 +1434,13 @@ config_set(char *name, char *val) {
 			config_setl(conf, 1);
 		else if (strcmp(tok[0], "false") == 0)
 			config_setl(conf, 0);
+	} else if (conf->valtype == Val_location && tok[0] && !tok[1]) {
+		if (strcmp(tok[0], "hidden") == 0)
+			config_setl(conf, Location_hidden);
+		else if (strcmp(tok[0], "left") == 0)
+			config_setl(conf, Location_left);
+		else if (strcmp(tok[0], "right") == 0)
+			config_setl(conf, Location_right);
 	} else if (tok[0]) {
 		config_sets(conf, str);
 	} else {
@@ -1506,29 +1519,16 @@ shrink:
 
 static int
 config_nicklist_location(long num) {
-	int i;
+	struct Config *nick = config_getp("nicklist.location");
+	struct Config *buf = config_getp("buflist.location");
 
-	if (num != HIDDEN && num != LEFT && num != RIGHT) {
-		ui_error("nicklist.location must be 0, 1 or 2", NULL);
-		return 0;
+	if (num == buf->num != Location_hidden) {
+		buf->num = (num == Location_left) ? Location_right : Location_left;
+		if (windows[Win_buflist].location != Location_hidden)
+			windows[Win_buflist].location = buf->num;
 	}
-
-	if (!selected.hasnicks)
-		return 0;
-
-	if (num == windows[Win_buflist].location != HIDDEN)
-		windows[Win_buflist].location = num == LEFT ? RIGHT : LEFT;
-	windows[Win_nicklist].location = num;
-
+	nick->num = windows[Win_nicklist].location = num;
 	ui_redraw();
-
-	for (i=0; config[i].name; i++) {
-		if (strcmp(config[i].name, "nicklist.location") == 0)
-			config[i].num = num;
-		if (strcmp(config[i].name, "buflist.location") == 0)
-			config[i].num = windows[Win_buflist].location;
-	}
-
 	return 0;
 }
 
@@ -1537,34 +1537,24 @@ config_nicklist_width(long num) {
 	if (num <= COLS - (windows[Win_buflist].location ? windows[Win_buflist].w : 0) - 2) {
 		uineedredraw = 1;
 		return 1;
+	} else {
+		ui_error("nicklist will be too big", NULL);
+		return 0;
 	}
-
-	ui_error("nicklist will be too big", NULL);
-	return 0;
 }
 
 static int
 config_buflist_location(long num) {
-	int i;
+	struct Config *buf = config_getp("buflist.location");
+	struct Config *nick = config_getp("nicklist.location");
 
-	if (num != HIDDEN && num != LEFT && num != RIGHT) {
-		ui_error("buflist.location must be 0, 1 or 2", NULL);
-		return 0;
+	if (num == nick->num != Location_hidden) {
+		nick->num = (num == Location_left) ? Location_right : Location_left;
+		if (windows[Win_nicklist].location != Location_hidden)
+			windows[Win_nicklist].location = buf->num;
 	}
-
-	if (num == windows[Win_buflist].location != HIDDEN)
-		windows[Win_nicklist].location = num == LEFT ? RIGHT : LEFT;
-	windows[Win_buflist].location = num;
-
+	buf->num = windows[Win_buflist].location = num;
 	ui_redraw();
-
-	for (i=0; config[i].name; i++) {
-		if (strcmp(config[i].name, "buflist.location") == 0)
-			config[i].num = num;
-		if (strcmp(config[i].name, "nicklist.location") == 0)
-			config[i].num = windows[Win_nicklist].location;
-	}
-
 	return 0;
 }
 
@@ -1573,10 +1563,10 @@ config_buflist_width(long num) {
 	if (num <= COLS - (windows[Win_nicklist].location ? windows[Win_nicklist].w : 0) - 2) {
 		uineedredraw = 1;
 		return 1;
+	} else {
+		ui_error("buflist will be too big", NULL);
+		return 0;
 	}
-
-	ui_error("buflist will be too big", NULL);
-	return 0;
 }
 
 static int

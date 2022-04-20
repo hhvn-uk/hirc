@@ -132,7 +132,7 @@ ui_init(void) {
 	windows[Win_main].window = newwin(0, 0, 0, 0);
 	windows[Win_input].window = newwin(0, 0, 0, 0);
 
-	windows[Win_dummy].location = HIDDEN;
+	windows[Win_dummy].location = Location_hidden;
 	windows[Win_main].location = -1;
 	windows[Win_input].location = -1;
 	if (windows[Win_nicklist].location)
@@ -174,7 +174,7 @@ ui_get_pair(short fg, short bg) {
 
 void
 ui_placewindow(struct Window *window) {
-	if (window->location != HIDDEN) {
+	if (window->location != Location_hidden) {
 		wresize(window->window, window->h, window->w);
 		mvwin(window->window, window->y, window->x);
 		wrefresh(window->window);
@@ -316,26 +316,26 @@ ui_redraw(void) {
 	buflistwidth = config_getl("buflist.width");
 
 	/* TODO: what if nicklistwidth or buflistwidth is too big? */
-	if (windows[Win_buflist].location == LEFT) {
+	if (windows[Win_buflist].location == Location_left) {
 		windows[Win_buflist].x = windows[Win_buflist].y = 0;
 		windows[Win_buflist].h = LINES;
 		windows[Win_buflist].w = buflistwidth;
 		x = windows[Win_buflist].w + 1;
 	}
-	if (windows[Win_nicklist].location == LEFT) {
+	if (windows[Win_nicklist].location == Location_left) {
 		windows[Win_nicklist].x = windows[Win_buflist].y = 0;
 		windows[Win_nicklist].h = LINES;
 		windows[Win_nicklist].w = nicklistwidth;
 		x = windows[Win_nicklist].w + 1;
 	}
-	if (windows[Win_buflist].location == RIGHT) {
+	if (windows[Win_buflist].location == Location_right) {
 		windows[Win_buflist].x = COLS - buflistwidth;
 		windows[Win_buflist].y = 0;
 		windows[Win_buflist].h = LINES;
 		windows[Win_buflist].w = buflistwidth;
 		rx = buflistwidth + 1;
 	}
-	if (windows[Win_nicklist].location == RIGHT) {
+	if (windows[Win_nicklist].location == Location_right) {
 		windows[Win_nicklist].x = COLS - nicklistwidth;
 		windows[Win_nicklist].y = 0;
 		windows[Win_nicklist].h = LINES;
@@ -904,7 +904,7 @@ ui_select(struct Server *server, struct Channel *channel) {
 	selected.history->unread = selected.history->ignored = 0;
 
 	if (!selected.hasnicks)
-		windows[Win_nicklist].location = HIDDEN;
+		windows[Win_nicklist].location = Location_hidden;
 	else
 		windows[Win_nicklist].location = config_getl("nicklist.location");
 	windows[Win_main].scroll = -1;
