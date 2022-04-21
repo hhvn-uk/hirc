@@ -29,7 +29,7 @@ handle_PING) {
 	if (param_len(msg->params) < 2)
 		return;
 
-	ircprintf(server, "PONG :%s\r\n", *(msg->params+1));
+	serv_write(server, "PONG :%s\r\n", *(msg->params+1));
 }
 
 HANDLER(
@@ -206,9 +206,9 @@ handle_MODE) {
 		expect_set(server, Expect_nosuchnick, NULL);
 		hist_addp(server->history, msg, Activity_status, HIST_LOG);
 		hist_addp(chan->history, msg, Activity_status, HIST_DFL);
-		ircprintf(server, "MODE %s\r\n", chan->name); /* Get full mode via RPL_CHANNELMODEIS
+		serv_write(server, "MODE %s\r\n", chan->name); /* Get full mode via RPL_CHANNELMODEIS
 						               * instead of concatenating manually */
-		ircprintf(server, "NAMES %s\r\n", chan->name); /* Also get updated priviledges */
+		serv_write(server, "NAMES %s\r\n", chan->name); /* Also get updated priviledges */
 	} else {
 		hist_addp(server->history, msg, Activity_status, HIST_DFL);
 	}
@@ -439,7 +439,7 @@ handle_ERR_NICKNAMEINUSE) {
 		nick_free(server->self);
 		server->self = nnick;
 		server->self->self = 1;
-		ircprintf(server, "NICK %s\r\n", nick);
+		serv_write(server, "NICK %s\r\n", nick);
 	} else {
 		expect_set(server, Expect_nicknameinuse, NULL);
 	}
@@ -639,7 +639,7 @@ handle(struct Server *server, char *msg) {
 
 	/* Fire off any scheduled events for the current cmd */
 	while ((schmsg = schedule_pull(server, cmd)) != NULL)
-		ircprintf(server, "%s", schmsg);
+		serv_write(server, "%s", schmsg);
 
 	for (i=0; cmd && handlers[i].cmd; i++) {
 		if (strcmp(handlers[i].cmd, cmd) == 0) {

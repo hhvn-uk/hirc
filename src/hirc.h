@@ -42,8 +42,6 @@ size_t		wcslcpy(wchar_t *, const wchar_t *, size_t);
 
 /* main.c */
 void		cleanup(char *quitmsg);
-int		ircgets(struct Server *server, char *buf, size_t buf_len);
-int		ircprintf(struct Server *server, char *format, ...);
 
 /* params.c */
 void		param_free(char **params);
@@ -116,6 +114,8 @@ void		hist_purgeopt(struct HistInfo *histinfo, enum HistOpt options);
 /* serv.c */
 void		serv_free(struct Server *server);
 void		serv_connect(struct Server *server);
+void		serv_read(struct Server *sp);
+int		serv_write(struct Server *server, char *format, ...);
 struct Server *	serv_create(char *name, char *host, char *port, char *nick,
 		char *username, char *realname, int tls, int tls_verify);
 void		serv_update(struct Server *sp, char *nick, char *username,

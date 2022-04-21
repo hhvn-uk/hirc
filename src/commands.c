@@ -87,9 +87,9 @@ command_away) {
 
 	if (all) {
 		for (sp = servers; sp; sp = sp->next)
-			ircprintf(sp, format, str);
+			serv_write(sp, format, str);
 	} else if (server) {
-		ircprintf(server, format, str);
+		serv_write(server, format, str);
 	} else {
 		ui_error("-one specified, but no server selected", NULL);
 	}
@@ -112,7 +112,7 @@ command_msg) {
 	else
 		chan = chan_get(&server->privs, target, -1);
 
-	ircprintf(server, "PRIVMSG %s :%s\r\n", target, message);
+	serv_write(server, "PRIVMSG %s :%s\r\n", target, message);
 	if (chan) {
 		hist_format(chan->history, Activity_self,
 				HIST_SHOW|HIST_LOG|HIST_SELF, "PRIVMSG %s :%s", target, message);
@@ -136,7 +136,7 @@ command_notice) {
 	else
 		chan = chan_get(&server->privs, target, -1);
 
-	ircprintf(server, "NOTICE %s :%s\r\n", target, message);
+	serv_write(server, "NOTICE %s :%s\r\n", target, message);
 	if (chan) {
 		hist_format(chan->history, Activity_self,
 				HIST_SHOW|HIST_LOG|HIST_SELF, "NOTICE %s :%s", target, message);
@@ -148,7 +148,7 @@ command_me) {
 	if (!str)
 		str = "";
 
-	ircprintf(server, "PRIVMSG %s :%cACTION %s%c\r\n", channel->name, 1, str, 1);
+	serv_write(server, "PRIVMSG %s :%cACTION %s%c\r\n", channel->name, 1, str, 1);
 	hist_format(channel->history, Activity_self,
 			HIST_SHOW|HIST_LOG|HIST_SELF, "PRIVMSG %s :%cACTION %s%c", channel->name, 1, str, 1);
 }
@@ -176,7 +176,7 @@ command_ctcp) {
 	/* XXX: if we CTCP a channel, responses should go to that channel.
 	 * This requires more than just expect_set, so might never be
 	 * implemented. */
-	ircprintf(server, "PRIVMSG %s :%c%s%c\r\n", target, 1, ctcp, 1);
+	serv_write(server, "PRIVMSG %s :%c%s%c\r\n", target, 1, ctcp, 1);
 	if (chan) {
 		hist_format(channel->history, Activity_self,
 				HIST_SHOW|HIST_LOG|HIST_SELF, "PRIVMSG %s :%c%s%c",
@@ -231,7 +231,7 @@ command_join) {
 		snprintf(msg, sizeof(msg), "JOIN %c%s\r\n", '#', str);
 
 	if (server->status == ConnStatus_connected)
-		ircprintf(server, "%s", msg);
+		serv_write(server, "%s", msg);
 	else
 		schedule_push(server, "376" /* RPL_ENDOFMOTD */, msg);
 
@@ -267,7 +267,7 @@ command_part) {
 
 	snprintf(msg, sizeof(msg), "PART %s :%s\r\n", chan, reason ? reason : config_gets("def.partmessage"));
 
-	ircprintf(server, "%s", msg);
+	serv_write(server, "%s", msg);
 	expect_set(server, Expect_part, chan);
 }
 
@@ -314,9 +314,9 @@ command_kick) {
 	}
 
 	if (reason)
-		ircprintf(server, "KICK %s %s :%s\r\n", chan, nick, reason);
+		serv_write(server, "KICK %s %s :%s\r\n", chan, nick, reason);
 	else
-		ircprintf(server, "KICK %s %s\r\n", chan, nick);
+		serv_write(server, "KICK %s %s\r\n", chan, nick);
 }
 
 COMMAND(
@@ -345,10 +345,10 @@ command_mode) {
 	if (modes) {
 		if (chan == channel->name)
 			expect_set(server, Expect_nosuchnick, chan);
-		ircprintf(server, "MODE %s %s\r\n", chan, modes);
+		serv_write(server, "MODE %s %s\r\n", chan, modes);
 	} else {
 		expect_set(server, Expect_channelmodeis, chan);
-		ircprintf(server, "MODE %s\r\n", chan);
+		serv_write(server, "MODE %s\r\n", chan);
 	}
 }
 
@@ -364,7 +364,7 @@ command_nick) {
 		return;
 	}
 
-	ircprintf(server, "NICK %s\r\n", str);
+	serv_write(server, "NICK %s\r\n", str);
 	expect_set(server, Expect_nicknameinuse, str);
 }
 
@@ -375,7 +375,7 @@ command_list) {
 		return;
 	}
 
-	ircprintf(server, "LIST\r\n", str);
+	serv_write(server, "LIST\r\n", str);
 }
 
 COMMAND(
@@ -394,9 +394,9 @@ command_whois) {
 	}
 
 	if (tserver)
-		ircprintf(server, "WHOIS %s :%s\r\n", tserver, nick);
+		serv_write(server, "WHOIS %s :%s\r\n", tserver, nick);
 	else
-		ircprintf(server, "WHOIS %s\r\n", nick);
+		serv_write(server, "WHOIS %s\r\n", nick);
 }
 
 COMMAND(
@@ -404,7 +404,7 @@ command_who) {
 	if (!str)
 		str = "*"; /* wildcard */
 
-	ircprintf(server, "WHO %s\r\n", str);
+	serv_write(server, "WHO %s\r\n", str);
 }
 
 COMMAND(
@@ -420,11 +420,11 @@ command_whowas) {
 	}
 
 	if (tserver)
-		ircprintf(server, "WHOWAS %s %s :%s\r\n", nick, count, tserver);
+		serv_write(server, "WHOWAS %s %s :%s\r\n", nick, count, tserver);
 	else if (count)
-		ircprintf(server, "WHOWAS %s %s\r\n", nick, count);
+		serv_write(server, "WHOWAS %s %s\r\n", nick, count);
 	else
-		ircprintf(server, "WHOWAS %s 5\r\n", nick);
+		serv_write(server, "WHOWAS %s 5\r\n", nick);
 }
 
 COMMAND(
@@ -434,7 +434,7 @@ command_ping) {
 		return;
 	}
 
-	ircprintf(server, "PING :%s\r\n", str);
+	serv_write(server, "PING :%s\r\n", str);
 	expect_set(server, Expect_pong, str);
 }
 
@@ -448,7 +448,7 @@ command_quote) {
 	}
 
 	if (server->status == ConnStatus_connected) {
-		ircprintf(server, "%s\r\n", str);
+		serv_write(server, "%s\r\n", str);
 	} else {
 		snprintf(msg, sizeof(msg), "%s\r\n", str);
 		schedule_push(server, "376" /* RPL_ENDOFMOTD */, msg);
@@ -820,7 +820,7 @@ command_names) {
 		return;
 	}
 
-	ircprintf(server, "NAMES %s\r\n", chan);
+	serv_write(server, "NAMES %s\r\n", chan);
 	expect_set(server, Expect_names, chan);
 }
 
@@ -866,14 +866,14 @@ command_topic) {
 			command_toomany("topic");
 			return;
 		}
-		ircprintf(server, "TOPIC %s :\r\n", chan);
+		serv_write(server, "TOPIC %s :\r\n", chan);
 		return;
 	}
 
 	if (!topic) {
-		ircprintf(server, "TOPIC %s\r\n", chan);
+		serv_write(server, "TOPIC %s\r\n", chan);
 		expect_set(server, Expect_topic, chan);
-	} else ircprintf(server, "TOPIC %s :%s\r\n", chan, topic);
+	} else serv_write(server, "TOPIC %s :%s\r\n", chan, topic);
 }
 
 COMMAND(
@@ -895,7 +895,7 @@ command_oper) {
 		user = server->self->nick;
 	}
 
-	ircprintf(server, "OPER %s %s\r\n", user, pass);
+	serv_write(server, "OPER %s %s\r\n", user, pass);
 }
 
 static void
@@ -903,7 +903,7 @@ command_send0(struct Server *server, char *cmd, char *cmdname, char *str) {
 	if (str)
 		command_toomany(cmdname);
 	else
-		ircprintf(server, "%s\r\n", cmd);
+		serv_write(server, "%s\r\n", cmd);
 }
 
 COMMAND(
@@ -921,9 +921,9 @@ command_send1(struct Server *server, char *cmd, char *cmdname, char *str) {
 	if (str && strchr(str, ' '))
 		command_toomany(cmdname);
 	else if (str)
-		ircprintf(server, "%s %s\r\n", cmd, str);
+		serv_write(server, "%s %s\r\n", cmd, str);
 	else
-		ircprintf(server, "%s\r\n", cmd);
+		serv_write(server, "%s\r\n", cmd);
 }
 
 COMMAND(
@@ -941,9 +941,9 @@ command_send2(struct Server *server, char *cmd, char *cmdname, char *str) {
 	if (str && strchr(str, ' ') != strrchr(str, ' '))
 		command_toomany(cmdname);
 	else if (str)
-		ircprintf(server, "%s %s\r\n", cmd, str);
+		serv_write(server, "%s %s\r\n", cmd, str);
 	else
-		ircprintf(server, "%s\r\n", cmd);
+		serv_write(server, "%s\r\n", cmd);
 }
 
 COMMAND(
@@ -968,7 +968,7 @@ command_kill) {
 	nick = strtok_r(str, " ", &reason);
 	if (!reason)
 		reason = config_gets("def.killmessage");
-	ircprintf(server, "KILL %s :%s\r\n", nick, reason);
+	serv_write(server, "KILL %s :%s\r\n", nick, reason);
 }
 
 COMMAND(
@@ -1537,7 +1537,7 @@ command_close) {
 
 	if (chp) {
 		if (serv_ischannel(sp, chp->name) && !chp->old) {
-			ircprintf(sp, "PART %s\r\n", chp->name);
+			serv_write(sp, "PART %s\r\n", chp->name);
 			chan_remove(&sp->channels, chp->name);
 		} else {
 			chan_remove(&sp->privs, chp->name);
@@ -1744,7 +1744,7 @@ modelset(char *cmd, struct Server *server, struct Channel *channel,
 			i++;
 		*(modes + i + 1) = '\0';
 
-		ircprintf(server, "MODE %s %s %s\r\n", channel->name, modes, args);
+		serv_write(server, "MODE %s %s %s\r\n", channel->name, modes, args);
 
 		args = p;
 	}
@@ -1838,7 +1838,7 @@ command_invite) {
 	if (!chan)
 		chan = channel->name;
 
-	ircprintf(server, "INVITE %s %s\r\n", nick, chan);
+	serv_write(server, "INVITE %s %s\r\n", nick, chan);
 }
 
 int
@@ -1992,7 +1992,7 @@ command_eval(struct Server *server, char *str) {
 		if (selected.channel && selected.server) {
 			// TODO: message splitting
 			snprintf(msg, sizeof(msg), "PRIVMSG %s :%s", selected.channel->name, s);
-			ircprintf(selected.server, "%s\r\n", msg);
+			serv_write(selected.server, "%s\r\n", msg);
 			hist_format(selected.channel->history, Activity_self, HIST_SHOW|HIST_LOG|HIST_SELF, "%s", msg);
 		} else {
 			ui_error("channel not selected, message ignored", NULL);

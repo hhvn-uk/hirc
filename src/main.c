@@ -49,116 +49,6 @@ cleanup(char *quitmsg) {
 	ui_deinit();
 }
 
-void
-ircread(struct Server *sp) {
-	char *line, *end;
-	char *err;
-	char *reason = NULL;
-	size_t len;
-	int ret;
-
-	if (!sp)
-		return;
-
-#ifdef TLS
-	if (sp->tls) {
-		switch (ret = tls_read(sp->tls_ctx, &sp->inputbuf[sp->inputlen], SERVER_INPUT_SIZE - sp->inputlen - 1)) {
-		case -1:
-			err = (char *)tls_error(sp->tls_ctx);
-			len = CONSTLEN("tls_read(): ") + strlen(err) + 1;
-			reason = emalloc(len);
-			snprintf(reason, len, "tls_read(): %s", err);
-			/* fallthrough */
-		case 0:
-			serv_disconnect(sp, 1, "EOF");
-			hist_format(sp->history, Activity_error, HIST_SHOW,
-					"SELF_CONNECTLOST %s %s %s :%s",
-					sp->name, sp->host, sp->port, reason ? reason : "connection close");
-			pfree(&reason);
-			return;
-		case TLS_WANT_POLLIN:
-		case TLS_WANT_POLLOUT:
-			return;
-		default:
-			sp->inputlen += ret;
-			break;
-		}
-	} else {
-#endif /* TLS */
-		switch (ret = read(sp->rfd, &sp->inputbuf[sp->inputlen], SERVER_INPUT_SIZE - sp->inputlen - 1)) {
-		case -1:
-			err = estrdup(strerror(errno));
-			len = CONSTLEN("read(): ") + strlen(err) + 1;
-			reason = emalloc(len);
-			snprintf(reason, len, "read(): %s", err);
-			pfree(&err);
-			/* fallthrough */
-		case 0:
-			serv_disconnect(sp, 1, "EOF");
-			hist_format(sp->history, Activity_error, HIST_SHOW,
-					"SELF_CONNECTLOST %s %s %s :%s",
-					sp->name, sp->host, sp->port, reason ? reason : "connection closed");
-			pfree(&reason);
-			return;
-		default:
-			sp->inputlen += ret;
-			break;
-		}
-#ifdef TLS
-	}
-#endif /* TLS */
-
-	sp->inputbuf[SERVER_INPUT_SIZE - 1] = '\0';
-	line = sp->inputbuf;
-	while (end = strstr(line, "\r\n")) {
-		*end = '\0';
-		handle(sp, line);
-		line = end + 2;
-	}
-
-	sp->inputlen -= line - sp->inputbuf;
-	memmove(sp->inputbuf, line, sp->inputlen);
-}
-
-int
-ircprintf(struct Server *server, char *format, ...) {
-	char msg[512];
-	va_list ap;
-	int ret, serrno;
-
-	if (!server || server->status == ConnStatus_notconnected) {
-		ui_error("Not connected to server '%s'", server ? server->name : "");
-		return -1;
-	}
-
-	va_start(ap, format);
-	if (vsnprintf(msg, sizeof(msg), format, ap) < 0) {
-		va_end(ap);
-		return -1;
-	}
-
-#ifdef TLS
-	if (server->tls)
-		do {
-			ret = tls_write(server->tls_ctx, msg, strlen(msg));
-		} while (ret == TLS_WANT_POLLIN || ret == TLS_WANT_POLLOUT);
-	else
-#endif /* TLS */
-		ret = write(server->wfd, msg, strlen(msg));
-
-	if (ret == -1 && server->status == ConnStatus_connected) {
-		serv_disconnect(server, 1, NULL);
-		hist_format(server->history, Activity_error, HIST_SHOW,
-				"SELF_CONNECTLOST %s %s %s :%s",
-				server->name, server->host, server->port, strerror(errno));
-	} else if (ret == -1 && server->status != ConnStatus_connecting) {
-		ui_error("Not connected to server '%s'", server->name);
-	}
-
-	va_end(ap);
-	return ret;
-}
-
 int
 main(int argc, char *argv[]) {
 	struct Selected oldselected;
@@ -226,10 +116,10 @@ main(int argc, char *argv[]) {
 				sp->pingsent = 0;
 				sp->lastrecv = time(NULL);
 				sp->rpollfd->revents = 0;
-				ircread(sp);
+				serv_read(sp);
 			} else if (!sp->pingsent && sp->lastrecv && (time(NULL) - sp->lastrecv) >= pinginact) {
 				/* haven't heard from server in pinginact seconds, sending a ping */
-				ircprintf(sp, "PING :ground control to Major Tom\r\n");
+				serv_write(sp, "PING :ground control to Major Tom\r\n");
 				sp->pingsent = time(NULL);
 			} else if (sp->pingsent && (time(NULL) - sp->pingsent) >= pinginact) {
 				/* haven't gotten a response in pinginact seconds since

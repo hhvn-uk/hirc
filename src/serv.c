@@ -321,8 +321,8 @@ serv_connect(struct Server *server) {
 	freeaddrinfo(ai);
 	server->connectfail = 0;
 
-	ircprintf(server, "NICK %s\r\n", server->self->nick);
-	ircprintf(server, "USER %s * * :%s\r\n",
+	serv_write(server, "NICK %s\r\n", server->self->nick);
+	serv_write(server, "USER %s * * :%s\r\n",
 			server->username ? server->username : server->self->nick,
 			server->realname ? server->realname : server->self->nick);
 
@@ -335,6 +335,117 @@ fail:
 	if (ai)
 		freeaddrinfo(ai);
 }
+
+void
+serv_read(struct Server *sp) {
+	char *line, *end;
+	char *err;
+	char *reason = NULL;
+	size_t len;
+	int ret;
+
+	if (!sp)
+		return;
+
+#ifdef TLS
+	if (sp->tls) {
+		switch (ret = tls_read(sp->tls_ctx, &sp->inputbuf[sp->inputlen], SERVER_INPUT_SIZE - sp->inputlen - 1)) {
+		case -1:
+			err = (char *)tls_error(sp->tls_ctx);
+			len = CONSTLEN("tls_read(): ") + strlen(err) + 1;
+			reason = emalloc(len);
+			snprintf(reason, len, "tls_read(): %s", err);
+			/* fallthrough */
+		case 0:
+			serv_disconnect(sp, 1, "EOF");
+			hist_format(sp->history, Activity_error, HIST_SHOW,
+					"SELF_CONNECTLOST %s %s %s :%s",
+					sp->name, sp->host, sp->port, reason ? reason : "connection close");
+			pfree(&reason);
+			return;
+		case TLS_WANT_POLLIN:
+		case TLS_WANT_POLLOUT:
+			return;
+		default:
+			sp->inputlen += ret;
+			break;
+		}
+	} else {
+#endif /* TLS */
+		switch (ret = read(sp->rfd, &sp->inputbuf[sp->inputlen], SERVER_INPUT_SIZE - sp->inputlen - 1)) {
+		case -1:
+			err = estrdup(strerror(errno));
+			len = CONSTLEN("read(): ") + strlen(err) + 1;
+			reason = emalloc(len);
+			snprintf(reason, len, "read(): %s", err);
+			pfree(&err);
+			/* fallthrough */
+		case 0:
+			serv_disconnect(sp, 1, "EOF");
+			hist_format(sp->history, Activity_error, HIST_SHOW,
+					"SELF_CONNECTLOST %s %s %s :%s",
+					sp->name, sp->host, sp->port, reason ? reason : "connection closed");
+			pfree(&reason);
+			return;
+		default:
+			sp->inputlen += ret;
+			break;
+		}
+#ifdef TLS
+	}
+#endif /* TLS */
+
+	sp->inputbuf[SERVER_INPUT_SIZE - 1] = '\0';
+	line = sp->inputbuf;
+	while (end = strstr(line, "\r\n")) {
+		*end = '\0';
+		handle(sp, line);
+		line = end + 2;
+	}
+
+	sp->inputlen -= line - sp->inputbuf;
+	memmove(sp->inputbuf, line, sp->inputlen);
+}
+
+int
+serv_write(struct Server *server, char *format, ...) {
+	char msg[512];
+	va_list ap;
+	int ret, serrno;
+
+	if (!server || server->status == ConnStatus_notconnected) {
+		ui_error("Not connected to server '%s'", server ? server->name : "");
+		return -1;
+	}
+
+	va_start(ap, format);
+	if (vsnprintf(msg, sizeof(msg), format, ap) < 0) {
+		va_end(ap);
+		return -1;
+	}
+
+#ifdef TLS
+	if (server->tls)
+		do {
+			ret = tls_write(server->tls_ctx, msg, strlen(msg));
+		} while (ret == TLS_WANT_POLLIN || ret == TLS_WANT_POLLOUT);
+	else
+#endif /* TLS */
+		ret = write(server->wfd, msg, strlen(msg));
+
+	if (ret == -1 && server->status == ConnStatus_connected) {
+		serv_disconnect(server, 1, NULL);
+		hist_format(server->history, Activity_error, HIST_SHOW,
+				"SELF_CONNECTLOST %s %s %s :%s",
+				server->name, server->host, server->port, strerror(errno));
+	} else if (ret == -1 && server->status != ConnStatus_connecting) {
+		ui_error("Not connected to server '%s'", server->name);
+	}
+
+	va_end(ap);
+	return ret;
+}
+
 
 int
 serv_len(struct Server **head) {
@@ -377,7 +488,7 @@ serv_disconnect(struct Server *server, int reconnect, char *msg) {
 	int ret;
 
 	if (msg)
-		ircprintf(server, "QUIT :%s\r\n", msg);
+		serv_write(server, "QUIT :%s\r\n", msg);
 #ifdef TLS
 	if (server->tls) {
 		if (server->tls_ctx) {
