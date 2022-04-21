@@ -117,9 +117,13 @@ nick_free_list(struct Nick **head) {
 	if (!head || !*head)
 		return;
 
-	for (prev = *head, p = prev->next; p; p = p->next) {
+	prev = *head;
+	p = prev->next;
+	while (prev) {
 		nick_free(prev);
 		prev = p;
+		if (p)
+			p = p->next;
 	}
 	*head = NULL;
 }

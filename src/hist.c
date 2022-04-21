@@ -33,10 +33,7 @@
 void
 hist_free(struct History *history) {
 	param_free(history->_params);
-	if (history->from) {
-		pfree(&history->from->prefix);
-		pfree(&history->from);
-	}
+	nick_free(history->from);
 	pfree(&history->raw);
 	pfree(&history->format);
 	pfree(&history->rformat);
@@ -50,9 +47,13 @@ hist_free_list(struct HistInfo *histinfo) {
 	if (!histinfo->history)
 		return;
 
-	for (prev = histinfo->history, p = prev->next; p; p = p->next) {
+	prev = histinfo->history;
+	p = prev->next;
+	while (prev) {
 		hist_free(prev);
 		prev = p;
+		if (p)
+			p = p->next;
 	}
 	histinfo->history = NULL;
 }
@@ -383,8 +384,10 @@ hist_loadlog(struct HistInfo *hist, char *server, char *channel) {
 
 		if (!tok[0] || !tok[1] || !tok[2] ||
 				!tok[3] || !tok[4] || !tok[5] ||
-				!tok[6] || !tok[7] || !msg)
+				!tok[6] || !tok[7] || !msg) {
+			pfree(&lines[i]);
 			continue;
+		}
 
 		timestamp = (time_t)strtoll(tok[0], NULL, 10);
 		activity = (int)strtol(tok[1], NULL, 10);
@@ -418,6 +421,7 @@ hist_loadlog(struct HistInfo *hist, char *server, char *channel) {
 		prev = p;
 
 		nick_free(from);
+		pfree(&prefix);
 		pfree(&lines[i]);
 	}
 

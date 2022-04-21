@@ -693,7 +693,7 @@ handle(struct Server *server, char *msg) {
 				hist_free(hist);
 			}
 			/* NULL handlers will stop a message being added to server->history */
-			return;
+			goto end;
 		}
 	}
 
@@ -702,5 +702,7 @@ handle(struct Server *server, char *msg) {
 		hist_add(server->history, msg, Activity_error, timestamp, HIST_DFL|HIST_SERR);
 	else
 		hist_add(server->history, msg, Activity_status, timestamp, HIST_DFL);
+
+end:
 	param_free(params);
 }
