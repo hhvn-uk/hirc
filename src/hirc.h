@@ -118,6 +118,8 @@ void		serv_free(struct Server *server);
 void		serv_connect(struct Server *server);
 struct Server *	serv_create(char *name, char *host, char *port, char *nick,
 		char *username, char *realname, int tls, int tls_verify);
+void		serv_update(struct Server *sp, char *nick, char *username,
+		char *realname, int tls, int tls_verify);
 struct Server * serv_get(struct Server **head, char *name);
 struct Server * serv_add(struct Server **head, char *name, char *host,
 		char *port, char *nick, char *username, char *realname, int tls, int tls_verify);

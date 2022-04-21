@@ -121,6 +121,36 @@ serv_create(char *name, char *host, char *port, char *nick,
 	return server;
 }
 
+void
+serv_update(struct Server *sp, char *nick, char *username,
+		char *realname, int tls, int tls_verify) {
+	if (!sp)
+		return;
+	if (nick) {
+		pfree(&sp->self->nick);
+		sp->self->nick = estrdup(nick);
+	}
+	if (username) {
+		pfree(&sp->username);
+		sp->username = estrdup(nick);
+	}
+	if (realname) {
+		pfree(&sp->realname);
+		sp->username = estrdup(nick);
+	}
+#ifdef TLS
+	if (tls >= 0 && !sp->tls) {
+		sp->tls = tls;
+		if (strcmp(sp->port, "6667") == 0) {
+			pfree(&sp->port);
+			sp->port = estrdup("6697");
+		}
+	}
+	if (tls_verify >= 0)
+		sp->tls_verify = tls_verify;
+#endif /* TLS */
+}
+
 struct Server *
 serv_add(struct Server **head, char *name, char *host, char *port,
 		char *nick, char *username, char *realname, int tls, int tls_verify) {

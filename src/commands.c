@@ -186,8 +186,11 @@ struct Command commands[] = {
 		"but will hide it unless this command is used.", NULL}},
 	{"connect", command_connect, 0, {
 		"usage: /connect [-network <name>] [-nick <nick>] [-user <user>]",
-		"                [-real <comment>] [-tls] [-verify] <host> [port]",
-		"Connect to a network/server", NULL}},
+		"                [-real <comment>] [-tls] [-verify] [host] [port]",
+		"Connect to a network/server.",
+		"If no host is given, it will attempt to connect to the\n",
+		"selected server if it is disconnected\n",
+		NULL}},
 	{"disconnect", command_disconnect, 0, {
 		"usage: /disconnect [network] [msg]",
 		"Disconnect from a network/server", NULL}},
@@ -791,10 +794,10 @@ command_connect) {
 	char *network	= NULL;
 	char *host	= NULL;
 	char *port	= NULL;
-	char *nick	= config_gets("def.nick");
-	char *username	= config_gets("def.user");
-	char *realname	= config_gets("def.real");
-	int tls = 0, tls_verify = 0;
+	char *nick	= NULL;
+	char *username	= NULL;
+	char *realname	= NULL;
+	int tls = -1, tls_verify = -1; /* tell serv_update not to change */
 	int ret;
 	struct passwd *user;
 	enum {
@@ -856,34 +859,51 @@ command_connect) {
 	host = strtok(str,  " ");
 	port = strtok(NULL, " ");
 
-	if (!host && network && serv_get(&servers, network)) {
-		serv_connect(serv_get(&servers, network));
-		return;
-	} else if (!host && server) {
-		serv_connect(server);
-		return;
-	} else if (!host) {
-		ui_error("must specify host", NULL);
+	if (!host) {
+		if (network) {
+			if (!(tserver = serv_get(&servers, network)))
+				ui_error("no such network", NULL);
+		} else {
+			if (!server)
+				ui_error("must specify host", NULL);
+			else
+				tserver = server;
+		}
+		if (server) {
+			serv_update(tserver, nick, username, realname, tls, tls_verify);
+			serv_connect(tserver);
+		}
 		return;
 	}
 
-	if (!nick) {
+	if (tls <= 0)
+		tls = 0;
+	if (tls_verify <= 0)
+		tls_verify = 0;
+
+	if (!nick && !(nick = config_gets("def.nick"))) {
 		user = getpwuid(geteuid());
 		nick = user ? user->pw_name : "null";
 	}
-
+	if (!username && !(username = config_gets("def.user")))
+		username = nick;
+	if (!realname && !(realname = config_gets("def.real")))
+		realname = nick;
+	if (!network)
+		network = host;
 	if (!port) {
-		port = tls  ? "6697" : "6667";
+		/* no ifdef required, as -tls only works with -DTLS */
+		if (tls)
+			port = "6697";
+		else
+			port = "6667";
 	}
-
-	username = username ? username : nick;
-	realname = realname ? realname : nick;
-	network  = network  ? network  : host;
 
 	tserver = serv_add(&servers, network, host, port, nick, username, realname, tls, tls_verify);
 	serv_connect(tserver);
 	if (!nouich)
 		ui_select(tserver, NULL);
+	return;
 }
 
 COMMAND(
