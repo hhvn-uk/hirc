@@ -275,12 +275,12 @@ struct Config config[] = {
 		.description = {
 		"TLS server name indication.", NULL}},
 	{"format.ui.tls.issuer", 1, Val_string,
-		.str = "Cert issuer: %{b}${3}%{b}",
+		.str = "Cert issuer: %{b}${2}%{b}",
 		.strhandle = config_redraws,
 		.description = {
 		"TLS certificate issuer.", NULL}},
 	{"format.ui.tls.subject", 1, Val_string,
-		.str = "Cert subject: %{b}${3}%{b}",
+		.str = "Cert subject: %{b}${2}%{b}",
 		.strhandle = config_redraws,
 		.description = {
 		"TLS certificate subject.", NULL}},
