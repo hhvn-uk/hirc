@@ -256,9 +256,7 @@ serv_connect(struct Server *server) {
 		goto fail;
 	}
 
-	freeaddrinfo(ai);
 	server->rfd = server->wfd = fd;
-	server->connectfail = 0;
 	hist_format(server->history, Activity_status, HIST_SHOW|HIST_MAIN,
 			"SELF_CONNECTED %s %s %s", server->name, server->host, server->port);
 
@@ -295,6 +293,13 @@ serv_connect(struct Server *server) {
 			goto fail;
 		}
 
+		if (tls_handshake(server->tls_ctx) == -1) {
+			hist_format(server->history, Activity_error, HIST_SHOW,
+					"SELF_CONNECTLOST %s %s %s :%s",
+					server->name, server->host, server->port, tls_error(server->tls_ctx));
+			goto fail;
+		}
+
 		tls_config_free(tls_conf);
 
 		if (tls_peer_cert_provided(server->tls_ctx)) {
@@ -311,6 +316,9 @@ serv_connect(struct Server *server) {
 		}
 	}
 #endif /* TLS */
+
+	freeaddrinfo(ai);
+	server->connectfail = 0;
 
 	ircprintf(server, "NICK %s\r\n", server->self->nick);
 	ircprintf(server, "USER %s * * :%s\r\n",
