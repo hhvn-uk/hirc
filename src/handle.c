@@ -45,6 +45,7 @@ HANDLER(handle_RPL_TOPICWHOTIME);
 HANDLER(handle_RPL_INVITING);
 HANDLER(handle_RPL_NAMREPLY);
 HANDLER(handle_RPL_ENDOFNAMES);
+HANDLER(handle_RPL_MOTD);
 HANDLER(handle_RPL_ENDOFMOTD);
 HANDLER(handle_ERR_NOSUCHNICK);
 HANDLER(handle_ERR_NICKNAMEINUSE);
@@ -79,6 +80,8 @@ struct Handler handlers[] = {
 	{ "341",	handle_RPL_INVITING		},
 	{ "353",	handle_RPL_NAMREPLY		},
 	{ "366",	handle_RPL_ENDOFNAMES		},
+	{ "372",	handle_RPL_MOTD			},
+	{ "375",	handle_RPL_MOTD			}, /* RPL_MOTDSTART, but handle it the same way as RPL_MOTD */
 	{ "376",	handle_RPL_ENDOFMOTD		},
 	{ "401",	handle_ERR_NOSUCHNICK		},
 	{ "433",	handle_ERR_NICKNAMEINUSE	},
@@ -640,6 +643,25 @@ handle_RPL_WELCOME) {
 	}
 	hist_addp(server->history, msg, Activity_status, HIST_DFL);
 	windows[Win_buflist].refresh = 1;
+}
+
+HANDLER(
+handle_RPL_MOTD) {
+	char *text;
+
+	if (config_getl("motd.removedash")) {
+		text = msg->raw;
+		if (*text == ':')
+			text++;
+		if ((text = strchr(text, ':'))) {
+			text++;
+			if (strncmp(text, "- ", CONSTLEN("- ")) == 0)
+				memmove(text, text + 2, strlen(text + 2) + 1);
+			else if (strncmp(text, "-", CONSTLEN("-")) == 0)
+				memmove(text, text + 1, strlen(text + 1) + 1);
+		}
+	}
+	hist_addp(server->history, msg, Activity_status, HIST_DFL);
 }
 
 HANDLER(

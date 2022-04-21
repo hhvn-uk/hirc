@@ -201,6 +201,12 @@ struct Config config[] = {
 		.description = {
 		"Send an audible bell on highlights or messages.",
 		"Often triggers some other form of action in graphical environments.", NULL}},
+	{"motd.removedash", 1, Val_bool,
+		.num = 1,
+		.numhandle = config_redrawl,
+		.description = {
+		"Remove dash characters often prepended to RPL_MOTD replies.",
+		"This setting only affects messages recieved after it is set.", NULL}},
 	{"completion.hchar", 1, Val_string,
 		.str = ",",
 		.strhandle = NULL,
