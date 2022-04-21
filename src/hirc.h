@@ -42,13 +42,14 @@ size_t		wcslcpy(wchar_t *, const wchar_t *, size_t);
 
 /* main.c */
 void		cleanup(char *quitmsg);
-void		param_free(char **params);
-int		param_len(char **params);
-char **		param_create(char *msg);
-char **		param_dup(char **p);
 int		read_line(int fd, char *buf, size_t buf_len);
 int		ircgets(struct Server *server, char *buf, size_t buf_len);
 int		ircprintf(struct Server *server, char *format, ...);
+
+/* params.c */
+void		param_free(char **params);
+int		param_len(char **params);
+char **		param_create(char *msg);
 
 /* str.c */
 char *		homepath(char *path);

@@ -49,58 +49,6 @@ cleanup(char *quitmsg) {
 	ui_deinit();
 }
 
-void
-param_free(char **params) {
-	char **p;
-
-	for (p = params; p && *p; p++)
-		pfree(&*p);
-	pfree(&params);
-}
-
-int
-param_len(char **params) {
-	int i;
-
-	for (i=0; params && *params; i++, params++);
-	return i;
-}
-
-char **
-param_create(char *msg) {
-	char **ret, **rp;
-	char *params[PARAM_MAX];
-	char tmp[2048];
-	char *p, *cur;
-	int final = 0, i;
-
-	memset(params, 0, sizeof(params));
-	strlcpy(tmp, msg, sizeof(tmp));
-
-	for (p=cur=tmp, i=0; p && *p && i < PARAM_MAX; p++) {
-		if (!final && *p == ':' && *(p-1) == ' ') {
-			final = 1;
-			*(p-1) = '\0';
-			params[i++] = cur;
-			cur = p + 1;
-		}
-		if (!final && *p == ' ' && *(p+1) != ':') {
-			*p = '\0';
-			params[i++] = cur;
-			cur = p + 1;
-		}
-	}
-	*p = '\0';
-	params[i] = cur;
-
-	ret = emalloc(sizeof(params));
-	for (rp=ret, i=0; params[i]; i++, rp++)
-		*rp = estrdup(params[i]);
-	*rp = NULL;
-
-	return ret;
-}
-
 int
 read_line(int fd, char *buf, size_t buf_len) {
 	size_t  i = 0;
