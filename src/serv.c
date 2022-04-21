@@ -304,15 +304,16 @@ serv_connect(struct Server *server) {
 
 		if (tls_peer_cert_provided(server->tls_ctx)) {
 			hist_format(server->history, Activity_status, HIST_SHOW,
-					"SELF_TLS_VERSION %s %s %s %s",
+					"SELF_TLS_VERSION %s %s %d %s",
 					server->name, tls_conn_version(server->tls_ctx),
 					tls_conn_cipher_strength(server->tls_ctx),
 					tls_conn_cipher(server->tls_ctx));
-			hist_format(server->history, Activity_status, HIST_SHOW,
-					"SELF_TLS_NAMES %s %s %s %s",
-					server->name, tls_conn_servername(server->tls_ctx),
-					tls_peer_cert_issuer(server->tls_ctx),
-					tls_peer_cert_subject(server->tls_ctx));
+			hist_format(server->history, Activity_status, HIST_SHOW, "SELF_TLS_SNI %s :%s",
+					server->name, tls_conn_servername(server->tls_ctx));
+			hist_format(server->history, Activity_status, HIST_SHOW, "SELF_TLS_ISSUER %s :%s",
+					server->name, tls_peer_cert_issuer(server->tls_ctx));
+			hist_format(server->history, Activity_status, HIST_SHOW, "SELF_TLS_SUBJECT %s :%s",
+					server->name, tls_peer_cert_subject(server->tls_ctx));
 		}
 	}
 #endif /* TLS */

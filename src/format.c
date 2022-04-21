@@ -38,7 +38,9 @@ struct {
 	{"SELF_TLSNOTCOMPILED",	"format.ui.tls.notcompiled"},
 #else
 	{"SELF_TLS_VERSION",	"format.ui.tls.version"},
-	{"SELF_TLS_NAMES",	"format.ui.tls.names"},
+	{"SELF_TLS_SNI",	"format.ui.tls.sni"},
+	{"SELF_TLS_ISSUER",	"format.ui.tls.issuer"},
+	{"SELF_TLS_SUBJECT",	"format.ui.tls.subject"},
 #endif /* TLS */
 	{"SELF_KEYBIND_START",	"format.ui.keybind.start"},
 	{"SELF_KEYBIND_LIST",	"format.ui.keybind"},

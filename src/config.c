@@ -308,12 +308,22 @@ struct Config config[] = {
 		.str = "Protocol: %{b}${2}%{b} (%{b}${3}%{b} bits, %{b}${4}%{b})",
 		.strhandle = config_redraws,
 		.description = {
-		"TLS version information", NULL}},
-	{"format.ui.tls.names", 1, Val_string,
-		.str = "SNI name: %{b}${2}%{b}\\nCert subject: %{b}${3}%{b}\\nCert issuer: %{b}${3}%{b}",
+		"TLS version and crypto information.", NULL}},
+	{"format.ui.tls.sni", 1, Val_string,
+		.str = "SNI name: %{b}${2}%{b}",
 		.strhandle = config_redraws,
 		.description = {
-		"TLS identification", NULL}},
+		"TLS server name indication.", NULL}},
+	{"format.ui.tls.issuer", 1, Val_string,
+		.str = "Cert issuer: %{b}${3}%{b}",
+		.strhandle = config_redraws,
+		.description = {
+		"TLS certificate issuer.", NULL}},
+	{"format.ui.tls.subject", 1, Val_string,
+		.str = "Cert subject: %{b}${3}%{b}",
+		.strhandle = config_redraws,
+		.description = {
+		"TLS certificate subject.", NULL}},
 #endif /* TLS */
 	{"format.ui.keybind", 1, Val_string,
 		.str = " ${1}: ${2}",
