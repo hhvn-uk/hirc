@@ -79,7 +79,7 @@ install: all
 	install -m0755 $(BIN) $(BINDIR)/$(BIN)
 	sed 's/COMMIT/$(COMMIT)/' \
 		< $(MAN) \
-		> $(MANDIR)/man1/$(MAN)
+		> $(MANDIR)/man1/`basename $(MAN)`
 
 uninstall:
 	-rm -f $(BINDIR)/$(BIN)
