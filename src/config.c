@@ -1465,7 +1465,7 @@ inval:
 
 void
 config_read(char *filename) {
-	static char **bt;
+	static char **bt = NULL;
 	static int btoffset = 0;
 	char buf[8192];
 	char *path;
@@ -1478,9 +1478,9 @@ config_read(char *filename) {
 	path = realpath(filename, NULL);
 
 	/* Check if file is already being read */
-	if (bt) {
+	if (bt && btoffset) {
 		for (i = 0; i < btoffset; i++) {
-			if (strcmp(path, *(bt + i)) == 0) {
+			if (strcmp_n(path, *(bt + i)) == 0) {
 				ui_error("recursive read of '%s' is not allowed", filename);
 				pfree(&path);
 				return;
