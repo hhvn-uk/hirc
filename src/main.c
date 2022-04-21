@@ -49,21 +49,6 @@ cleanup(char *quitmsg) {
 	ui_deinit();
 }
 
-int
-read_line(int fd, char *buf, size_t buf_len) {
-	size_t  i = 0;
-	char    c = 0;
-
-	do {
-		if (read(fd, &c, sizeof(char)) != sizeof(char))
-			return 0;
-		if (c != '\r')
-			buf[i++] = c;
-	} while (c != '\n' && i < buf_len);
-	buf[i - 1] = '\0';
-	return 1;
-}
-
 void
 ircread(struct Server *sp) {
 	char *line, *end;

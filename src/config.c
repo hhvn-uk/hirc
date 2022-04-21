@@ -281,9 +281,11 @@ config_read(char *filename) {
 
 	save = nouich;
 	nouich = 1;
-	while (read_line(fileno(file), buf, sizeof(buf)))
+	while (fgets(buf, sizeof(buf), file)) {
+		buf[strlen(buf) - 1] = '\0'; /* remove \n */
 		if (*buf == '/')
 			command_eval(NULL, buf);
+	}
 	fclose(file);
 	nouich = save;
 

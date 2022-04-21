@@ -42,7 +42,6 @@ size_t		wcslcpy(wchar_t *, const wchar_t *, size_t);
 
 /* main.c */
 void		cleanup(char *quitmsg);
-int		read_line(int fd, char *buf, size_t buf_len);
 int		ircgets(struct Server *server, char *buf, size_t buf_len);
 int		ircprintf(struct Server *server, char *format, ...);
 
