@@ -25,7 +25,7 @@ SRC	= src/main.c src/mem.c src/handle.c src/hist.c \
 OBJ	= $(SRC:.c=.o)
 MAN	= doc/hirc.1
 COMMIT	= $(shell git log HEAD...HEAD~1 --pretty=format:%h)
-CFLAGS	= -g -O0 $(CTLS)
+CFLAGS	= $(DEBUG)
 LDFLAGS = -lncursesw
 
 include config.mk
