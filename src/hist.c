@@ -377,7 +377,7 @@ hist_loadlog(struct HistInfo *hist, char *server, char *channel) {
 			version = strtok_r(lines[i], "\t", &msg) + 1; /* in future versioning could allow for back-compat */
 		else
 			version = NULL;
-		tok[0] = strtok_r(lines[i], "\t", &msg);
+		tok[0] = strtok_r(*lines[i] == 'v' ? NULL : lines[i], "\t", &msg);
 		for (j = 1; j < (sizeof(tok) / sizeof(tok[0])); j++)
 			tok[j] = strtok_r(NULL, "\t", &msg); /* strtok_r will store remaining text after the tokens in msg.
 							      * This is used instead of a tok[8] as messages can contain tabs. */
