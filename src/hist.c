@@ -154,7 +154,7 @@ hist_add(struct HistInfo *histinfo,
 
 	if (!(options & HIST_NIGN)) {
 		for (ign = ignores; ign; ign = ign->next) {
-			if (!ign->server || (histinfo->server && strcmp_n(ign->server, histinfo->server->name))) {
+			if (!ign->server || (histinfo->server && strcmp_n(ign->server, histinfo->server->name) == 0)) {
 				if ((!ign->format || strcmp_n(format_get(new), ign->format) == 0) && regexec(&ign->regex, msg, 0, NULL, 0) == 0) {
 					if (!ign->noact) {
 						options |= HIST_IGN;
