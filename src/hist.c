@@ -160,7 +160,7 @@ hist_add(struct HistInfo *histinfo,
 						options |= HIST_IGN;
 						new->options = options;
 					}
-					activity = Activity_ignore;
+					activity = Activity_none;
 					break;
 				}
 			}

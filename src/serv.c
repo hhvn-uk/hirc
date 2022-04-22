@@ -93,7 +93,7 @@ serv_create(char *name, char *host, char *port, char *nick,
 	server->self = nick_create(nick, ' ', NULL);
 	server->self->self = 1;
 	server->history = emalloc(sizeof(struct HistInfo));
-	server->history->activity = Activity_ignore;
+	server->history->activity = Activity_none;
 	server->history->unread = server->history->ignored = 0;
 	server->history->server = server;
 	server->history->channel = NULL;

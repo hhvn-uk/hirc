@@ -36,9 +36,9 @@ struct Nick {
 };
 
 enum Activity {
-	Activity_ignore = 0,
-	Activity_self = Activity_ignore,
+	/* There used to be an Activity_ignore = 0, but it served no purpose */
 	Activity_none = 1,
+	Activity_self = Activity_none,
 	Activity_status = 2,
 	Activity_notice = Activity_status,
 	Activity_error = 3,

@@ -89,7 +89,7 @@ main(int argc, char *argv[]) {
 	}
 
 	main_buf = emalloc(sizeof(struct HistInfo));
-	main_buf->activity = Activity_ignore;
+	main_buf->activity = Activity_none;
 	main_buf->unread = main_buf->ignored = 0;
 	main_buf->server = NULL;
 	main_buf->channel = NULL;
