@@ -1580,7 +1580,7 @@ command_ignore) {
 		for (p = ignores, i = 1; p; p = p->next, i++)
 			if (!serv || !p->server || strcmp(server->name, p->server) == 0)
 				hist_format(selected.history, Activity_none, HIST_UI|HIST_NIGN, "SELF_IGNORES_LIST %d %s %s %s :%s",
-						i, p->server ? p->server : "ANY", noact ? "yes" : "no", p->format ? p->format : "ANY", p->text);
+						i, p->server ? p->server : "ANY", p->noact ? "yes" : "no", p->format ? p->format : "ANY", p->text);
 		hist_format(selected.history, Activity_none, HIST_UI, "SELF_IGNORES_END :End of ignore list");
 		return;
 	}
