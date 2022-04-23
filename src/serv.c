@@ -41,6 +41,7 @@ serv_free(struct Server *server) {
 	pfree(&server->name);
 	pfree(&server->username);
 	pfree(&server->realname);
+	pfree(&server->password);
 	pfree(&server->host);
 	pfree(&server->port);
 	pfree(&server->rpollfd);
@@ -67,8 +68,8 @@ serv_free(struct Server *server) {
 }
 
 struct Server *
-serv_create(char *name, char *host, char *port, char *nick,
-		char *username, char *realname, int tls, int tls_verify) {
+serv_create(char *name, char *host, char *port, char *nick, char *username,
+		char *realname, char *password, int tls, int tls_verify) {
 	struct Server *server;
 	int i;
 
@@ -87,6 +88,7 @@ serv_create(char *name, char *host, char *port, char *nick,
 	server->name = estrdup(name);
 	server->username = username ? estrdup(username) : NULL;
 	server->realname = realname ? estrdup(realname) : NULL;
+	server->password = password ? estrdup(password) : NULL;
 	server->host = estrdup(host);
 	server->port = estrdup(port);
 	server->supports = NULL;
@@ -123,7 +125,7 @@ serv_create(char *name, char *host, char *port, char *nick,
 
 void
 serv_update(struct Server *sp, char *nick, char *username,
-		char *realname, int tls, int tls_verify) {
+		char *realname, char *password, int tls, int tls_verify) {
 	if (!sp)
 		return;
 	if (nick) {
@@ -137,6 +139,10 @@ serv_update(struct Server *sp, char *nick, char *username,
 	if (realname) {
 		pfree(&sp->realname);
 		sp->username = estrdup(nick);
+	}
+	if (password) {
+		pfree(&sp->password);
+		sp->password = estrdup(password);
 	}
 #ifdef TLS
 	if (tls >= 0 && !sp->tls) {
@@ -152,11 +158,11 @@ serv_update(struct Server *sp, char *nick, char *username,
 }
 
 struct Server *
-serv_add(struct Server **head, char *name, char *host, char *port,
-		char *nick, char *username, char *realname, int tls, int tls_verify) {
+serv_add(struct Server **head, char *name, char *host, char *port, char *nick,
+		char *username, char *realname, char *password, int tls, int tls_verify) {
 	struct Server *new, *p;
 
-	if ((new = serv_create(name, host, port, nick, username, realname, tls, tls_verify)) == NULL)
+	if ((new = serv_create(name, host, port, nick, username, realname, password, tls, tls_verify)) == NULL)
 		return NULL;
 
 	if (!*head) {
@@ -321,6 +327,8 @@ serv_connect(struct Server *server) {
 	freeaddrinfo(ai);
 	server->connectfail = 0;
 
+	if (server->password)
+		serv_write(server, "PASS %s\r\n", server->password);
 	serv_write(server, "NICK %s\r\n", server->self->nick);
 	serv_write(server, "USER %s * * :%s\r\n",
 			server->username ? server->username : server->self->nick,

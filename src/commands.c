@@ -464,6 +464,7 @@ command_connect) {
 	char *nick	= NULL;
 	char *username	= NULL;
 	char *realname	= NULL;
+	char *password  = NULL;
 	int tls = -1, tls_verify = -1; /* tell serv_update not to change */
 	int ret;
 	struct passwd *user;
@@ -472,6 +473,7 @@ command_connect) {
 		opt_nick,
 		opt_username,
 		opt_realname,
+		opt_password,
 #ifdef TLS
 		opt_tls,
 		opt_tls_verify,
@@ -488,6 +490,9 @@ command_connect) {
 		{"real", CMD_ARG, opt_realname},
 		{"comment", CMD_ARG, opt_realname},
 
+		{"pass", CMD_ARG, opt_password},
+		{"password", CMD_ARG, opt_password},
+		{"auth", CMD_ARG, opt_password},
 #ifdef TLS
 		{"tls", CMD_NARG, opt_tls},
 		{"ssl", CMD_NARG, opt_tls},
@@ -511,6 +516,9 @@ command_connect) {
 			break;
 		case opt_realname:
 			realname = command_optarg;
+			break;
+		case opt_password:
+			password = command_optarg;
 			break;
 #ifdef TLS
 		case opt_tls:
@@ -537,7 +545,7 @@ command_connect) {
 				tserver = server;
 		}
 		if (server) {
-			serv_update(tserver, nick, username, realname, tls, tls_verify);
+			serv_update(tserver, nick, username, realname, password, tls, tls_verify);
 			serv_connect(tserver);
 		}
 		return;
@@ -566,7 +574,8 @@ command_connect) {
 			port = "6667";
 	}
 
-	tserver = serv_add(&servers, network, host, port, nick, username, realname, tls, tls_verify);
+	tserver = serv_add(&servers, network, host, port, nick,
+			username, realname, password, tls, tls_verify);
 	serv_connect(tserver);
 	if (!nouich)
 		ui_select(tserver, NULL);

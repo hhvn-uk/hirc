@@ -173,6 +173,7 @@ struct Server {
 	char *name;
 	char *username;
 	char *realname;
+	char *password;
 	char *host;
 	char *port;
 	struct Support *supports;

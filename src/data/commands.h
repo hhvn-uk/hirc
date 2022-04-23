@@ -148,7 +148,8 @@ struct Command commands[] = {
 		"but will hide it unless this command is used.", NULL}},
 	{"connect", command_connect, 0, {
 		"usage: /connect [-network <name>] [-nick <nick>] [-user <user>]",
-		"                [-real <comment>] [-tls] [-verify] [host] [port]",
+		"                [-real <comment>] [-pass <password]",
+		"                [-tls] [-verify] [host] [port]",
 		"Connect to a network/server.",
 		"If no host is given, it will attempt to connect to the\n",
 		"selected server if it is disconnected\n",
