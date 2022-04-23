@@ -1424,7 +1424,7 @@ command_dump) {
 	}
 
 	if (!selected)
-		selected = opt_default;
+		selected = opt_default - 1;
 
 	if (!str || !*str) {
 		command_toofew("dump");
@@ -1513,6 +1513,10 @@ command_dump) {
 
 			if (ip->format)
 				fprintf(file, "-format %s ", ip->format);
+			if (ip->regopt & REG_EXTENDED)
+				fprintf(file, "-E ");
+			if (ip->regopt & REG_ICASE)
+				fprintf(file, "-i ");
 
 			fprintf(file, "%s\n", ip->text);
 		}
