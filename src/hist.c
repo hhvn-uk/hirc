@@ -331,6 +331,7 @@ hist_log(struct History *hist) {
 struct History *
 hist_loadlog(struct HistInfo *hist, char *server, char *channel) {
 	struct History *head = NULL, *p, *prev;
+	struct stat st;
 	char filename[2048];
 	char *logdir;
 	FILE *f;
@@ -359,6 +360,9 @@ hist_loadlog(struct HistInfo *hist, char *server, char *channel) {
 		snprintf(filename, sizeof(filename), "%s/%s,%s.log", logdir, server, channel);
 	else
 		snprintf(filename, sizeof(filename), "%s/%s.log", logdir, server);
+
+	if (stat(filename, &st) == -1)
+		return NULL;
 
 	if (!(f = fopen(filename, "rb")))
 		return NULL;
@@ -428,7 +432,7 @@ hist_loadlog(struct HistInfo *hist, char *server, char *channel) {
 	fclose(f);
 
 	if (head) {
-		p = hist_format(NULL, Activity_none, HIST_SHOW|HIST_RLOG, "SELF_LOG_RESTORE %lld :log restored up to", (long long)head->timestamp);
+		p = hist_format(NULL, Activity_none, HIST_SHOW|HIST_RLOG, "SELF_LOG_RESTORE %lld :log restored up to", (long long)st.st_mtime);
 		p->origin = hist;
 		p->next = head;
 		head->prev = p;

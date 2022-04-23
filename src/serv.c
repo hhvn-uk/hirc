@@ -514,8 +514,14 @@ serv_disconnect(struct Server *server, int reconnect, char *msg) {
 	server->lastconnected = time(NULL);
 	server->reconnect = reconnect;
 
-	for (chan = server->channels; chan; chan = chan->next)
+	/* Create a history item for disconnect:
+	 *  - shows up in the log
+	 *  - updates the file's mtime, so hist_laodlog knows when we disconnected */
+	hist_format(server->history, Activity_none, HIST_LOG, "SELF_DISCONNECT");
+	for (chan = server->channels; chan; chan = chan->next) {
 		chan_setold(chan, 1);
+		hist_format(chan->history, Activity_none, HIST_LOG, "SELF_DISCONNECT");
+	}
 
 	windows[Win_buflist].refresh = 1;
 }
