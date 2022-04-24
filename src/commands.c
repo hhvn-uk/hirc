@@ -704,6 +704,33 @@ command_set) {
 }
 
 COMMAND(
+command_toggle) {
+	struct Config *conf;
+	char *p;
+
+	if (!str) {
+		command_toofew("toggle");
+		return;
+	}
+	if ((p = strrchr(str, ' ')) && *(p+1) == '\0')
+		*p = '\0';
+	if (strchr(str, ' ')) {
+		command_toomany("toggle");
+		return;
+	}
+	if (!(conf = config_getp(str))) {
+		ui_error("no such configuration variable", NULL);
+		return;
+	}
+	if (!conf->valtype == Val_bool) {
+		ui_error("%s is not a boolean variable", str);
+		return;
+	}
+
+	config_setl(conf, !conf->num);
+}
+
+COMMAND(
 command_format) {
 	char *newstr;
 	int len;

@@ -70,6 +70,7 @@ COMMAND(command_unban);
 COMMAND(command_query);
 COMMAND(command_select);
 COMMAND(command_set);
+COMMAND(command_toggle);
 COMMAND(command_format);
 COMMAND(command_server);
 COMMAND(command_bind);
@@ -250,6 +251,9 @@ struct Command commands[] = {
 		"       /set <variable> string....",
 		"Set a configuration variable.",
 		"Passing only the name prints content.", NULL}},
+	{"toggle", command_toggle, 0, {
+		"usage: /toggle <variable>",
+		"Toggle a boolean configuration variable on or off.", NULL}},
 	{"format", command_format, 0, {
 		"usage: /format <format> string...",
 		"Set a formatting variable.",

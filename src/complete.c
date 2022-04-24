@@ -234,7 +234,7 @@ getcmd:
 	if (cmd) {
 		if (wcscmp(cmd, L"help") == 0)
 			type = 1;
-		else if (wcscmp(cmd, L"set") == 0)
+		else if (wcscmp(cmd, L"set") == 0 || wcscmp(cmd, L"toggle") == 0)
 			type = 2;
 		else if (wcscmp(cmd, L"format") == 0)
 			type = 3;
