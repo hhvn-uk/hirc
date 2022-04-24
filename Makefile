@@ -46,6 +46,12 @@ config.mk:
 # that have been changed aswell.
 $(OBJ): src/struct.h
 
+# Data/ headers
+src/config.o: src/data/config.h
+src/commands.o: src/data/commands.h
+src/format.o: src/data/formats.h
+src/handle.o: src/data/handlers.h
+
 $(BIN): $(OBJ)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(OBJ)
 
