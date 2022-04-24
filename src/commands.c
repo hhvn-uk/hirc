@@ -1567,6 +1567,17 @@ command_close) {
 	}
 }
 
+static char *
+strregopt(int regopt) {
+	if (regopt & REG_EXTENDED && regopt & REG_ICASE)
+		return "extended+icase";
+	if (regopt & REG_EXTENDED)
+		return "extended";
+	if (regopt & REG_ICASE)
+		return "basic+icase";
+	return "basic";
+}
+
 COMMAND(
 command_ignore) {
 	struct Ignore *ign, *p;
@@ -1592,8 +1603,11 @@ command_ignore) {
 		hist_format(selected.history, Activity_none, HIST_UI, "SELF_IGNORES_START :Ignoring:");
 		for (p = ignores, i = 1; p; p = p->next, i++)
 			if (!serv || !p->server || strcmp(server->name, p->server) == 0)
-				hist_format(selected.history, Activity_none, HIST_UI|HIST_NIGN, "SELF_IGNORES_LIST %d %s %s %s :%s",
-						i, p->server ? p->server : "ANY", p->noact ? "yes" : "no", p->format ? p->format : "ANY", p->text);
+				hist_format(selected.history, Activity_none, HIST_UI|HIST_NIGN, "SELF_IGNORES_LIST %d %s %s %s %s :%s",
+						i, p->server ? p->server : "ANY",
+						p->noact ? "yes" : "no",
+						p->format ? p->format : "ANY",
+						strregopt(p->regopt), p->text);
 		hist_format(selected.history, Activity_none, HIST_UI, "SELF_IGNORES_END :End of ignore list");
 		return;
 	}
@@ -1691,8 +1705,12 @@ idrange:
 	ign->server = serv ? strdup(server->name) : NULL;
 
 	if (!nouich)
-		hist_format(selected.history, Activity_none, HIST_UI, "SELF_IGNORES_ADDED %s %s %s :%s",
-				serv ? server->name : "ANY", noact ? "yes" : "no", format ? format : "ANY", str);
+		hist_format(selected.history, Activity_none, HIST_UI|HIST_NIGN,
+				"SELF_IGNORES_ADDED %s %s %s %s :%s",
+				serv ? server->name : "ANY",
+				noact ? "yes" : "no",
+				format ? format : "ANY",
+				strregopt(regopt), str);
 
 	if (!ignores) {
 		ignores = ign;
