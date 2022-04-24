@@ -25,18 +25,16 @@
 #include <limits.h>
 #include "hirc.h"
 
-static int config_nicklist_location(long num);
-static int config_nicklist_width(long num);
-static int config_buflist_location(long num);
-static int config_buflist_width(long num);
-static int config_nickcolour_self(long num);
-static int config_nickcolour_range(long a, long b);
-static int config_redrawl(long num);
-static int config_redraws(char *str);
+static int config_window_hide(struct Config *conf, long num);
+static int config_window_location(struct Config *conf, long num);
+static int config_window_width(struct Config *conf, long num);
+static int config_nickcolour_self(struct Config *conf, long num);
+static int config_nickcolour_range(struct Config *conf, long a, long b);
+static int config_redrawl(struct Config *conf, long num);
+static int config_redraws(struct Config *conf, char *str);
 
 static char *strbool[] = { "true", "false", NULL };
 static char *strlocation[] = {
-	[Location_hidden] = "hidden",
 	[Location_left] = "left",
 	[Location_right] = "right",
 	NULL
@@ -54,7 +52,7 @@ static struct {
 	[Val_nzunsigned]	= {"greater than zero",			1, LONG_MAX},
 	[Val_pair]		= {"a pair",				LONG_MIN, LONG_MAX},
 	[Val_colourpair]	= {"pair with numbers from 0 to 99",	0, 99},
-	[Val_location]		= {"a location (hidden/left/right)",	Location_hidden, Location_right},
+	[Val_location]		= {"a location (left/right)",	Location_left, Location_right},
 };
 
 #include "data/config.h"
@@ -137,7 +135,7 @@ config_setl(struct Config *conf, long num) {
 			conf->valtype == Val_nzunsigned ||
 			conf->valtype == Val_location)) {
 		if (conf->numhandle)
-			if (!conf->numhandle(num))
+			if (!conf->numhandle(conf, num))
 				return;
 		conf->isdef = 0;
 		conf->num = num;
@@ -155,7 +153,7 @@ config_sets(struct Config *conf, char *str) {
 		return;
 	}
 	if (conf->strhandle)
-		if (!conf->strhandle(str))
+		if (!conf->strhandle(conf, str))
 			return;
 	if (!conf->isdef)
 		pfree(&conf->str);
@@ -171,7 +169,7 @@ config_setr(struct Config *conf, long a, long b) {
 	if (a >= vals[conf->valtype].min && b <= vals[conf->valtype].max &&
 			(conf->valtype == Val_pair || conf->valtype == Val_colourpair)) {
 		if (conf->pairhandle)
-			if (!conf->pairhandle(a, b))
+			if (!conf->pairhandle(conf, a, b))
 				return;
 		conf->isdef = 0;
 		conf->pair[0] = a;
@@ -208,13 +206,15 @@ config_set(char *name, char *val) {
 			config_setl(conf, 1);
 		else if (strcmp(tok[0], "false") == 0)
 			config_setl(conf, 0);
+		else
+			goto inval;
 	} else if (tok[0] && !tok[1] && conf->valtype == Val_location) {
-		if (strcmp(tok[0], "hidden") == 0)
-			config_setl(conf, Location_hidden);
-		else if (strcmp(tok[0], "left") == 0)
+		if (strcmp(tok[0], "left") == 0)
 			config_setl(conf, Location_left);
 		else if (strcmp(tok[0], "right") == 0)
 			config_setl(conf, Location_right);
+		else
+			goto inval;
 	} else if (tok[0]) {
 		config_sets(conf, str);
 	} else {
@@ -303,77 +303,86 @@ shrink:
 }
 
 static int
-config_nicklist_location(long num) {
-	struct Config *nick = config_getp("nicklist.location");
-	struct Config *buf = config_getp("buflist.location");
-
-	if (num == buf->num != Location_hidden) {
-		buf->num = (num == Location_left) ? Location_right : Location_left;
-		if (windows[Win_buflist].location != Location_hidden)
-			windows[Win_buflist].location = buf->num;
+config_window_hide(struct Config *conf, long num) {
+	enum Windows win;
+	enum WindowLocation loc = Location_hidden;
+	if (strcmp(conf->name, "buflist.hidden") == 0) {
+		win = Win_buflist;
+		if (!num)
+			loc = config_getl("buflist.location");
+	} else if (strcmp(conf->name, "nicklist.hidden") == 0) {
+		win = Win_nicklist;
+		if (!num)
+			loc = config_getl("nicklist.location");
 	}
-	nick->num = windows[Win_nicklist].location = num;
+	windows[win].location = loc;
+	conf->isdef = 0;
 	ui_redraw();
-	return 0;
+	return 1;
 }
 
 static int
-config_nicklist_width(long num) {
-	if (num <= COLS - (windows[Win_buflist].location ? windows[Win_buflist].w : 0) - 2) {
+config_window_location(struct Config *conf, long num) {
+	struct Config *otherloc, *otherhide;
+	enum WindowLocation win, otherwin;
+	if (strcmp(conf->name, "buflist.location") == 0) {
+		win = Win_buflist;
+		otherwin = Win_nicklist;
+		otherloc = config_getp("nicklist.location");
+		otherhide = config_getp("nicklist.hidden");
+	} else if (strcmp(conf->name, "nicklist.location") == 0) {
+		win = Win_nicklist;
+		otherwin = Win_buflist;
+		otherloc = config_getp("buflist.location");
+		otherhide = config_getp("buflist.hidden");
+	}
+	if (num == otherloc->num) {
+		otherloc->num = (num == Location_left) ? Location_right : Location_left;
+		otherloc->isdef = 0;
+		if (!otherhide->num)
+			windows[otherwin].location = otherloc->num;
+	}
+	conf->num = windows[win].location = num;
+	conf->isdef = 0;
+	ui_redraw();
+}
+
+static int
+config_window_width(struct Config *conf, long num) {
+	enum WindowLocation win;
+	if (strcmp(conf->name, "buflist.width") == 0)
+		win = Win_buflist;
+	else if (strcmp(conf->name, "nicklist.width") == 0)
+		win = Win_nicklist;
+	if (num <= COLS - (windows[win].location ? windows[win].w : 0) - 2) {
 		uineedredraw = 1;
 		return 1;
 	} else {
-		ui_error("nicklist will be too big", NULL);
+		ui_error("window will be too big", NULL);
 		return 0;
 	}
 }
 
 static int
-config_buflist_location(long num) {
-	struct Config *buf = config_getp("buflist.location");
-	struct Config *nick = config_getp("nicklist.location");
-
-	if (num == nick->num != Location_hidden) {
-		nick->num = (num == Location_left) ? Location_right : Location_left;
-		if (windows[Win_nicklist].location != Location_hidden)
-			windows[Win_nicklist].location = buf->num;
-	}
-	buf->num = windows[Win_buflist].location = num;
-	ui_redraw();
-	return 0;
-}
-
-static int
-config_buflist_width(long num) {
-	if (num <= COLS - (windows[Win_nicklist].location ? windows[Win_nicklist].w : 0) - 2) {
-		uineedredraw = 1;
-		return 1;
-	} else {
-		ui_error("buflist will be too big", NULL);
-		return 0;
-	}
-}
-
-static int
-config_nickcolour_self(long num) {
+config_nickcolour_self(struct Config *conf, long num) {
 	windows[Win_nicklist].refresh = 1;
 	return 1;
 }
 
 static int
-config_nickcolour_range(long a, long b) {
+config_nickcolour_range(struct Config *conf, long a, long b) {
 	windows[Win_nicklist].refresh = 1;
 	return 1;
 }
 
 static int
-config_redraws(char *str) {
+config_redraws(struct Config *conf, char *str) {
 	ui_redraw();
 	return 1;
 }
 
 static int
-config_redrawl(long num) {
+config_redrawl(struct Config *conf, long num) {
 	ui_redraw();
 	return 1;
 }

@@ -903,7 +903,7 @@ ui_select(struct Server *server, struct Channel *channel) {
 	selected.history->activity = Activity_none;
 	selected.history->unread = selected.history->ignored = 0;
 
-	if (!selected.hasnicks)
+	if (!selected.hasnicks || config_getl("nicklist.hidden"))
 		windows[Win_nicklist].location = Location_hidden;
 	else
 		windows[Win_nicklist].location = config_getl("nicklist.location");

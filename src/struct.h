@@ -240,9 +240,9 @@ struct Config {
 	char *str;
 	long num;
 	long pair[2];
-	int (*strhandle)(char *string);
-	int (*numhandle)(long num);
-	int (*pairhandle)(long a, long b);
+	int (*strhandle)(struct Config *, char *);
+	int (*numhandle)(struct Config *, long);
+	int (*pairhandle)(struct Config *, long, long);
 };
 
 enum WindowLocation {
@@ -262,7 +262,7 @@ struct Window {
 	WINDOW *window;
 };
 
-enum {
+enum Windows {
 	Win_dummy,
 	Win_main,
 	Win_nicklist,
