@@ -64,7 +64,7 @@ serv_free(struct Server *server) {
 		if (server->tls_ctx)
 			tls_free(server->tls_ctx);
 #endif /* TLS */
-	pfree(&p);
+	pfree(&server);
 }
 
 struct Server *
