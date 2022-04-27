@@ -161,7 +161,6 @@ hist_add(struct HistInfo *histinfo,
 						new->options = options;
 					}
 					activity = Activity_none;
-					break;
 				}
 			}
 		}
