@@ -1,0 +1,34 @@
+.\" vim: set syntax=nroff :
+.Dd COMMIT
+.Dt hirc2txt 1
+.Os
+.Sh NAME
+.Nm hirc2txt
+.Nd convert
+.Xr hirc 1
+logs to "pretty" text
+.Sh SYNOPSIS
+.Nm
+.Sh DESCRIPTION
+.Nm
+reads a log created by
+.Xr hirc 1
+from standard input and reformats it as plaintext,
+including a timestamp, before printing it to standard output.
+
+.Nm
+does not handle mIRC formatting, so it is recommended to pipe the output to
+.Xr irccat 1 ","
+also included with
+.Xr hirc 1
+in the
+.Pa misc/
+directory.
+.Sh EXAMPLES
+An example script for interactively selecting a log file and subsequently veiwing it is located at
+.Pa misc/hirc2txt.sh
+.Sh SEE ALSO
+.Xr hirc 1 ","
+.Xr irccat 1
+.Sh AUTHOR
+.An hhvn Aq Mt dev@hhvn.uk

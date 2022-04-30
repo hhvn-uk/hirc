@@ -17,13 +17,12 @@
 PREFIX	= /usr/local
 BINDIR	= $(PREFIX)/bin
 MANDIR	= $(PREFIX)/share/man
-BINS	= irccat
-MANS	= irccat.1
+BINS	= irccat hirc2txt
+MANS	= irccat.1 hirc2txt.1
 
 include ../config.mk
 
 all: $(BINS)
-irccat: irccat.c
 
 install:
 	mkdir -p $(BINDIR) $(MANDIR)/man1
