@@ -245,7 +245,7 @@ hist_purgeopt(struct HistInfo *histinfo, enum HistOpt options) {
 
 struct History *
 hist_format(struct HistInfo *histinfo, enum Activity activity, enum HistOpt options, char *format, ...) {
-	char msg[1024], **params;
+	char msg[1024];
 	va_list ap;
 
 	va_start(ap, format);
@@ -263,7 +263,7 @@ hist_log(struct History *hist) {
 	char filename[2048];
 	FILE *f;
 	char *logdir;
-	int ret, serrno;
+	int ret;
 	struct stat st;
 	char *nick, *ident, *host, *raw;
 
@@ -325,6 +325,7 @@ hist_log(struct History *hist) {
 	}
 
 	fclose(f);
+	return 0;
 }
 
 struct History *

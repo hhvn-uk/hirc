@@ -350,7 +350,7 @@ outcont:
 					/* Save ret for use in snprintf */
 					save = estrdup(ret);
 					rc = snprintf(ret, rs, "%1$*3$s%2$s", save, config_gets("divider.string"),
-							config_getl("divider.margin") + (strlen(ret) - ui_strlenc(window, ret, NULL)));
+							(int)(config_getl("divider.margin") + (strlen(ret) - ui_strlenc(window, ret, NULL))));
 					pfree(&save);
 					format = strchr(format, '}') + 1;
 					continue;
@@ -372,7 +372,7 @@ outcont:
 				save = ret;
 				ret = NULL;
 				format_(NULL, content, hist, 1);
-				rc += snprintf(&save[rc], rs - rc, "%1$*2$s", ret, pn);
+				rc += snprintf(&save[rc], rs - rc, "%1$*2$s", ret, (int)pn);
 				pfree(&ret);
 				ret = save;
 				format = strchr(format+2+CONSTLEN("pad:"), ',') + strlen(content) + 2;
@@ -461,7 +461,7 @@ outcont:
 		if (escape && *format == 'n') {
 			ret[rc++] = '\n';
 			rc += snprintf(&ret[rc], rs - rc, "%1$*3$s%2$s", "", config_gets("divider.string"),
-					ui_strlenc(NULL, ts, NULL) + config_getl("divider.margin"));
+					(int)(ui_strlenc(NULL, ts, NULL) + config_getl("divider.margin")));
 			escape = 0;
 			format++;
 			continue;
@@ -487,7 +487,7 @@ outcont:
 	ret[rc] = '\0';
 	if (!recursive && divider && !rhs) {
 		save = estrdup(ret);
-		rc = snprintf(ret, rs, "%1$*4$s%2$s%3$s", "", config_gets("divider.string"), save, config_getl("divider.margin"));
+		rc = snprintf(ret, rs, "%1$*4$s%2$s%3$s", "", config_gets("divider.string"), save, (int)config_getl("divider.margin"));
 		pfree(&save);
 	}
 
@@ -534,7 +534,7 @@ outcont:
 					if (divider) {
 						p += snprintf(p, rs - ((size_t)(p - ret)), "%1$*4$s %2$s%3$s",
 								"", config_gets("divider.string"), save,
-								config_getl("divider.margin") + ui_strlenc(NULL, ts, NULL));
+								(int)config_getl("divider.margin") + ui_strlenc(NULL, ts, NULL));
 					} else {
 						p += snprintf(p, rs - ((size_t)(p - ret)), "%1$*3$s %2$s", "", save, ui_strlenc(NULL, ts, NULL));
 					}

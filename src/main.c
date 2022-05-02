@@ -53,10 +53,8 @@ int
 main(int argc, char *argv[]) {
 	struct Selected oldselected;
 	struct Server *sp;
-	FILE *file;
 	int i, j, refreshed, inputrefreshed;
 	long pinginact, reconnectinterval, maxreconnectinterval;
-	char *tmp;
 
 	if (argc > 2) {
 		fprintf(stderr, "usage: %s [configfile]\n", basename(argv[0]));

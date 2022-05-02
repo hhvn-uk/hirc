@@ -219,7 +219,7 @@ serv_connect(struct Server *server) {
 	struct Support *s, *prev;
 	struct addrinfo hints;
 	struct addrinfo *ai = NULL;
-	int fd, ret, serrno;
+	int fd, ret;
 
 	if (!server)
 		return;
@@ -405,7 +405,7 @@ serv_read(struct Server *sp) {
 
 	sp->inputbuf[SERVER_INPUT_SIZE - 1] = '\0';
 	line = sp->inputbuf;
-	while (end = strstr(line, "\r\n")) {
+	while ((end = strstr(line, "\r\n"))) {
 		*end = '\0';
 		handle(sp, line);
 		line = end + 2;
@@ -419,7 +419,7 @@ int
 serv_write(struct Server *server, char *format, ...) {
 	char msg[512];
 	va_list ap;
-	int ret, serrno;
+	int ret;
 
 	if (!server || server->status == ConnStatus_notconnected) {
 		ui_error("Not connected to server '%s'", server ? server->name : "");
@@ -492,7 +492,6 @@ serv_poll(struct Server **head, int timeout) {
 void
 serv_disconnect(struct Server *server, int reconnect, char *msg) {
 	struct Channel *chan;
-	struct Support *s, *prev = NULL;
 	int ret;
 
 	if (msg)

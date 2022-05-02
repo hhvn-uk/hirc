@@ -147,7 +147,6 @@ void
 complete(wchar_t *str, size_t size, unsigned *counter) {
 	wchar_t *wstem = NULL;
 	char *stem = NULL;
-	static int pctok, prcnt;
 	wchar_t **_toks;
 	wchar_t **toks;
 	wchar_t *cmd;

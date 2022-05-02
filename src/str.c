@@ -144,7 +144,7 @@ strrdate(time_t secs) {
 		rc += snprintf(&ret[rc], sizeof(ret) - rc, "%d%s%s, ", mins,
 				shrt ? "m" : " min", !shrt && mins != 1 ? "s" : "");
 	if (secs || verb)
-		rc += snprintf(&ret[rc], sizeof(ret) - rc, "%d%s%s, ", secs,
+		rc += snprintf(&ret[rc], sizeof(ret) - rc, "%d%s%s, ", (int)secs,
 				shrt ? "s" : " sec", !shrt && secs != 1 ? "s" : "");
 	if (rc >= 2)
 		ret[rc - 2] = '\0';

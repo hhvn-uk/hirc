@@ -31,7 +31,7 @@
 
 short
 nick_getcolour(struct Nick *nick) {
-	unsigned short ret, sum;
+	unsigned short sum;
 	int i;
 	long range[2];
 	char *s = nick->nick;
@@ -166,7 +166,7 @@ nick_isself_server(struct Nick *nick, struct Server *server) {
 
 struct Nick *
 nick_add(struct Nick **head, char *prefix, char priv, struct Server *server) {
-	struct Nick *nick, *p;
+	struct Nick *nick;
 
 	if (!prefix || !priv)
 		return NULL;
@@ -262,9 +262,9 @@ enum {
 
 void
 nick_sort(struct Nick **head, struct Server *server) {
-	char *supportedprivs, *s[2];
+	char *s[2];
 	struct Nick *p, *next;
-	int i, swapped;
+	int swapped;
 	int map[CHAR_MAX] = {
 		['\0'] = S_null,
 		[' '] = S_space, /* default p->priv */

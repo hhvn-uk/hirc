@@ -31,10 +31,8 @@
  * than producing potential heisenbugs. */
 void
 pfree_(void **ptr) {
-	size_t i;
 	if (!ptr || !*ptr)
 		return;
-
 	free(*ptr);
 	*ptr = NULL;
 }

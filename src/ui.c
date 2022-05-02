@@ -166,7 +166,6 @@ ui_read(void) {
 	static wchar_t *backup = NULL;
 	struct Keybind *kp;
 	char *str;
-	wchar_t *wcs;
 	wint_t key;
 	int ret;
 	int savecounter;
@@ -273,7 +272,7 @@ ui_read(void) {
 			}
 			break;
 		default:
-			if (iswprint(key) || iscntrl(key) && input.counter + 1 != sizeof(input.string)) {
+			if (iswprint(key) || (iscntrl(key) && input.counter + 1 != sizeof(input.string))) {
 					memmove(input.string + input.counter + 1,
 							input.string + input.counter,
 							(wcslen(input.string + input.counter) + 1) * sizeof(wchar_t));
@@ -392,9 +391,7 @@ ui_redraw(void) {
 
 void
 ui_draw_input(void) {
-	char utfbuf[5];
 	wchar_t *p;
-	int utfc;
 	int offset;
 	int x;
 
@@ -604,7 +601,6 @@ ui_draw_buflist(void) {
 
 int
 ui_wprintc(struct Window *window, int lines, char *format, ...) {
-	char utfbuf[5];
 	char *str;
 	wchar_t *wcs, *s;
 	va_list ap;
@@ -612,10 +608,9 @@ ui_wprintc(struct Window *window, int lines, char *format, ...) {
 	attr_t curattr;
 	short temp; /* used only for wattr_get,
 		     because ncurses is dumb */
-	int cc, lc, elc, utfc;
+	int cc, lc, elc;
 	char colourbuf[2][3];
 	int colours[2];
-	int colour = 0;
 	int bold = 0;
 	int underline = 0;
 	int reverse = 0;
@@ -682,7 +677,6 @@ ui_wprintc(struct Window *window, int lines, char *format, ...) {
 
 			wattr_get(window->window, &curattr, &temp, NULL);
 			wattr_set(window->window, curattr, ui_get_pair(colours[0], colours[1]), NULL);
-			colour = 1;
 			break;
 		case 9: /* ^I */
 #ifdef A_ITALIC
@@ -694,7 +688,6 @@ ui_wprintc(struct Window *window, int lines, char *format, ...) {
 #endif /* A_ITALIC */
 			break;
 		case 15: /* ^O */
-			colour = 0;
 			bold = 0;
 			underline = 0;
 			reverse = 0;
@@ -735,7 +728,6 @@ ui_wprintc(struct Window *window, int lines, char *format, ...) {
 
 end:
 	pfree(&wcs);
-	colour = 0;
 	bold = 0;
 	underline =0;
 	reverse = 0;
@@ -777,7 +769,7 @@ ui_strlenc(struct Window *window, char *s, int *lines) {
 			if ((*s & 0xC0) != 0x80)
 				cc++;
 			ret++;
-			if (window && cc == window->w || *s == '\n') {
+			if ((window && cc == window->w) || *s == '\n') {
 				lc++;
 				cc = 0;
 			}
@@ -793,7 +785,6 @@ ui_strlenc(struct Window *window, char *s, int *lines) {
 void
 ui_draw_main(void) {
 	struct History *p, *hp;
-	char *format;
 	int y, lines;
 	int i;
 

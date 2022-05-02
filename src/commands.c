@@ -722,7 +722,7 @@ command_toggle) {
 		ui_error("no such configuration variable", NULL);
 		return;
 	}
-	if (!conf->valtype == Val_bool) {
+	if (conf->valtype != Val_bool) {
 		ui_error("%s is not a boolean variable", str);
 		return;
 	}

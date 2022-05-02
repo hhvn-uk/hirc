@@ -303,7 +303,6 @@ handle_RPL_ISUPPORT) {
 HANDLER(
 handle_RPL_AWAY) {
 	struct Channel *priv;
-	struct HistInfo *history;
 
 	if ((priv = chan_get(&server->privs, *(msg->params+2), -1)) != NULL) {
 		hist_addp(priv->history, msg, Activity_status, HIST_DFL);

@@ -182,7 +182,7 @@ config_setr(struct Config *conf, long a, long b) {
 void
 config_set(char *name, char *val) {
 	char *str = val ? estrdup(val) : NULL;
-	char *tok[3], *save, *p;
+	char *tok[3], *save;
 	struct Config *conf;
 	int i, found;
 
@@ -345,6 +345,7 @@ config_window_location(struct Config *conf, long num) {
 	conf->num = windows[win].location = num;
 	conf->isdef = 0;
 	ui_redraw();
+	return 0;
 }
 
 static int
