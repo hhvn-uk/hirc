@@ -31,6 +31,11 @@
 #endif /* TLS */
 #include "hirc.h"
 
+/* 1024 is enough to fit two max-length messages in the buffer at once.
+ * To stress-test this, it is possible to set it to 2 as the lowest value.
+ * (The last byte is reserved for '\0', so a value of 1 will act weird). */
+#define INPUT_BUF_MIN 1024
+
 void
 serv_free(struct Server *server) {
 	struct Support *p, *prev;
@@ -79,7 +84,9 @@ serv_create(char *name, char *host, char *port, char *nick, char *username,
 	server = emalloc(sizeof(struct Server));
 	server->prev = server->next = NULL;
 	server->wfd = server->rfd = -1;
-	server->inputlen = 0;
+	server->input.size = INPUT_BUF_MIN;
+	server->input.pos = 0;
+	server->input.buf = emalloc(server->input.size);
 	server->rpollfd = emalloc(sizeof(struct pollfd));
 	server->rpollfd->fd = -1;
 	server->rpollfd->events = POLLIN;
@@ -357,7 +364,7 @@ serv_read(struct Server *sp) {
 
 #ifdef TLS
 	if (sp->tls) {
-		switch (ret = tls_read(sp->tls_ctx, &sp->inputbuf[sp->inputlen], SERVER_INPUT_SIZE - sp->inputlen - 1)) {
+		switch (ret = tls_read(sp->tls_ctx, &sp->input.buf[sp->input.pos], sp->input.size - sp->input.pos - 1)) {
 		case -1:
 			err = (char *)tls_error(sp->tls_ctx);
 			len = CONSTLEN("tls_read(): ") + strlen(err) + 1;
@@ -368,19 +375,19 @@ serv_read(struct Server *sp) {
 			serv_disconnect(sp, 1, "EOF");
 			hist_format(sp->history, Activity_error, HIST_SHOW,
 					"SELF_CONNECTLOST %s %s %s :%s",
-					sp->name, sp->host, sp->port, reason ? reason : "connection close");
+					sp->name, sp->host, sp->port, reason ? reason : "connection closed");
 			pfree(&reason);
 			return;
 		case TLS_WANT_POLLIN:
 		case TLS_WANT_POLLOUT:
 			return;
 		default:
-			sp->inputlen += ret;
+			sp->input.pos += ret;
 			break;
 		}
 	} else {
 #endif /* TLS */
-		switch (ret = read(sp->rfd, &sp->inputbuf[sp->inputlen], SERVER_INPUT_SIZE - sp->inputlen - 1)) {
+		switch (ret = read(sp->rfd, &sp->input.buf[sp->input.pos], sp->input.size - sp->input.pos - 1)) {
 		case -1:
 			err = estrdup(strerror(errno));
 			len = CONSTLEN("read(): ") + strlen(err) + 1;
@@ -396,23 +403,34 @@ serv_read(struct Server *sp) {
 			pfree(&reason);
 			return;
 		default:
-			sp->inputlen += ret;
+			sp->input.pos += ret;
 			break;
 		}
 #ifdef TLS
 	}
 #endif /* TLS */
 
-	sp->inputbuf[SERVER_INPUT_SIZE - 1] = '\0';
-	line = sp->inputbuf;
+	sp->input.buf[sp->input.size - 1] = '\0';
+	line = sp->input.buf;
 	while ((end = strstr(line, "\r\n"))) {
 		*end = '\0';
 		handle(sp, line);
 		line = end + 2;
 	}
 
-	sp->inputlen -= line - sp->inputbuf;
-	memmove(sp->inputbuf, line, sp->inputlen);
+	sp->input.pos -= line - sp->input.buf;
+	memmove(sp->input.buf, line, sp->input.pos);
+
+	/* Shrink and grow buffer as needed
+	 * If we didn't read everything, serv_read will be called
+	 * again in the main loop as poll gives another POLLIN. */
+	if (sp->input.pos + ret > sp->input.size / 2) {
+		sp->input.size *= 2;
+		sp->input.buf = erealloc(sp->input.buf, sp->input.size);
+	} else if (sp->input.pos + ret < sp->input.size / 2 && sp->input.size != INPUT_BUF_MIN) {
+		sp->input.size /= 2;
+		sp->input.buf = erealloc(sp->input.buf, sp->input.size);
+	}
 }
 
 int

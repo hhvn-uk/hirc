@@ -161,13 +161,15 @@ struct Schedule {
 	struct Schedule *next;
 };
 
-#define SERVER_INPUT_SIZE 16384
 struct Server {
 	struct Server *prev;
 	int wfd;
 	int rfd;
-	char inputbuf[SERVER_INPUT_SIZE];
-	int inputlen;
+	struct {
+		char *buf;
+		size_t size;
+		size_t pos;
+	} input;
 	struct pollfd *rpollfd;
 	enum ConnStatus status;
 	char *name;
