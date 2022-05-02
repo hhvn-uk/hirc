@@ -111,8 +111,8 @@ complete_files(char *str, char **ret, int *fullcomplete) {
 	int dirs, i;
 	size_t len;
 
-	cpy[0] = estrdup(str);
-	cpy[1] = estrdup(str);
+	cpy[0] = estrdup(homepath(str));
+	cpy[1] = estrdup(cpy[0]);
 	dir = estrdup(dirname(cpy[0]));
 	base = basename(cpy[1]);
 	len = strlen(base);

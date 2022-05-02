@@ -1389,7 +1389,7 @@ command_source) {
 	p = strrchr(str, ' ');
 	if (p && *(p+1) == '\0')
 		*p = '\0'; /* remove trailing spaces */
-	config_read(str);
+	config_read(homepath(str));
 }
 
 COMMAND(
@@ -1457,6 +1457,7 @@ command_dump) {
 		command_toofew("dump");
 		return;
 	}
+	str = homepath(str);
 	p = strrchr(str, ' ');
 	if (p && *(p+1) == '\0')
 		*p = '\0';
