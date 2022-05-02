@@ -19,7 +19,9 @@
 
 #include <string.h>
 #include <libgen.h>
+#include <limits.h>
 #include <dirent.h>
+#include <sys/stat.h>
 #include "hirc.h"
 
 void complete_stitch(wchar_t *dest, size_t dsize, unsigned *counter, unsigned coff,
@@ -32,7 +34,7 @@ void complete_cmds(char *str, size_t len, char **ret, int *fullcomplete);
 void complete_settings(char *str, size_t len, char **ret, int *fullcomplete);
 void complete_nicks(struct Channel *chan, char *str, size_t len, char **ret, int *fullcomplete);
 void complete_servers(struct Server **head, char *str, size_t len, char **ret, int *fullcomplete);
-void complete_files(char *str, size_t len, char **ret, int *fullcomplete);
+void complete_files(char *str, char **ret, int *fullcomplete);
 
 void
 complete_stitch(wchar_t *dest, size_t dsize, unsigned *counter, unsigned coff,
@@ -101,27 +103,44 @@ complete_servers(struct Server **head, char *str, size_t len, char **ret, int *f
 }
 
 void
-complete_files(char *str, size_t len, char **ret, int *fullcomplete) {
-	char *cpy[2], *dir, *file;
+complete_files(char *str, char **ret, int *fullcomplete) {
+	char *cpy[2], *dir, *base;
+	char path[PATH_MAX], *p;
 	struct dirent **dirent;
+	struct stat st;
 	int dirs, i;
+	size_t len;
 
 	cpy[0] = estrdup(str);
 	cpy[1] = estrdup(str);
-	dir = dirname(cpy[0]);
-	file = basename(cpy[1]);
+	dir = estrdup(dirname(cpy[0]));
+	base = basename(cpy[1]);
+	len = strlen(base);
 
 	if ((dirs = scandir(dir, &dirent, NULL, alphasort)) >= 0) {
+		if (*(p = dir + strlen(dir) - 1) == '/')
+			*p = '\0';
 		for (i = 0; i < dirs; i++) {
-			if (strncmp(dirent[i]->d_name, str, len) == 0)
-				complete_add(ret, dirent[i]->d_name, fullcomplete);
+			if (strncmp(dirent[i]->d_name, base, len) == 0) {
+				snprintf(path, sizeof(path), "%s/%s", dir, dirent[i]->d_name);
+				complete_add(ret, path, fullcomplete);
+			}
 			pfree(&dirent[i]);
 		}
 		pfree(&dirent);
 	}
 
+	/* A directory isn't a full completion */
+	if (*fullcomplete && stat(*ret, &st) == 0 && S_ISDIR(st.st_mode)) {
+		snprintf(path, sizeof(path), "%s/", *ret);
+		pfree(ret); /* already a pointer to the pointer */
+		*ret = estrdup(path);
+		*fullcomplete = 0;
+	}
+
 	pfree(&cpy[0]);
 	pfree(&cpy[1]);
+	pfree(&dir);
 }
 
 void
@@ -311,7 +330,7 @@ getcmd:
 		stem = wctos(wstem);
 		len = strlen(stem);
 
-		complete_files(stem, len, &found, &fullcomplete);
+		complete_files(stem, &found, &fullcomplete);
 		pfree(&stem);
 
 		if (found) {
