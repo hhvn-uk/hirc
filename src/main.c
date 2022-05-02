@@ -127,7 +127,8 @@ main(int argc, char *argv[]) {
 						"SELF_CONNECTLOST %s %s %s :No ping reply in %d seconds",
 						sp->name, sp->host, sp->port, pinginact);
 			} else if (sp->status == ConnStatus_notconnected && sp->reconnect &&
-					(time(NULL) - sp->lastconnected) >= (sp->connectfail * reconnectinterval)) {
+					((time(NULL) - sp->lastconnected) >= maxreconnectinterval ||
+					(time(NULL) - sp->lastconnected) >= (sp->connectfail * reconnectinterval))) {
 				/* time since last connected is sufficient to initiate reconnect */
 				serv_connect(sp);
 			}
