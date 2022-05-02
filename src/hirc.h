@@ -71,9 +71,9 @@ char * 		wctos(wchar_t *str);
 /* chan.c */
 void		chan_free(struct Channel *channel);
 void		chan_free_list(struct Channel **head);
-struct Channel *chan_create(struct Server *server, char *name, int priv);
+struct Channel *chan_create(struct Server *server, char *name, int query);
 struct Channel *chan_get(struct Channel **head, char *name, int old);
-struct Channel *chan_add(struct Server *server, struct Channel **head, char *name, int priv);
+struct Channel *chan_add(struct Server *server, struct Channel **head, char *name, int query);
 int		chan_isold(struct Channel *channel);
 void 		chan_setold(struct Channel *channel, int old);
 /* struct Channel *chan_dup(struct Channel *channel); */
@@ -155,7 +155,7 @@ void		ui_draw_input(void);
 void		ui_draw_nicklist(void);
 void		ui_draw_buflist(void);
 void		ui_draw_main(void);
-int		ui_buflist_count(int *ret_servers, int *ret_channels, int *ret_privs);
+int		ui_buflist_count(int *ret_servers, int *ret_channels, int *ret_queries);
 int		ui_buflist_get(int num, struct Server **server, struct Channel **chan);
 int		ui_get_pair(short fg, short bg);
 int		ui_wprintc(struct Window *window, int lines, char *format, ...);

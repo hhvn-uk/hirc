@@ -52,7 +52,7 @@ chan_free_list(struct Channel **head) {
 }
 
 struct Channel *
-chan_create(struct Server *server, char *name, int priv) {
+chan_create(struct Server *server, char *name, int query) {
 	struct Channel *channel;
 
 	channel = emalloc(sizeof(struct Channel));
@@ -61,7 +61,7 @@ chan_create(struct Server *server, char *name, int priv) {
 	channel->nicks = NULL;
 	channel->old = 0;
 	channel->mode = channel->topic = NULL;
-	channel->priv = priv;
+	channel->query = query;
 	channel->server = server;
 	channel->history = emalloc(sizeof(struct HistInfo));
 	channel->history->activity = Activity_none;
@@ -85,13 +85,13 @@ chan_selected(struct Channel *channel) {
 }
 
 struct Channel *
-chan_add(struct Server *server, struct Channel **head, char *name, int priv) {
+chan_add(struct Server *server, struct Channel **head, char *name, int query) {
 	struct Channel *channel, *p;
 
 	if (!name)
 		return NULL;
 
-	if ((channel = chan_create(server, name, priv)) == NULL)
+	if ((channel = chan_create(server, name, query)) == NULL)
 		return NULL;
 
 	if (!*head) {

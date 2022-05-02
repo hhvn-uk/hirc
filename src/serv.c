@@ -48,7 +48,7 @@ serv_free(struct Server *server) {
 	nick_free(server->self);
 	hist_free_list(server->history);
 	chan_free_list(&server->channels);
-	chan_free_list(&server->privs);
+	chan_free_list(&server->queries);
 	prev = server->supports;
 	p = prev->next;
 	while (prev) {
@@ -101,7 +101,7 @@ serv_create(char *name, char *host, char *port, char *nick, char *username,
 	server->history->channel = NULL;
 	server->history->history = NULL;
 	server->channels = NULL;
-	server->privs = NULL;
+	server->queries = NULL;
 	server->schedule = NULL;
 	server->reconnect = 0;
 	for (i=0; i < Expect_last; i++)

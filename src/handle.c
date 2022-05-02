@@ -218,7 +218,6 @@ HANDLER(
 handle_PRIVMSG) {
 	int act_direct = Activity_hilight, act_regular = Activity_message, act;
 	struct Channel *chan;
-	struct Channel *priv;
 	struct Nick *nick;
 	char *target;
 
@@ -235,18 +234,18 @@ handle_PRIVMSG) {
 		hist_addp(server->history, msg, Activity_status, HIST_DFL);
 	} else if (strcmp_n(target, server->self->nick) == 0) {
 		/* it's messaging me */
-		if ((priv = chan_get(&server->privs, nick->nick, -1)) == NULL)
-			priv = chan_add(server, &server->privs, nick->nick, 1);
-		chan_setold(priv, 0);
+		if ((chan = chan_get(&server->queries, nick->nick, -1)) == NULL)
+			chan = chan_add(server, &server->queries, nick->nick, 1);
+		chan_setold(chan, 0);
 
-		hist_addp(priv->history, msg, act_direct, HIST_DFL);
+		hist_addp(chan->history, msg, act_direct, HIST_DFL);
 	} else if (nick_isself(nick) && !strchr("#&!+", *target)) {
 		/* i'm messaging someone */
-		if ((priv = chan_get(&server->privs, target, -1)) == NULL)
-			priv = chan_add(server, &server->privs, target, 1);
-		chan_setold(priv, 0);
+		if ((chan = chan_get(&server->queries, target, -1)) == NULL)
+			chan = chan_add(server, &server->queries, target, 1);
+		chan_setold(chan, 0);
 
-		hist_addp(priv->history, msg, act_regular, HIST_DFL);
+		hist_addp(chan->history, msg, act_regular, HIST_DFL);
 	} else {
 		/* message to a channel */
 		if ((chan = chan_get(&server->channels, target, -1)) == NULL)
@@ -262,13 +261,13 @@ handle_PRIVMSG) {
 
 HANDLER(
 handle_INVITE) {
-	struct Channel *priv;
+	struct Channel *query;
 
 	if (!msg->from || param_len(msg->params) < 3)
 		return;
 
-	if ((priv = chan_get(&server->privs, msg->from->nick, -1)) != NULL)
-		hist_addp(priv->history, msg, Activity_status, HIST_DFL);
+	if ((query = chan_get(&server->queries, msg->from->nick, -1)) != NULL)
+		hist_addp(query->history, msg, Activity_status, HIST_DFL);
 	else
 		hist_addp(server->history, msg, Activity_status, HIST_DFL);
 }
@@ -302,10 +301,10 @@ handle_RPL_ISUPPORT) {
 
 HANDLER(
 handle_RPL_AWAY) {
-	struct Channel *priv;
+	struct Channel *query;
 
-	if ((priv = chan_get(&server->privs, *(msg->params+2), -1)) != NULL) {
-		hist_addp(priv->history, msg, Activity_status, HIST_DFL);
+	if ((query = chan_get(&server->queries, *(msg->params+2), -1)) != NULL) {
+		hist_addp(query->history, msg, Activity_status, HIST_DFL);
 		hist_addp(server->history, msg, Activity_status, HIST_LOG);
 	} else {
 		hist_addp(server->history, msg, Activity_status, HIST_DFL);

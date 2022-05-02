@@ -110,7 +110,7 @@ command_msg) {
 	if (serv_ischannel(server, target))
 		chan = chan_get(&server->channels, target, -1);
 	else
-		chan = chan_get(&server->privs, target, -1);
+		chan = chan_get(&server->queries, target, -1);
 
 	serv_write(server, "PRIVMSG %s :%s\r\n", target, message);
 	if (chan) {
@@ -134,7 +134,7 @@ command_notice) {
 	if (serv_ischannel(server, target))
 		chan = chan_get(&server->channels, target, -1);
 	else
-		chan = chan_get(&server->privs, target, -1);
+		chan = chan_get(&server->queries, target, -1);
 
 	serv_write(server, "NOTICE %s :%s\r\n", target, message);
 	if (chan) {
@@ -171,7 +171,7 @@ command_ctcp) {
 	}
 
 	if ((chan = chan_get(&server->channels, target, -1)) == NULL)
-		chan = chan_get(&server->privs, target, -1);
+		chan = chan_get(&server->queries, target, -1);
 
 	/* XXX: if we CTCP a channel, responses should go to that channel.
 	 * This requires more than just expect_set, so might never be
@@ -186,7 +186,7 @@ command_ctcp) {
 
 COMMAND(
 command_query) {
-	struct Channel *priv;
+	struct Channel *query;
 
 	if (!str) {
 		command_toofew("query");
@@ -203,11 +203,11 @@ command_query) {
 		return;
 	}
 
-	if ((priv = chan_get(&server->privs, str, -1)) == NULL)
-		priv = chan_add(server, &server->privs, str, 1);
+	if ((query = chan_get(&server->queries, str, -1)) == NULL)
+		query = chan_add(server, &server->queries, str, 1);
 
 	if (!nouich)
-		ui_select(server, priv);
+		ui_select(server, query);
 }
 
 COMMAND(
@@ -1496,7 +1496,7 @@ command_dump) {
 						fprintf(file, "/server %s /join %s\n", sp->name, chp->name);
 			}
 			if (selected & opt_queries) {
-				for (chp = sp->privs; chp; chp = chp->next)
+				for (chp = sp->queries; chp; chp = chp->next)
 					fprintf(file, "/server %s /query %s\n", sp->name, chp->name);
 			}
 			fprintf(file, "\n");
@@ -1581,7 +1581,7 @@ command_close) {
 			serv_write(sp, "PART %s\r\n", chp->name);
 			chan_remove(&sp->channels, chp->name);
 		} else {
-			chan_remove(&sp->privs, chp->name);
+			chan_remove(&sp->queries, chp->name);
 		}
 		ui_select(sp, NULL);
 	} else {

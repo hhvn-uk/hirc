@@ -98,7 +98,7 @@ struct Channel {
 	char *name;
 	char *mode;
 	char *topic;
-	int priv;
+	int query;
 	struct Nick *nicks;
 	struct HistInfo *history;
 	struct Server *server;
@@ -180,7 +180,7 @@ struct Server {
 	struct Nick *self;
 	struct HistInfo *history;
 	struct Channel *channels;
-	struct Channel *privs;
+	struct Channel *queries;
 	struct Schedule *schedule;
 	int reconnect;
 	char *expect[Expect_last];

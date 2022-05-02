@@ -446,7 +446,7 @@ ui_draw_nicklist(void) {
 }
 
 int
-ui_buflist_count(int *ret_servers, int *ret_channels, int *ret_privs) {
+ui_buflist_count(int *ret_servers, int *ret_channels, int *ret_queries) {
 	struct Server *sp;
 	struct Channel *chp;
 	int sc, cc, pc;
@@ -454,7 +454,7 @@ ui_buflist_count(int *ret_servers, int *ret_channels, int *ret_privs) {
 	for (sc = cc = pc = 0, sp = servers; sp; sp = sp->next, sc++) {
 		for (chp = sp->channels; chp; chp = chp->next, cc++)
 			;
-		for (chp = sp->privs; chp; chp = chp->next, pc++)
+		for (chp = sp->queries; chp; chp = chp->next, pc++)
 			;
 	}
 
@@ -462,7 +462,7 @@ ui_buflist_count(int *ret_servers, int *ret_channels, int *ret_privs) {
 		*ret_servers = sc;
 	if (ret_channels)
 		*ret_channels = cc;
-	if (ret_privs)
+	if (ret_queries)
 		*ret_channels = pc;
 
 	return sc + cc + pc + 1;
@@ -502,7 +502,7 @@ ui_buflist_get(int num, struct Server **server, struct Channel **chan) {
 				return 0;
 			}
 		}
-		for (chp = sp->privs; chp; chp = chp->next, i++) {
+		for (chp = sp->queries; chp; chp = chp->next, i++) {
 			if (i == num) {
 				*server = sp;
 				*chan = chp;
@@ -568,13 +568,13 @@ ui_draw_buflist(void) {
 					indicator = format_get_bufact(chp->history->activity);
 
 				ui_wprintc(&windows[Win_buflist], 1, "%02d: %s  %s─ %s%s\n", i,
-						sp->next ? "│" : " ", chp->next || sp->privs ? "├" : "└", indicator, chp->name);
+						sp->next ? "│" : " ", chp->next || sp->queries ? "├" : "└", indicator, chp->name);
 				wattrset(windows[Win_buflist].window, A_NORMAL);
 			}
 			i++;
 		}
 
-		for (prp = sp->privs; prp && (i - scroll - 1) < windows[Win_buflist].h; prp = prp->next) {
+		for (prp = sp->queries; prp && (i - scroll - 1) < windows[Win_buflist].h; prp = prp->next) {
 			if (scroll < i - 1) {
 				if (selected.channel == prp)
 					wattron(windows[Win_buflist].window, A_BOLD);
@@ -843,7 +843,7 @@ ui_select(struct Server *server, struct Channel *channel) {
 	selected.server   = server;
 	selected.history  = channel ? channel->history : server ? server->history : main_buf;
 	selected.name     = channel ? channel->name    : server ? server->name    : "hirc";
-	selected.hasnicks = channel ? !channel->priv && !channel->old : 0;
+	selected.hasnicks = channel ? !channel->query && !channel->old : 0;
 	selected.showign  = 0;
 
 	if (selected.history->unread || selected.history->ignored) {
