@@ -38,7 +38,8 @@
 
 void
 serv_free(struct Server *server) {
-	struct Support *p, *prev;
+	struct Support *sp, *sprev;
+	struct Schedule *ep, *eprev;
 
 	if (!server)
 		return;
@@ -54,15 +55,27 @@ serv_free(struct Server *server) {
 	hist_free_list(server->history);
 	chan_free_list(&server->channels);
 	chan_free_list(&server->queries);
-	prev = server->supports;
-	p = prev->next;
-	while (prev) {
-		pfree(&prev->key);
-		pfree(&prev->value);
-		pfree(&prev);
-		prev = p;
-		if (p)
-			p = p->next;
+	sprev = server->supports;
+	if (sprev)
+		sp = sprev->next;
+	while (sprev) {
+		pfree(&sprev->key);
+		pfree(&sprev->value);
+		pfree(&sprev);
+		sprev = sp;
+		if (sp)
+			sp = sp->next;
+	}
+	eprev = server->schedule;
+	if (eprev)
+		ep = eprev->next;
+	while (eprev) {
+		pfree(&eprev->tmsg);
+		pfree(&eprev->msg);
+		pfree(&eprev);
+		eprev = ep;
+		if (ep)
+			ep = ep->next;
 	}
 #ifdef TLS
 	if (server->tls)
