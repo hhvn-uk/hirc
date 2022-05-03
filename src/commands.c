@@ -1054,7 +1054,7 @@ command_bind) {
 
 		ui_error("no such keybind: '%s'", binding);
 	} else {
-		if (ui_bind(binding, cmd) == -1)
+		if (ui_bind(binding, cmd) == -1 && !nouich)
 			ui_error("keybind already exists: '%s'", binding);
 	}
 }
@@ -1106,7 +1106,7 @@ command_alias) {
 
 		ui_error("no such alias: '%s'", alias);
 	} else {
-		if (alias_add(alias, cmd) == -1)
+		if (alias_add(alias, cmd) == -1 && !nouich)
 			ui_error("alias already exists: '%s'", alias);
 	}
 }
