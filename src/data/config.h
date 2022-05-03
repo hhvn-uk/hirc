@@ -335,6 +335,11 @@ struct Config config[] = {
 		.strhandle = config_redraws,
 		.description = {
 		"Format of unread message indicator.", NULL}},
+	{"format.ui.newday", 1, Val_string,
+		.str = "%{c:93}---%{=}%{c:93}%{b}%{time:%A %d %B %Y,${1}}%{b} ---",
+		.strhandle = config_redraws,
+		.description = {
+		"Format of indicator placed between messages on different days.", NULL}},
 	{"format.ui.ignores.start", 1, Val_string,
 		.str = "Ignoring:",
 		.strhandle = config_redraws,

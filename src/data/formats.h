@@ -52,6 +52,7 @@ struct {
 	{"SELF_AUTOCMDS_LIST",	"format.ui.autocmds"},
 	{"SELF_AUTOCMDS_END",	"format.ui.autocmds.end"},
 	{"SELF_LOG_RESTORE",	"format.ui.logrestore"},
+	{"SELF_NEW_DAY",	"format.ui.newday"},
 	{"SELF_UNREAD",		"format.ui.unread"},
 	{"SELF_IGNORES_START",	"format.ui.ignores.start"},
 	{"SELF_IGNORES_LIST",	"format.ui.ignores"},

@@ -126,6 +126,7 @@ hist_add(struct HistInfo *histinfo,
 	struct Nick *from = NULL;
 	struct History *new, *p;
 	struct Ignore *ign;
+	struct tm ptm, ctm, dtm;
 	int i;
 
 	if (!histinfo || !msg)
@@ -163,6 +164,18 @@ hist_add(struct HistInfo *histinfo,
 					activity = Activity_none;
 				}
 			}
+		}
+	}
+
+	if (strncmp(msg, "SELF_NEW_DAY", CONSTLEN("SELF_NEW_DAY")) != 0 && histinfo && histinfo->history &&
+			histinfo->history->timestamp < timestamp && !(histinfo->history->options & HIST_RLOG)) {
+		localtime_r(&histinfo->history->timestamp, &ptm);
+		localtime_r(&timestamp, &ctm);
+		if (ptm.tm_mday != ctm.tm_mday || ptm.tm_mon != ctm.tm_mon || ptm.tm_year != ctm.tm_year) {
+			memcpy(&dtm, &ctm, sizeof(struct tm));
+			dtm.tm_sec = dtm.tm_min = dtm.tm_hour = 0;
+			hist_format(histinfo, Activity_none, histinfo->server ? HIST_DFL : HIST_SHOW,
+					"SELF_NEW_DAY %d :day changed to", (long long)mktime(&dtm));
 		}
 	}
 
