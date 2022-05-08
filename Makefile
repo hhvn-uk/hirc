@@ -80,14 +80,14 @@ misc-uninstall:
 misc-clean:
 	cd misc/ && make clean
 
-install: all
+install: all misc-install
 	mkdir -p $(BINDIR) $(MANDIR)/man1
 	install -m0755 $(BIN) $(BINDIR)/$(BIN)
 	sed 's/COMMIT/$(COMMIT)/' \
 		< $(MAN) \
 		> $(MANDIR)/man1/`basename $(MAN)`
 
-uninstall:
+uninstall: misc-uninstall
 	-rm -f $(BINDIR)/$(BIN)
 	-rm -f $(MANDIR)/man1/$(MAN)
 

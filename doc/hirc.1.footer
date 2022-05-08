@@ -27,6 +27,10 @@ so that '/unalias /command` is translated to `/alias -delete /command`
 .Dl /server hlircnet /ignore -E -server ^:[^ ]* (JOIN|PART|QUIT).*
 Ignore join, part and quit messages on server 'hlircnet'.
 .Sh SEE ALSO
-.Xr irssi 1
+.Bl -compact -tag -width "hirc2txt()"
+.It Xr irssi 1
+.It Xr irccat 1
+.It Xr hirc2txt 1
+Displays hirc logs in a human friendly way.
 .Sh AUTHOR
 .An hhvn Aq Mt dev@hhvn.uk
