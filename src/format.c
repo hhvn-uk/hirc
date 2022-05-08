@@ -46,8 +46,7 @@ format_get(struct History *hist) {
 	char *cmd, *p1, *p2;
 	int i;
 
-	if (!hist)
-		return NULL;
+	assert_warn(hist, NULL);
 
 	if (!hist->params)
 		goto raw;
@@ -163,8 +162,7 @@ format_(struct Window *window, char *format, struct History *hist, int recursive
 
 	if (!format)
 		format = config_gets(format_get(hist));
-	if (!format)
-		return NULL;
+	assert_warn(format, NULL);
 
 	pfree(&ret);
 	ret = emalloc(rs);

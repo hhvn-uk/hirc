@@ -1,0 +1,4 @@
+Include the following in config.mk:
+	DEBUG = -g3 -O0 -Wall -DASSERT_ALWAYS_DIES -DDIE_CORE
+
+Then make sure to `make clean`, before trying to debug something.

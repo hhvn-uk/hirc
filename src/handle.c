@@ -26,8 +26,7 @@
 
 HANDLER(
 handle_PING) {
-	if (param_len(msg->params) < 2)
-		return;
+	assert_warn(param_len(msg->params) >= 2,);
 
 	serv_write(server, "PONG :%s\r\n", *(msg->params+1));
 }
@@ -36,8 +35,7 @@ HANDLER(
 handle_PONG) {
 	int len;
 
-	if ((len = param_len(msg->params)) < 2)
-		return;
+	assert_warn((len = param_len(msg->params)) >= 2,);
 
 	/* RFC1459 says that PONG should have a list of daemons,
 	 * but that's not how PONG seems to work in modern IRC. 
@@ -54,8 +52,7 @@ handle_JOIN) {
 	struct Nick *nick;
 	char *target;
 
-	if (!msg->from || param_len(msg->params) < 2)
-		return;
+	assert_warn(msg->from && param_len(msg->params) >= 2,);
 
 	target = *(msg->params+1);
 	if ((chan = chan_get(&server->channels, target, -1)) == NULL)
@@ -86,8 +83,7 @@ handle_PART) {
 	struct Nick *nick;
 	char *target;
 
-	if (!msg->from || param_len(msg->params) < 2)
-		return;
+	assert_warn(msg->from && param_len(msg->params) >= 2,);
 
 	target = *(msg->params+1);
 	if ((chan = chan_get(&server->channels, target, -1)) == NULL)
@@ -118,8 +114,7 @@ handle_KICK) {
 	struct Nick *nick;
 	char *target;
 
-	if (!msg->from || param_len(msg->params) < 3)
-		return;
+	assert_warn(msg->from && param_len(msg->params) >= 3,);
 
 	target = *(msg->params+1);
 	if ((chan = chan_get(&server->channels, target, -1)) == NULL)
@@ -173,8 +168,7 @@ handle_QUIT) {
 	struct Channel *chan;
 	struct Nick *nick;
 
-	if (!msg->from || param_len(msg->params) < 1)
-		return;
+	assert_warn(msg->from && param_len(msg->params) >= 1,);
 
 	nick = msg->from;
 	if (nick_isself(nick)) {
@@ -196,8 +190,7 @@ HANDLER(
 handle_MODE) {
 	struct Channel *chan;
 
-	if (!msg->from || param_len(msg->params) < 3)
-		return;
+	assert_warn(msg->from && param_len(msg->params) >= 3,);
 
 	if (serv_ischannel(server, *(msg->params+1))) {
 		if ((chan = chan_get(&server->channels, *(msg->params+1), -1)) == NULL)
@@ -221,8 +214,7 @@ handle_PRIVMSG) {
 	struct Nick *nick;
 	char *target;
 
-	if (!msg->from || param_len(msg->params) < 3)
-		return;
+	assert_warn(msg->from && param_len(msg->params) >= 3,);
 
 	if (strcmp(*msg->params, "NOTICE") == 0)
 		act_direct = act_regular = Activity_notice;
@@ -263,8 +255,7 @@ HANDLER(
 handle_INVITE) {
 	struct Channel *query;
 
-	if (!msg->from || param_len(msg->params) < 3)
-		return;
+	assert_warn(msg->from && param_len(msg->params) >= 3,);
 
 	if ((query = chan_get(&server->queries, msg->from->nick, -1)) != NULL)
 		hist_addp(query->history, msg, Activity_status, HIST_DFL);
@@ -278,8 +269,7 @@ handle_RPL_ISUPPORT) {
 	char **params = msg->params;
 
 	hist_addp(server->history, msg, Activity_status, HIST_DFL);
-	if (param_len(msg->params) < 4)
-		return;
+	assert_warn(param_len(msg->params) >= 4,);
 
 	params += 2;
 
@@ -315,8 +305,7 @@ HANDLER(
 handle_RPL_CHANNELMODEIS) {
 	struct Channel *chan;
 
-	if (param_len(msg->params) < 4)
-		return;
+	assert_warn(param_len(msg->params) >= 4,);
 
 	if ((chan = chan_get(&server->channels, *(msg->params+2), -1)) == NULL)
 		chan = chan_add(server, &server->channels, *(msg->params+2), 0);
@@ -337,8 +326,7 @@ HANDLER(
 handle_RPL_INVITING) {
 	struct Channel *chan;
 
-	if (param_len(msg->params) < 4)
-		return;
+	assert_warn(param_len(msg->params) >= 4,);
 
 	if ((chan = chan_get(&server->channels, *(msg->params+3), -1)) == NULL)
 		chan = chan_add(server, &server->channels, *(msg->params+3), 0);
@@ -355,8 +343,7 @@ handle_RPL_NAMREPLY) {
 	char **nicks, **nicksref;
 	char *supportedprivs;
 
-	if (param_len(params) < 5)
-		return;
+	assert_warn(param_len(params) >= 5,);
 
 	hist_addp(server->history, msg, Activity_status, HIST_LOG);
 
@@ -403,8 +390,7 @@ handle_RPL_ENDOFNAMES) {
 	char *target;
 
 	hist_addp(server->history, msg, Activity_status, HIST_LOG);
-	if (param_len(msg->params) < 3)
-		return;
+	assert_warn(param_len(msg->params) >= 3,);
 
 	target = *(msg->params+2);
 	if (strcmp_n(target, expect_get(server, Expect_names)) == 0)
@@ -451,8 +437,7 @@ handle_NICK) {
 	char *newnick;
 	char priv;
 
-	if (!msg->from || !*msg->params || !*(msg->params+1))
-		return;
+	assert_warn(msg->from && *msg->params && *(msg->params+1),);
 
 	nick = msg->from;
 	hist_addp(server->history, msg, Activity_status, msg->from->self ? HIST_DFL : HIST_LOG);
@@ -486,8 +471,7 @@ HANDLER(
 handle_TOPIC) {
 	struct Channel *chan;
 
-	if (param_len(msg->params) < 3 || !msg->from)
-		return;
+	assert_warn(param_len(msg->params) >= 3 && msg->from,);
 
 	if ((chan = chan_get(&server->channels, *(msg->params+1), -1)) != NULL) {
 		hist_addp(chan->history, msg, Activity_status, HIST_DFL);
@@ -501,8 +485,7 @@ handle_RPL_NOTOPIC) {
 	struct Channel *chan;
 	char *target;
 
-	if (param_len(msg->params) < 4)
-		return;
+	assert_warn(param_len(msg->params) >= 4,);
 
 	target = *(msg->params+2);
 
@@ -523,8 +506,7 @@ handle_RPL_TOPIC) {
 	struct Channel *chan;
 	char *target, *topic;
 
-	if (param_len(msg->params) < 4)
-		return;
+	assert_warn(param_len(msg->params) >= 4,);
 
 	hist_addp(server->history, msg, Activity_status, HIST_LOG);
 
@@ -551,8 +533,7 @@ handle_RPL_TOPICWHOTIME) {
 	struct Channel *chan;
 	char *target;
 
-	if (param_len(msg->params) < 5)
-		return;
+	assert_warn(param_len(msg->params) >= 5,);
 
 	hist_addp(server->history, msg, Activity_status, HIST_LOG);
 

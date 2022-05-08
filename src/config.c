@@ -60,8 +60,7 @@ struct Config *
 config_getp(char *name) {
 	int i;
 
-	if (!name)
-		return NULL;
+	assert_warn(name, NULL);
 
 	for (i = 0; config[i].name; i++)
 		if (strcmp(config[i].name, name) == 0)
@@ -124,8 +123,7 @@ config_getr(char *name, long *a, long *b) {
 
 void
 config_setl(struct Config *conf, long num) {
-	if (!conf)
-		return;
+	assert_warn(conf,);
 	if (num >= vals[conf->valtype].min && num <= vals[conf->valtype].max && (
 			conf->valtype == Val_bool ||
 			conf->valtype == Val_colour ||
@@ -145,8 +143,7 @@ config_setl(struct Config *conf, long num) {
 
 void
 config_sets(struct Config *conf, char *str) {
-	if (!conf)
-		return;
+	assert_warn(conf,);
 	if (conf->valtype != Val_string) {
 		ui_error("%s must be %s", conf->name, vals[conf->valtype].name);
 		return;
@@ -163,8 +160,7 @@ config_sets(struct Config *conf, char *str) {
 
 void
 config_setr(struct Config *conf, long a, long b) {
-	if (!conf)
-		return;
+	assert_warn(conf,);
 	if (a >= vals[conf->valtype].min && b <= vals[conf->valtype].max &&
 			(conf->valtype == Val_pair || conf->valtype == Val_colourpair)) {
 		if (conf->pairhandle)
@@ -248,8 +244,7 @@ config_read(char *filename) {
 	FILE *file;
 	int save, i;
 
-	if (!filename)
-		return -2;
+	assert_warn(filename, -2);
 
 	path = realpath(filename, NULL);
 

@@ -48,7 +48,11 @@ die(int code, char *format, ...) {
 		va_start(ap, format);
 		vfprintf(stderr, format, ap);
 		va_end(ap);
+#ifdef DIE_CORE
+		raise(SIGABRT);
+#else
 		exit(code);
+#endif /* DIE_CORE */
 	}
 }
 

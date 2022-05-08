@@ -88,11 +88,10 @@ struct Channel *
 chan_add(struct Server *server, struct Channel **head, char *name, int query) {
 	struct Channel *channel, *p;
 
-	if (!name)
-		return NULL;
+	assert_warn(name, NULL);
 
-	if ((channel = chan_create(server, name, query)) == NULL)
-		return NULL;
+	channel = chan_create(server, name, query);
+	assert_warn(channel, NULL);
 
 	if (!*head) {
 		*head = channel;
@@ -114,7 +113,8 @@ chan_get(struct Channel **head, char *name, int old) {
 	/* if old is negative, match regardless of p->old
 	 * else return only when p->old and old match */
 
-	if (!head || !*head || !name)
+	assert_warn(head && name, NULL);
+	if (!*head)
 		return NULL;
 
 	for (p = *head; p; p = p->next) {
@@ -142,8 +142,7 @@ int
 chan_remove(struct Channel **head, char *name) {
 	struct Channel *p;
 
-	if (!head || !name)
-		return -1;
+	assert_warn(head && name, -1);
 
 	if ((p = chan_get(head, name, -1)) == NULL)
 		return 0;

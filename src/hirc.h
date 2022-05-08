@@ -30,6 +30,11 @@
 #define CONSTLEN(str) ((size_t)((sizeof(str) - sizeof(str[0])) / sizeof(str[0])))
 	/* compile-time char/wchar_t literals */
 #define assert(x) ((void)((x) || (die(1, "assertion '%s' failed at %s:%d in %s()\n", #x, __FILE__, __LINE__, __func__),0)))
+#ifdef ASSERT_ALWAYS_DIES
+#define assert_warn(x,ret) assert(x)
+#else
+#define assert_warn(x,ret) do {if (!(x)) {ui_error("assertion '%s' failed", #x); return ret;}} while(0)
+#endif /* ASSERT_ALWAYS_DIES */
 
 /* strlcpy/wcslcpy.c */
 #ifdef HIRC_STRLCPY

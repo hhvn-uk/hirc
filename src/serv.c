@@ -90,8 +90,7 @@ serv_create(char *name, char *host, char *port, char *nick, char *username,
 	struct Server *server;
 	int i;
 
-	if (!name || !host || !port || !nick)
-		return NULL;
+	assert_warn(name && host && port && nick, NULL);
 
 	server = emalloc(sizeof(struct Server));
 	server->prev = server->next = NULL;
@@ -145,8 +144,7 @@ serv_create(char *name, char *host, char *port, char *nick, char *username,
 void
 serv_update(struct Server *sp, char *nick, char *username,
 		char *realname, char *password, int tls, int tls_verify) {
-	if (!sp)
-		return;
+	assert_warn(sp,);
 	if (nick) {
 		pfree(&sp->self->nick);
 		sp->self->nick = estrdup(nick);
@@ -181,8 +179,8 @@ serv_add(struct Server **head, char *name, char *host, char *port, char *nick,
 		char *username, char *realname, char *password, int tls, int tls_verify) {
 	struct Server *new, *p;
 
-	if ((new = serv_create(name, host, port, nick, username, realname, password, tls, tls_verify)) == NULL)
-		return NULL;
+	new = serv_create(name, host, port, nick, username, realname, password, tls, tls_verify);
+	assert_warn(new, NULL);
 
 	if (!*head) {
 		*head = new;
@@ -201,7 +199,8 @@ struct Server *
 serv_get(struct Server **head, char *name) {
 	struct Server *p;
 
-	if (!head || !*head || !name)
+	assert_warn(head && name, NULL);
+	if (!*head)
 		return NULL;
 
 	for (p = *head; p; p = p->next) {
@@ -216,8 +215,7 @@ int
 serv_remove(struct Server **head, char *name) {
 	struct Server *p;
 
-	if (!head || !name)
-		return -1;
+	assert_warn(head && name, -1);
 
 	if ((p = serv_get(head, name)) == NULL)
 		return 0;
@@ -240,8 +238,7 @@ serv_connect(struct Server *server) {
 	struct addrinfo *ai = NULL;
 	int fd, ret;
 
-	if (!server)
-		return;
+	assert_warn(server,);
 
 	if (server->status != ConnStatus_notconnected) {
 		ui_error("server '%s' is already connected", server->name);
@@ -371,8 +368,7 @@ serv_read(struct Server *sp) {
 	size_t len;
 	int ret;
 
-	if (!sp)
-		return;
+	assert_warn(sp,);
 
 #ifdef TLS
 	if (sp->tls) {
@@ -585,8 +581,7 @@ void
 support_set(struct Server *server, char *key, char *value) {
 	struct Support *p;
 
-	if (!server)
-		return;
+	assert_warn(server,);
 
 	if (!server->supports) {
 		server->supports = emalloc(sizeof(struct Support));
@@ -615,8 +610,7 @@ int
 serv_ischannel(struct Server *server, char *str) {
 	char *chantypes;
 
-	if (!str || !server)
-		return 0;
+	assert_warn(str && server,0);
 
 	chantypes = support_get(server, "CHANTYPES");
 	if (!chantypes)
@@ -631,8 +625,7 @@ serv_auto_add(struct Server *server, char *cmd) {
 	char **p;
 	size_t len;
 
-	if (!server || !cmd)
-		return;
+	assert_warn(server && cmd,);
 
 	if (!server->autocmds) {
 		len = 1;
@@ -694,8 +687,7 @@ void
 schedule_push(struct Server *server, char *tmsg, char *msg) {
 	struct Schedule *p;
 
-	if (!server)
-		return;
+	assert_warn(server,);
 
 	if (!server->schedule) {
 		server->schedule = emalloc(sizeof(struct Schedule));
@@ -719,8 +711,7 @@ schedule_pull(struct Server *server, char *tmsg) {
 	static char *ret = NULL;
 	struct Schedule *p;
 
-	if (!server || !tmsg)
-		return NULL;
+	assert_warn(server && tmsg, NULL);
 
 	for (p = server->schedule; p; p = p->next) {
 		if (strcmp(p->tmsg, tmsg) == 0) {

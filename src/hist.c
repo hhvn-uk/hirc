@@ -65,8 +65,7 @@ hist_create(struct HistInfo *histinfo, struct Nick *from, char *msg,
 	struct Nick *np;
 	char *nick;
 
-	if (!msg)
-		return NULL;
+	assert_warn(msg, NULL);
 
 	new = emalloc(sizeof(struct History));
 	new->prev = new->next = NULL;
@@ -129,8 +128,7 @@ hist_add(struct HistInfo *histinfo,
 	struct tm ptm, ctm, dtm;
 	int i;
 
-	if (!histinfo || !msg)
-		return NULL;
+	assert_warn(histinfo && msg, NULL);
 
 	if (options & HIST_MAIN) {
 		if (options & HIST_TMP && histinfo == main_buf) {
@@ -233,8 +231,7 @@ void
 hist_purgeopt(struct HistInfo *histinfo, enum HistOpt options) {
 	struct History *p, *next;
 
-	if (!histinfo)
-		return;
+	assert_warn(histinfo,);
 
 	p = histinfo->history;
 
@@ -361,8 +358,7 @@ hist_loadlog(struct HistInfo *hist, char *server, char *channel) {
 	size_t len;
 	struct Nick *from;
 
-	if (!server || !hist)
-		return NULL;
+	assert_warn(server && hist, NULL);
 
 	if ((logdir = config_gets("log.dir")) == NULL)
 		return NULL;

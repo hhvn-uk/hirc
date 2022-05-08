@@ -950,8 +950,7 @@ ui_bind(char *binding, char *cmd) {
 	struct Keybind *p;
 	char *tmp, *b;
 
-	if (!binding || !cmd)
-		return -1;
+	assert_warn(binding && cmd, -1);
 	b = ui_rectrl(binding);
 
 	for (p = keybinds; p; p = p->next)
@@ -982,8 +981,7 @@ ui_unbind(char *binding) {
 	struct Keybind *p;
 	char *b;
 
-	if (!binding)
-		return -1;
+	assert_warn(binding, -1);
 	b = ui_rectrl(binding);
 
 	for (p=keybinds; p; p = p->next) {

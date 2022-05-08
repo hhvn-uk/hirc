@@ -132,8 +132,7 @@ struct Nick *
 nick_create(char *prefix, char priv, struct Server *server) {
 	struct Nick *nick;
 
-	if (!prefix || !priv)
-		return NULL;
+	assert_warn(prefix && priv, NULL);
 
 	nick = emalloc(sizeof(struct Nick));
 	nick->prefix = estrdup(prefix);
@@ -168,11 +167,10 @@ struct Nick *
 nick_add(struct Nick **head, char *prefix, char priv, struct Server *server) {
 	struct Nick *nick;
 
-	if (!prefix || !priv)
-		return NULL;
+	assert_warn(prefix && priv, NULL);
 
-	if ((nick = nick_create(prefix, priv, server)) == NULL)
-		return NULL;
+	nick = nick_create(prefix, priv, server);
+	assert_warn(nick, NULL);
 
 	nick->next = *head;
 	nick->prev = NULL;
