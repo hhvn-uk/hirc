@@ -35,6 +35,25 @@ struct Server *servers = NULL;
 struct HistInfo *main_buf;
 
 void
+die(int code, char *format, ...) {
+	static int dying = 0;
+	va_list ap;
+
+	/* prevent loop if a function in cleanup() calls die() */
+	if (!dying) {
+		dying = 1;
+		cleanup("Client error");
+		dying = 0;
+
+		fprintf(stderr, "Fatal: ");
+		va_start(ap, format);
+		vfprintf(stderr, format, ap);
+		va_end(ap);
+		exit(code);
+	}
+}
+
+void
 cleanup(char *quitmsg) {
 	struct Server *sp, *prev;
 
@@ -96,7 +115,8 @@ main(int argc, char *argv[]) {
 	ui_init();
 
 	if (argc == 2)
-		config_read(argv[1]);
+		if (config_read(argv[1]) == -1)
+			die(1, "cannot read config file '%s': %s\n", argv[1], strerror(errno));
 
 	for (;;) {
 		/* 25 seems fast enough not to cause any visual lag */

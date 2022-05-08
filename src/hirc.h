@@ -41,6 +41,7 @@ size_t		wcslcpy(wchar_t *, const wchar_t *, size_t);
 #endif /* HIST_WCSLCPY */
 
 /* main.c */
+void		die(int code, char *format, ...);
 void		cleanup(char *quitmsg);
 
 /* params.c */
@@ -200,7 +201,7 @@ void		config_set(char *name, char *str);
 void		config_setl(struct Config *conf, long num);
 void		config_sets(struct Config *conf, char *str);
 void		config_setr(struct Config *conf, long a, long b);
-void		config_read(char *filename);
+int		config_read(char *filename);
 
 /* complete.c */
 void		complete(wchar_t *str, size_t size, unsigned *counter);

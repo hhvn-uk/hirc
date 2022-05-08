@@ -239,17 +239,18 @@ inval:
 	goto end;
 }
 
-void
+int
 config_read(char *filename) {
 	static char **bt = NULL;
 	static int btoffset = 0;
+	int ret = 0, serrno;
 	char buf[8192];
 	char *path;
 	FILE *file;
 	int save, i;
 
 	if (!filename)
-		return;
+		return -2;
 
 	path = realpath(filename, NULL);
 
@@ -259,7 +260,7 @@ config_read(char *filename) {
 			if (strcmp_n(path, *(bt + i)) == 0) {
 				ui_error("recursive read of '%s' is not allowed", filename);
 				pfree(&path);
-				return;
+				return -2;
 			}
 		}
 	}
@@ -275,6 +276,8 @@ config_read(char *filename) {
 
 	/* Read and execute */
 	if ((file = fopen(filename, "rb")) == NULL) {
+		serrno = errno;
+		ret = -1;
 		ui_error("cannot open file '%s': %s", filename, strerror(errno));
 		goto shrink;
 	}
@@ -300,6 +303,9 @@ shrink:
 		bt = erealloc(bt, (sizeof(char *)) * btoffset);
 		assert(bt != NULL);
 	}
+
+	errno = serrno;
+	return ret;
 }
 
 static int
