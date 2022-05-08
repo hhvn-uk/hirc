@@ -27,7 +27,6 @@
 #include <unistd.h>
 #include <stdarg.h>
 #include <signal.h>
-#include <assert.h>
 #include <poll.h>
 #include "hirc.h"
 

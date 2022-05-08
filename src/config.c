@@ -21,7 +21,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
-#include <assert.h>
 #include <limits.h>
 #include "hirc.h"
 

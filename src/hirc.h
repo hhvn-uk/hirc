@@ -29,6 +29,7 @@
 	/* real maximum = HIST_MAX * (channels + servers + queries) */
 #define CONSTLEN(str) ((size_t)((sizeof(str) - sizeof(str[0])) / sizeof(str[0])))
 	/* compile-time char/wchar_t literals */
+#define assert(x) ((void)((x) || (die(1, "assertion '%s' failed at %s:%d in %s()\n", #x, __FILE__, __LINE__, __func__),0)))
 
 /* strlcpy/wcslcpy.c */
 #ifdef HIRC_STRLCPY
