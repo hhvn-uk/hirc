@@ -78,7 +78,7 @@ Split string s using character c, and print nth element.
 .It %{time:f,s}
 If string s is a unix timestamp, format it by passing f to
 .Xr strftime 3 "."
-.It %{rtime:s}
+.It %{rdate:s}
 Get relative date from unix timestamp s.
 This behaviour is dictated by rdate.* namespaced settings.
 For a better understanding, see strrdate() in src/main.c.
