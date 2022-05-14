@@ -24,6 +24,12 @@
 #include <limits.h>
 #include "hirc.h"
 
+/*
+ * Handlers.
+ * These can be attached to a config variable in order to performs actions
+ * when changing the value, or validate the new value before setting.
+ * A non-zero return value sets the variable, whilst a 0 keeps the old value.
+ */
 static int config_window_hide(struct Config *conf, long num);
 static int config_window_location(struct Config *conf, long num);
 static int config_window_width(struct Config *conf, long num);
@@ -31,6 +37,7 @@ static int config_nickcolour_self(struct Config *conf, long num);
 static int config_nickcolour_range(struct Config *conf, long a, long b);
 static int config_redrawl(struct Config *conf, long num);
 static int config_redraws(struct Config *conf, char *str);
+static int config_formats(struct Config *conf, char *str);
 
 static char *strbool[] = { "true", "false", NULL };
 static char *strlocation[] = {
@@ -321,6 +328,7 @@ config_window_hide(struct Config *conf, long num) {
 	return 1;
 }
 
+/* prevent nicklist/buflist being drawn in same location */
 static int
 config_window_location(struct Config *conf, long num) {
 	struct Config *otherloc, *otherhide;
@@ -386,4 +394,14 @@ static int
 config_redrawl(struct Config *conf, long num) {
 	ui_redraw();
 	return 1;
+}
+
+/* Don't set formats with syntax errors */
+static int
+config_formats(struct Config *conf, char *str) {
+	if (format(NULL, str, NULL)) {
+		ui_redraw();
+		return 1;
+	}
+	return 0;
 }

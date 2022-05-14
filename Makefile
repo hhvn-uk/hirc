@@ -18,10 +18,11 @@ PREFIX	= /usr/local
 BINDIR	= $(PREFIX)/bin
 MANDIR	= $(PREFIX)/share/man
 BIN	= hirc
+PARSE	= src/format.y
 SRC	= src/main.c src/mem.c src/handle.c src/hist.c \
 	  src/nick.c src/chan.c src/serv.c src/ui.c \
-	  src/format.c src/complete.c src/commands.c \
-	  src/config.c src/str.c src/params.c
+	  src/complete.c src/commands.c src/config.c \
+	  src/str.c src/params.c $(PARSE:.y=.c)
 OBJ	= $(SRC:.c=.o)
 MAN	= doc/hirc.1
 COMMIT	= $(shell git log HEAD...HEAD~1 --pretty=format:%h)

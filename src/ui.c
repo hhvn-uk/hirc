@@ -54,12 +54,12 @@ struct Selected selected;
 struct Keybind *keybinds = NULL;
 
 void
-ui_error_(char *file, int line, const char *func, char *format, ...) {
+ui_error_(char *file, int line, const char *func, char *fmt, ...) {
 	char msg[1024];
 	va_list ap;
 
-	va_start(ap, format);
-	vsnprintf(msg, sizeof(msg), format, ap);
+	va_start(ap, fmt);
+	vsnprintf(msg, sizeof(msg), fmt, ap);
 	va_end(ap);
 
 	hist_format(selected.history, Activity_error, HIST_UI|HIST_ERR|HIST_NIGN,
@@ -286,7 +286,7 @@ ui_read(void) {
 void
 ui_redraw(void) {
 	struct History *p;
-	char *format;
+	char *fmt;
 	long nicklistwidth, buflistwidth;
 	int x = 0, rx = 0;
 	int i;
@@ -337,34 +337,34 @@ ui_redraw(void) {
 	windows[Win_dummy].h = LINES;
 	windows[Win_dummy].w = COLS;
 
-	format = format(NULL, config_gets("format.ui.separator.horizontal"), NULL);
+	fmt = format(NULL, config_gets("format.ui.separator.horizontal"), NULL);
 	for (i = x; i <= COLS - rx; i++) {
 		wmove(windows[Win_dummy].window, LINES - 2, i);
-		ui_wprintc(&windows[Win_dummy], 1, "%s", format);
+		ui_wprintc(&windows[Win_dummy], 1, "%s", fmt);
 	}
 
 	if (x) {
-		format = format(NULL, config_gets("format.ui.separator.vertical"), NULL);
+		fmt = format(NULL, config_gets("format.ui.separator.vertical"), NULL);
 		for (i = 0; i <= LINES; i++) {
 			wmove(windows[Win_dummy].window, i, x - 1);
-			ui_wprintc(&windows[Win_dummy], 1, "%s", format);
+			ui_wprintc(&windows[Win_dummy], 1, "%s", fmt);
 		}
 
-		format = format(NULL, config_gets("format.ui.separator.split.left"), NULL);
+		fmt = format(NULL, config_gets("format.ui.separator.split.left"), NULL);
 		wmove(windows[Win_dummy].window, LINES - 2, x - 1);
-		ui_wprintc(&windows[Win_dummy], 1, "%s", format);
+		ui_wprintc(&windows[Win_dummy], 1, "%s", fmt);
 	}
 
 	if (rx) {
-		format = format(NULL, config_gets("format.ui.separator.vertical"), NULL);
+		fmt = format(NULL, config_gets("format.ui.separator.vertical"), NULL);
 		for (i = 0; i <= LINES; i++) {
 			wmove(windows[Win_dummy].window, i, COLS - rx);
-			ui_wprintc(&windows[Win_dummy], 1, "%s", format);
+			ui_wprintc(&windows[Win_dummy], 1, "%s", fmt);
 		}
 
-		format = format(NULL, config_gets("format.ui.separator.split.right"), NULL);
+		fmt = format(NULL, config_gets("format.ui.separator.split.right"), NULL);
 		wmove(windows[Win_dummy].window, LINES - 2, COLS - rx);
-		ui_wprintc(&windows[Win_dummy], 1, "%s", format);
+		ui_wprintc(&windows[Win_dummy], 1, "%s", fmt);
 	}
 
 	refresh();
@@ -520,7 +520,15 @@ ui_draw_buflist(void) {
 	struct Server *sp;
 	struct Channel *chp, *prp;
 	int i = 1, scroll;
-	char *indicator;
+	char *actind[Activity_last];
+	char *oldind, *indicator;
+
+	oldind = estrdup(format(NULL, config_gets("format.ui.buflist.old"), NULL));
+	actind[Activity_none] = estrdup(format(NULL, config_gets("format.ui.buflist.activity.none"), NULL));
+	actind[Activity_status] = estrdup(format(NULL, config_gets("format.ui.buflist.activity.status"), NULL));
+	actind[Activity_error] = estrdup(format(NULL, config_gets("format.ui.buflist.activity.error"), NULL));
+	actind[Activity_message] = estrdup(format(NULL, config_gets("format.ui.buflist.activity.message"), NULL));
+	actind[Activity_hilight] = estrdup(format(NULL, config_gets("format.ui.buflist.activity.hilight"), NULL));
 
 	werase(windows[Win_buflist].window);
 
@@ -546,12 +554,7 @@ ui_draw_buflist(void) {
 		if (scroll < i - 1) {
 			if (selected.server == sp && !selected.channel)
 				wattron(windows[Win_buflist].window, A_BOLD);
-
-			if (sp->status == ConnStatus_notconnected)
-				indicator = format(NULL, config_gets("format.ui.buflist.old"), NULL);
-			else
-				indicator = format_get_bufact(sp->history->activity);
-
+			indicator = (sp->status == ConnStatus_notconnected) ? oldind : actind[sp->history->activity];
 			ui_wprintc(&windows[Win_buflist], 1, "%02d: %s─ %s%s\n", i, sp->next ? "├" : "└", indicator, sp->name);
 			wattrset(windows[Win_buflist].window, A_NORMAL);
 		}
@@ -561,12 +564,7 @@ ui_draw_buflist(void) {
 			if (scroll < i - 1) {
 				if (selected.channel == chp)
 					wattron(windows[Win_buflist].window, A_BOLD);
-
-				if (chp->old)
-					indicator = format(NULL, config_gets("format.ui.buflist.old"), NULL);
-				else
-					indicator = format_get_bufact(chp->history->activity);
-
+				indicator = (chp->old) ? oldind : actind[chp->history->activity];
 				ui_wprintc(&windows[Win_buflist], 1, "%02d: %s  %s─ %s%s\n", i,
 						sp->next ? "│" : " ", chp->next || sp->queries ? "├" : "└", indicator, chp->name);
 				wattrset(windows[Win_buflist].window, A_NORMAL);
@@ -578,12 +576,7 @@ ui_draw_buflist(void) {
 			if (scroll < i - 1) {
 				if (selected.channel == prp)
 					wattron(windows[Win_buflist].window, A_BOLD);
-
-				if (prp->old)
-					indicator = format(NULL, config_gets("format.ui.buflist.old"), NULL);
-				else
-					indicator = format_get_bufact(prp->history->activity);
-
+				indicator = (prp->old) ? oldind : actind[prp->history->activity];
 				ui_wprintc(&windows[Win_buflist], 1, "%02d: %s  %s─ %s%s\n", i,
 						sp->next ? "│" : " ", prp->next ? "├" : "└", indicator, prp->name);
 				wattrset(windows[Win_buflist].window, A_NORMAL);
@@ -600,7 +593,7 @@ ui_draw_buflist(void) {
 }
 
 int
-ui_wprintc(struct Window *window, int lines, char *format, ...) {
+ui_wprintc(struct Window *window, int lines, char *fmt, ...) {
 	char *str;
 	wchar_t *wcs, *s;
 	va_list ap;
@@ -616,13 +609,13 @@ ui_wprintc(struct Window *window, int lines, char *format, ...) {
 	int reverse = 0;
 	int italic = 0;
 
-	va_start(ap, format);
-	ret = vsnprintf(str, 0, format, ap) + 1;
+	va_start(ap, fmt);
+	ret = vsnprintf(str, 0, fmt, ap) + 1;
 	va_end(ap);
 	str = emalloc(ret);
 
-	va_start(ap, format);
-	ret = vsnprintf(str, ret, format, ap);
+	va_start(ap, fmt);
+	ret = vsnprintf(str, ret, fmt, ap);
 	va_end(ap);
 	if (ret < 0)
 		return ret;

@@ -44,6 +44,7 @@ enum Activity {
 	Activity_error = 3,
 	Activity_message = 4,
 	Activity_hilight = 5,
+	Activity_last = 6
 };
 
 enum HistOpt {

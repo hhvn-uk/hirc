@@ -187,8 +187,7 @@ void		ui_tls_error_(char *file, int line, const char *func, struct tls *ctx, cha
 /* format.c */
 char *		format_get_bufact(int activity);
 char *		format_get(struct History *hist);
-char *		format_(struct Window *window, char *format, struct History *hist, int recursive);
-#define		format(window, format, hist) format_(window, format, hist, 0)
+char *		format(struct Window *window, char *format, struct History *hist);
 
 /* commands.c */
 void		command_eval(struct Server *server, char *str);
