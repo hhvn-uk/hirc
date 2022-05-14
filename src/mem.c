@@ -44,6 +44,7 @@ void *
 emalloc(size_t size) {
 	void *mem;
 
+	assert_warn(size, NULL);
 	if ((mem = malloc(size)) == NULL) {
 		endwin();
 		perror("malloc()");
@@ -57,6 +58,7 @@ void *
 erealloc(void *ptr, size_t size) {
 	void *mem;
 
+	assert_warn(ptr && size, NULL);
 	if ((mem = realloc(ptr, size)) == NULL) {
 		endwin();
 		perror("realloc()");
@@ -70,6 +72,7 @@ char *
 estrdup(const char *str) {
 	char *ret;
 
+	assert_warn(str, NULL);
 	if ((ret = strdup(str)) == NULL) {
 		endwin();
 		perror("strdup()");
@@ -82,6 +85,7 @@ estrdup(const char *str) {
 wchar_t *
 ewcsdup(const wchar_t *str) {
 	wchar_t *ret;
+	assert_warn(str, NULL);
 	if ((ret = wcsdup(str)) == NULL) {
 		endwin();
 		perror("wcsdup()");
