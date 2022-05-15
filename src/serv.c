@@ -69,7 +69,6 @@ serv_free(struct Server *server) {
 	if (eprev)
 		ep = eprev->next;
 	while (eprev) {
-		pfree(&eprev->tmsg);
 		pfree(&eprev->msg);
 		pfree(&eprev);
 		eprev = ep;
@@ -344,9 +343,9 @@ serv_connect(struct Server *server) {
 	server->connectfail = 0;
 
 	if (server->password)
-		serv_write(server, "PASS %s\r\n", server->password);
-	serv_write(server, "NICK %s\r\n", server->self->nick);
-	serv_write(server, "USER %s * * :%s\r\n",
+		serv_write(server, Sched_now, "PASS %s\r\n", server->password);
+	serv_write(server, Sched_now, "NICK %s\r\n", server->self->nick);
+	serv_write(server, Sched_now, "USER %s * * :%s\r\n",
 			server->username ? server->username : server->self->nick,
 			server->realname ? server->realname : server->self->nick);
 
@@ -442,21 +441,31 @@ serv_read(struct Server *sp) {
 }
 
 int
-serv_write(struct Server *server, char *format, ...) {
+serv_write(struct Server *server, enum Sched when, char *format, ...) {
 	char msg[512];
 	va_list ap;
 	int ret;
 
-	if (!server || server->status == ConnStatus_notconnected) {
-		ui_error("Not connected to server '%s'", server ? server->name : "");
-		return -1;
-	}
+	assert_warn(server && server->status != ConnStatus_notconnected, -1);
 
 	va_start(ap, format);
-	if (vsnprintf(msg, sizeof(msg), format, ap) < 0) {
-		va_end(ap);
-		return -1;
+	ret = vsnprintf(msg, sizeof(msg), format, ap);
+	va_end(ap);
+
+	assert_warn(ret >= 0, -1);
+
+	if (when != Sched_now) {
+		switch (when) {
+		case Sched_connected:
+			if (server->status == ConnStatus_connected)
+				goto write;
+			break;
+		}
+		schedule(server, when, msg);
+		return 0;
 	}
+
+write:
 
 #ifdef TLS
 	if (server->tls)
@@ -476,7 +485,6 @@ serv_write(struct Server *server, char *format, ...) {
 		ui_error("Not connected to server '%s'", server->name);
 	}
 
-	va_end(ap);
 	return ret;
 }
 
@@ -521,7 +529,7 @@ serv_disconnect(struct Server *server, int reconnect, char *msg) {
 	int ret;
 
 	if (msg)
-		serv_write(server, "QUIT :%s\r\n", msg);
+		serv_write(server, Sched_now, "QUIT :%s\r\n", msg);
 #ifdef TLS
 	if (server->tls) {
 		if (server->tls_ctx) {
@@ -684,16 +692,16 @@ serv_auto_haschannel(struct Server *server, char *chan) {
 }
 
 void
-schedule_push(struct Server *server, char *tmsg, char *msg) {
+schedule(struct Server *server, enum Sched when, char *msg) {
 	struct Schedule *p;
 
-	assert_warn(server,);
+	assert_warn(server && msg,);
 
 	if (!server->schedule) {
 		server->schedule = emalloc(sizeof(struct Schedule));
 		server->schedule->prev = server->schedule->next = NULL;
-		server->schedule->tmsg = strdup(tmsg);
-		server->schedule->msg  = strdup(msg);
+		server->schedule->when = when;
+		server->schedule->msg  = estrdup(msg);
 		return;
 	}
 
@@ -702,29 +710,19 @@ schedule_push(struct Server *server, char *tmsg, char *msg) {
 	p->next = emalloc(sizeof(struct Schedule));
 	p->next->prev = p;
 	p->next->next = NULL;
-	p->next->tmsg = strdup(tmsg);
-	p->next->msg  = strdup(msg);
+	p->next->when = when;
+	p->next->msg  = estrdup(msg);
 }
 
-char *
-schedule_pull(struct Server *server, char *tmsg) {
-	static char *ret = NULL;
+void
+schedule_send(struct Server *server, enum Sched when) {
 	struct Schedule *p;
 
-	assert_warn(server && tmsg, NULL);
+	assert_warn(server, NULL);
 
 	for (p = server->schedule; p; p = p->next) {
-		if (strcmp(p->tmsg, tmsg) == 0) {
-			pfree(&p->tmsg);
-
-			/* Don't free p->msg, instead save it to
-			 * a static pointer that we free the next
-			 * time schedule_pull is invoked. Since
-			 * schedule_pull will probably be used in
-			 * while loops until it equals NULL, this
-			 * will likely be set free quite quickly */
-			pfree(&ret);
-			ret = p->msg;
+		if (p->when == when) {
+			serv_write(server, Sched_now, "%s", p->msg);
 
 			if (p->prev) p->prev->next = p->next;
 			if (p->next) p->next->prev = p->prev;
@@ -732,14 +730,10 @@ schedule_pull(struct Server *server, char *tmsg) {
 			if (!p->prev)
 				server->schedule = p->next;
 
+			pfree(&p->msg);
 			pfree(&p);
-			return ret;
 		}
 	}
-
-	pfree(&ret);
-	ret = NULL;
-	return NULL;
 }
 
 void

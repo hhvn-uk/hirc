@@ -155,9 +155,14 @@ enum Expect {
 	Expect_last,
 };
 
+enum Sched {
+	Sched_now,
+	Sched_connected, /* when 001, or end of motd is received */
+};
+
 struct Schedule {
 	struct Schedule *prev;
-	char *tmsg;
+	enum Sched when;
 	char *msg;
 	struct Schedule *next;
 };

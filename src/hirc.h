@@ -122,7 +122,7 @@ void		hist_purgeopt(struct HistInfo *histinfo, enum HistOpt options);
 void		serv_free(struct Server *server);
 void		serv_connect(struct Server *server);
 void		serv_read(struct Server *sp);
-int		serv_write(struct Server *server, char *format, ...);
+int		serv_write(struct Server *server, enum Sched when, char *format, ...);
 struct Server *	serv_create(char *name, char *host, char *port, char *nick,
 		char *username, char *realname, char *password, int tls, int tls_verify);
 void		serv_update(struct Server *sp, char *nick, char *username,
@@ -142,8 +142,8 @@ void		serv_auto_send(struct Server *server);
 int		serv_auto_haschannel(struct Server *server, char *chan);
 char *		support_get(struct Server *server, char *key);
 void		support_set(struct Server *server, char *key, char *value);
-void		schedule_push(struct Server *server, char *tmsg, char *msg);
-char *		schedule_pull(struct Server *server, char *tmsg);
+void		schedule(struct Server *server, enum Sched when, char *msg);
+void		schedule_send(struct Server *server, enum Sched when);
 void		expect_set(struct Server *server, enum Expect cmd, char *about);
 char *		expect_get(struct Server *server, enum Expect cmd);
 

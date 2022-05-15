@@ -140,7 +140,7 @@ main(int argc, char *argv[]) {
 				serv_read(sp);
 			} else if (!sp->pingsent && sp->lastrecv && (time(NULL) - sp->lastrecv) >= pinginact) {
 				/* haven't heard from server in pinginact seconds, sending a ping */
-				serv_write(sp, "PING :ground control to Major Tom\r\n");
+				serv_write(sp, Sched_now, "PING :ground control to Major Tom\r\n");
 				sp->pingsent = time(NULL);
 			} else if (sp->pingsent && (time(NULL) - sp->pingsent) >= pinginact) {
 				/* haven't gotten a response in pinginact seconds since

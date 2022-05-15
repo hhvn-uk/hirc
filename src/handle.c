@@ -28,7 +28,7 @@ HANDLER(
 handle_PING) {
 	assert_warn(param_len(msg->params) >= 2,);
 
-	serv_write(server, "PONG :%s\r\n", *(msg->params+1));
+	serv_write(server, Sched_now, "PONG :%s\r\n", *(msg->params+1));
 }
 
 HANDLER(
@@ -199,9 +199,9 @@ handle_MODE) {
 		expect_set(server, Expect_nosuchnick, NULL);
 		hist_addp(server->history, msg, Activity_status, HIST_LOG);
 		hist_addp(chan->history, msg, Activity_status, HIST_DFL);
-		serv_write(server, "MODE %s\r\n", chan->name); /* Get full mode via RPL_CHANNELMODEIS
-						               * instead of concatenating manually */
-		serv_write(server, "NAMES %s\r\n", chan->name); /* Also get updated priviledges */
+		serv_write(server, Sched_now, "MODE %s\r\n", chan->name); /* Get full mode via RPL_CHANNELMODEIS
+						                           * instead of concatenating manually */
+		serv_write(server, Sched_now, "NAMES %s\r\n", chan->name); /* Also get updated priviledges */
 	} else {
 		hist_addp(server->history, msg, Activity_status, HIST_DFL);
 	}
@@ -423,7 +423,7 @@ handle_ERR_NICKNAMEINUSE) {
 		nick_free(server->self);
 		server->self = nnick;
 		server->self->self = 1;
-		serv_write(server, "NICK %s\r\n", nick);
+		serv_write(server, Sched_now, "NICK %s\r\n", nick);
 	} else {
 		expect_set(server, Expect_nicknameinuse, NULL);
 	}
@@ -553,8 +553,10 @@ handle_RPL_TOPICWHOTIME) {
 HANDLER(
 handle_RPL_WELCOME) {
 	if (server->status != ConnStatus_connected) {
+		/* XXX: unify this with RPL_ENDOFMOTD */
 		server->status = ConnStatus_connected;
 		serv_auto_send(server);
+		schedule_send(server, Sched_connected);
 	}
 	hist_addp(server->history, msg, Activity_status, HIST_DFL);
 	windows[Win_buflist].refresh = 1;
@@ -585,6 +587,7 @@ handle_RPL_ENDOFMOTD) {
 	if (server->status != ConnStatus_connected) {
 		server->status = ConnStatus_connected;
 		serv_auto_send(server);
+		schedule_send(server, Sched_connected);
 	}
 	hist_addp(server->history, msg, Activity_status, HIST_DFL);
 	windows[Win_buflist].refresh = 1;
@@ -615,10 +618,6 @@ handle(struct Server *server, char *msg) {
 		cmd = *(params + 1);
 	else
 		cmd = *(params);
-
-	/* Fire off any scheduled events for the current cmd */
-	while ((schmsg = schedule_pull(server, cmd)) != NULL)
-		serv_write(server, "%s", schmsg);
 
 	for (i=0; cmd && handlers[i].cmd; i++) {
 		if (strcmp(handlers[i].cmd, cmd) == 0) {
