@@ -16,7 +16,7 @@ static void yyerror(char *fmt, ...);
 static int yylex(void);
 
 #define BRACEMAX 16
-#define RETURN(s) do {if (s == STRING) fprintf(stderr, "[lex \"%s\"]\n", yylval); else fprintf(stderr, "[lex %s]\n", #s); prev = s; return s;} while (0)
+#define RETURN(s) do {prev = s; return s;} while (0)
 #define ISSPECIAL(s) isspecial(s, prev, bracelvl, bracetype, styleseg)
 
 enum {
@@ -79,10 +79,8 @@ var:	VAR LBRACE STRING RBRACE {
 			$$ = *(parse_params + num - 1);
 			goto varfin;
 		}
-		fprintf(stderr, "{var: %s}\n", $3);
 		if (*$3 && *($3 + strlen($3) - 1) == '-') {
 			*($3 + strlen($3) - 1) = '\0';
-			fprintf(stderr, "{var without -: %s}\n", $3);
 			if (strisnum($3, 0) && (num = strtoll($3, NULL, 10)) && param_len(parse_params) >= num) {
 				buf[0] = '\0';
 				for (i = num; i <= param_len(parse_params); i++) {
@@ -311,8 +309,6 @@ yylex(void) {
 	if (!*s)
 		RETURN(0);
 
-	fprintf(stderr, "s (lex): %s\n", s);
-
 	if (ISSPECIAL(s)) {
 		switch (*s) {
 		case '$':
@@ -347,13 +343,9 @@ yylex(void) {
 	strlval[0] = *s;
 
 	for (p = s + 1, i = 1; *p && i < sizeof(strlval); p++) {
-		fprintf(stderr, "p (lex): %s\n", s);
-		if (ISSPECIAL(p)) {
-			fprintf(stderr, "<breaking in lex due to special>\n");
+		if (ISSPECIAL(p))
 			break;
-		}
 		if (*p == '\\' && ISSPECIAL(p+1)) {
-			fprintf(stderr, "<escaping special in lex>\n");
 			strlval[i++] = *(p+1);
 			p++;
 		} else if (*p == '\\' && *(p+1) == 'n') {
@@ -482,8 +474,6 @@ format(struct Window *window, char *format, struct History *hist) {
 			parse_params = hist->params + 1;
 	} else parse_params = NULL;
 
-	fprintf(stderr, "---\nrformat: %s\n", rformat);
-
 	parse_dup(0); /* free memory in use for last parse_ */
 	for (i = 0; i < PARSE_LAST; i++)
 		pfree(&parse_out[i]);
@@ -494,17 +484,6 @@ format(struct Window *window, char *format, struct History *hist) {
 
 	if (config_getl("timestamp.toggle"))
 		pfree(&rformat);
-
-	/* TODO: remove DEBUG */
-	fprintf(stderr, "format: %s\n", format);
-	if (hist) {
-		fprintf(stderr, "hist->raw: %s\n", hist->raw);
-		for (i = 0; i < param_len(hist->params); i++)
-			fprintf(stderr, "hist->params[%d]: %s\n", i, *(hist->params + i));
-	}
-	fprintf(stderr, "parse_out[PARSE_TIME]: %s\n", parse_out[PARSE_TIME]);
-	fprintf(stderr, "parse_out[PARSE_LEFT]: %s\n", parse_out[PARSE_LEFT]);
-	fprintf(stderr, "parse_out[PARSE_RIGHT]: %s\n", parse_out[PARSE_RIGHT]);
 
 	/* If there is no %{=}, then it's on the right */
 	if (hist && parse_out[PARSE_LEFT] && !parse_out[PARSE_RIGHT]) {
@@ -533,8 +512,6 @@ format(struct Window *window, char *format, struct History *hist) {
 		if (parse_out[PARSE_RIGHT])
 			parse_append(&ret, parse_out[PARSE_RIGHT]);
 	}
-
-	fprintf(stderr, "ret: %s\n", ret);
 
 	return ret;
 }
