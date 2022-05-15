@@ -2042,11 +2042,11 @@ command_eval(struct Server *server, char *str) {
 
 	s = dup = estrdup(alias_eval(str));
 
-	if (*s != '/' || strncmp(s, "/ /", sizeof("/ /")) == 0) {
+	if (*s != '/' || strncmp(s, "/ /", CONSTLEN("/ /")) == 0) {
 		/* Provide a way to escape commands
 		 *      "/ /cmd" --> "/cmd"      */
-		if (strncmp(s, "/ /", sizeof("/ /")) == 0)
-			s += 3;
+		if (strncmp(s, "/ /", CONSTLEN("/ /")) == 0)
+			s += 2;
 
 		if (selected.channel && selected.server) {
 			// TODO: message splitting
