@@ -1562,7 +1562,7 @@ command_close) {
 	}
 
 	if (chp) {
-		if (serv_ischannel(sp, chp->name) && !chp->old) {
+		if (serv_ischannel(sp, chp->name)) {
 			serv_write(sp, Sched_connected, "PART %s\r\n", chp->name);
 			chan_remove(&sp->channels, chp->name);
 		} else {
