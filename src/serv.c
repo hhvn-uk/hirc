@@ -718,7 +718,7 @@ void
 schedule_send(struct Server *server, enum Sched when) {
 	struct Schedule *p;
 
-	assert_warn(server, NULL);
+	assert_warn(server,);
 
 	for (p = server->schedule; p; p = p->next) {
 		if (p->when == when) {
