@@ -12,12 +12,13 @@
 static void parse_append(char **dest, char *str);
 static char *parse_dup(char *str);
 static char *parse_printf(char *fmt, ...);
-static void yyerror(char *fmt, ...);
+static void yyerror(char *msg);
 static int yylex(void);
 
 #define BRACEMAX 16
 #define RETURN(s) do {prev = s; return s;} while (0)
 #define ISSPECIAL(s) isspecial(s, prev, bracelvl, bracetype, styleseg)
+
 
 enum {
 	PARSE_TIME,
@@ -26,6 +27,7 @@ enum {
 	PARSE_LAST
 };
 
+static int parse_error = 0;
 static char *parse_in = NULL;
 static char *parse_out[PARSE_LAST] = {NULL, NULL, NULL};
 static int parse_pos = PARSE_LEFT;
@@ -52,7 +54,7 @@ static struct {
 	[var_nick]	= {"nick", NULL},
 	[var_ident]	= {"ident", NULL},
 	[var_host]	= {"host", NULL},
-	[var_priv]    = {"priv", NULL},
+	[var_priv]	= {"priv", NULL},
 	[var_channel]	= {"channel", NULL},
 	[var_topic]	= {"topic", NULL},
 	[var_server]	= {"server", NULL},
@@ -130,7 +132,10 @@ style:	STYLE LBRACE STRING RBRACE {
 				parse_pos = PARSE_LEFT; /* let's hope no-one puts it in format.ui.timestamp */
 				$$ = parse_dup("");
 			} else {
-				$$ = parse_dup("%{_time}"); /* in the unlikely event some uses it somewhere else.. */
+				yyerror("%{_time} used erroneously here: "
+					"this style is meant for internal use only, "
+					"this isn't a bug if you manually inserted this in a format");
+				YYERROR;
 			}
 		} else {
 			$$ = parse_printf("%%{%s}", $3);
@@ -146,10 +151,12 @@ style:	STYLE LBRACE STRING RBRACE {
 			$$ = parse_printf("%c%02d", 3 /* ^C */, nick_getcolour(nick));
 			nick_free(nick);
 		} else if (strcmp($3, "rdate") == 0) {
-			if (strisnum($5, 0))
+			if (strisnum($5, 0)) {
 				$$ = parse_printf("%s", strrdate((time_t)strtoll($5, NULL, 10)));
-			else
-				$$ = parse_printf("%%{%s:%s}", $3, $5);
+			} else {
+				yyerror("invalid date in invocation of %{rdate:...}");
+				YYERROR;
+			}
 		} else {
 			$$ = parse_printf("%%{%s:%s}", $3, $5);
 		}
@@ -164,17 +171,20 @@ style:	STYLE LBRACE STRING RBRACE {
 			else
 				$$ = parse_printf("%%{%s:%s,%s}", $3, $5, $7);
 		} else if (strcmp($3, "pad") == 0) {
-			if (strisnum($5, 1))
+			if (strisnum($5, 1)) {
 				$$ = parse_printf("%1$*2$s", $7, (int)strtoll($5, NULL, 0));
-			else
-				$$ = parse_printf("%%{%s:%s,%s}", $3, $5, $7);
+			} else {
+				yyerror("second argument to %{pad:...} must be a integer");
+				YYERROR;
+			}
 		} else if (strcmp($3, "time") == 0) {
 			if (strisnum($7, 0)) {
 				dtime = (time_t)strtoll($7, NULL, 0);
 				strftime(stime, sizeof(stime), $5, localtime(&dtime));
 				$$ = parse_dup(stime);
 			} else {
-				$$ = parse_printf("%%{%s:%s,%s}", $3, $5, $7);
+				yyerror("invalid date in invocation of %{time:...}");
+				YYERROR;
 			}
 		} else {
 			$$ = parse_printf("%%{%s:%s,%s}", $3, $5, $7);
@@ -188,8 +198,11 @@ style:	STYLE LBRACE STRING RBRACE {
 			val = strntok($9, $7, num);
 			if (strisnum($5, 0) && val) {
 				$$ = parse_dup(val);
+			} else if (strisnum($5, 0)) {
+				$$ = parse_dup("");
 			} else {
-				$$ = parse_printf("%%{%s:%s,%s,%s}", $3, $5, $7, $9);
+				yyerror("second argument to %{pad:...} must be an integer");
+				YYERROR;
 			}
 		} else {
 			$$ = parse_printf("%%{%s:%s,%s,%s}", $3, $5, $7, $9);
@@ -205,15 +218,8 @@ sstring: STRING
 %%
 
 static void
-yyerror(char *fmt, ...) {
-	char msg[1024];
-	va_list ap;
-
-	va_start(ap, fmt);
-	vsnprintf(msg, sizeof(msg), fmt, ap);
-	va_end(ap);
-
-	pfree(&parse_out); /* format() will return NULL */
+yyerror(char *msg) {
+	parse_error = 1;
 	ui_error("parsing '%s': %s", parse_in, msg);
 }
 
@@ -482,6 +488,11 @@ format(struct Window *window, char *format, struct History *hist) {
 	parse_in = rformat;
 
 	yyparse();
+
+	if (parse_error) {
+		parse_error = 0;
+		return NULL;
+	}
 
 	if (config_getl("timestamp.toggle"))
 		pfree(&rformat);

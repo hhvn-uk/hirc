@@ -399,9 +399,7 @@ config_redrawl(struct Config *conf, long num) {
 /* Don't set formats with syntax errors */
 static int
 config_formats(struct Config *conf, char *str) {
-	if (format(NULL, str, NULL)) {
-		ui_redraw();
-		return 1;
-	}
-	return 0;
+	int ret = format(NULL, str, NULL) ? 1 : 0;
+	ui_redraw(); /* for success & error msg */
+	return ret;
 }
