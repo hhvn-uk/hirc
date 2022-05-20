@@ -413,6 +413,7 @@ format(struct Window *window, char *format, struct History *hist) {
 	static char *ret;
 	char *ts;
 	char *rformat;
+	int x;
 	size_t len;
 	int clen[PARSE_LAST]; /* ui_strlenc */
 	int alen[PARSE_LAST]; /* strlen */
@@ -420,7 +421,7 @@ format(struct Window *window, char *format, struct History *hist) {
 	int divbool = 0;
 	char *divstr = config_gets("divider.string");
 	char priv[2];
-	int i;
+	size_t i;
 
 	assert_warn(format || hist, NULL);
 	if (!format)
@@ -492,25 +493,70 @@ format(struct Window *window, char *format, struct History *hist) {
 	}
 	
 	for (i = 0; i < PARSE_LAST; i++) {
-		if (parse_out[i]) {
-			clen[i] = ui_strlenc(&windows[Win_main], parse_out[i], NULL);
-			alen[i] = strlen(parse_out[i]);
-		}
+		clen[i] = parse_out[i] ? ui_strlenc(&windows[Win_main], parse_out[i], NULL) : 0;
+		alen[i] = parse_out[i] ? strlen(parse_out[i]) : 0;
 	}
 
 	if (divbool) {
-		ret = estrdup(parse_printf("%1$s %2$*3$s%4$s%5$s",
+		len = alen[PARSE_TIME] + alen[PARSE_LEFT] + alen[PARSE_RIGHT] + divlen - clen[PARSE_LEFT] + strlen(divstr) + 2;
+		ret = emalloc(len);
+		snprintf(ret, len, "%1$s %2$*3$s%4$s%5$s",
 				parse_out[PARSE_TIME] ? parse_out[PARSE_TIME] : "",
 				parse_out[PARSE_LEFT] ? parse_out[PARSE_LEFT] : "", divlen + alen[PARSE_LEFT] - clen[PARSE_LEFT],
 				divstr,
-				parse_out[PARSE_RIGHT]));
+				parse_out[PARSE_RIGHT]);
 	} else {
-		if (parse_out[PARSE_TIME])
-			parse_append(&ret, parse_out[PARSE_TIME]);
-		if (parse_out[PARSE_LEFT])
-			parse_append(&ret, parse_out[PARSE_LEFT]);
-		if (parse_out[PARSE_RIGHT])
-			parse_append(&ret, parse_out[PARSE_RIGHT]);
+		len = alen[PARSE_TIME] + alen[PARSE_LEFT] + alen[PARSE_RIGHT] + 1;
+		ret = emalloc(len);
+		snprintf(ret, len, "%s%s%s",
+				parse_out[PARSE_TIME] ? parse_out[PARSE_TIME] : "",
+				parse_out[PARSE_LEFT] ? parse_out[PARSE_LEFT] : "",
+				parse_out[PARSE_RIGHT] ? parse_out[PARSE_RIGHT] : "");
+	}
+
+	if (window) {
+		for (i = x = 0; ret[i]; i++) {
+			/* taken from ui_strlenc */
+			switch (ret[i]) {
+			case 2: case 9: case 15: case 18: case 21:
+				break;
+			case 3:  /* ^C */
+				if (ret[i] && isdigit(ret[i+1]))
+					i += 1;
+				if (ret[i] && isdigit(ret[i+1]))
+					i += 1;
+				if (ret[i] && ret[i+1] == ',' && isdigit(ret[i+2]))
+					i += 2;
+				if (ret[i] && i && ret[i-1] == ',' && isdigit(ret[i+1]))
+					i += 1;
+				break;
+			default:
+				if ((ret[i] & 0xC0) != 0x80)
+					x++;
+			}
+
+			if (x == window->w) {
+				x = 0;
+				len = strlen(ret) + clen[PARSE_TIME] + 1;
+				if (divbool)
+					len += divlen + strlen(divstr);
+				ret = erealloc(ret, len);
+
+				len -= strlen(ret);
+				if (!divbool)
+					len--;
+				memmove(ret + i + len, ret + i, strlen(ret + i) + 1);
+				if (parse_out[PARSE_TIME])
+					memset(ret + i + 1, ' ', clen[PARSE_TIME]);
+				if (divbool) {
+					memset(ret + i + 1 + clen[PARSE_TIME], ' ', len - clen[PARSE_TIME]);
+					memcpy(ret + i + 1 + len - strlen(divstr), divstr, strlen(divstr));
+				}
+				/* no need to increment i, as all the text
+				 * inserted here is after ret[i] and will be
+				 * counted in this for loop */
+			}
+		}
 	}
 
 	return ret;
