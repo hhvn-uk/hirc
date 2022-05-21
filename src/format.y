@@ -420,7 +420,7 @@ format(struct Window *window, char *format, struct History *hist) {
 	char *ts;
 	char *rformat;
 	int x;
-	size_t len;
+	size_t len, pad;
 	int clen[PARSE_LAST]; /* ui_strlenc */
 	int alen[PARSE_LAST]; /* strlen */
 	int divlen = config_getl("divider.margin");
@@ -488,14 +488,13 @@ format(struct Window *window, char *format, struct History *hist) {
 	parse_in = rformat;
 
 	yyparse();
+	pfree(&rformat);
 
 	if (parse_error) {
 		parse_error = 0;
 		return NULL;
 	}
 
-	if (config_getl("timestamp.toggle"))
-		pfree(&rformat);
 
 	/* If there is no %{=}, then it's on the right */
 	if (hist && parse_out[PARSE_LEFT] && !parse_out[PARSE_RIGHT]) {
@@ -508,8 +507,11 @@ format(struct Window *window, char *format, struct History *hist) {
 		alen[i] = parse_out[i] ? strlen(parse_out[i]) : 0;
 	}
 
+	/* Space for padding is allocated here (see how len is incremented using pad) */
 	if (divbool) {
-		len = alen[PARSE_TIME] + alen[PARSE_LEFT] + alen[PARSE_RIGHT] + divlen - clen[PARSE_LEFT] + strlen(divstr) + 2;
+		len = alen[PARSE_TIME] + alen[PARSE_LEFT] + alen[PARSE_RIGHT] + divlen - clen[PARSE_LEFT] + strlen(divstr) + 1;
+		pad = clen[PARSE_TIME] + divlen + strlen(divstr) + 1;
+		len += (clen[PARSE_RIGHT] / (window->w - pad)) * pad + 1;
 		ret = emalloc(len);
 		snprintf(ret, len, "%1$s %2$*3$s%4$s%5$s",
 				parse_out[PARSE_TIME] ? parse_out[PARSE_TIME] : "",
@@ -518,6 +520,10 @@ format(struct Window *window, char *format, struct History *hist) {
 				parse_out[PARSE_RIGHT]);
 	} else {
 		len = alen[PARSE_TIME] + alen[PARSE_LEFT] + alen[PARSE_RIGHT] + 1;
+		if (window) {
+			pad = clen[PARSE_TIME];
+			len += ((clen[PARSE_LEFT] + clen[PARSE_RIGHT] + 1) / (window->w - pad)) * pad;
+		}
 		ret = emalloc(len);
 		snprintf(ret, len, "%s%s%s",
 				parse_out[PARSE_TIME] ? parse_out[PARSE_TIME] : "",
@@ -548,20 +554,12 @@ format(struct Window *window, char *format, struct History *hist) {
 
 			if (x == window->w) {
 				x = 0;
-				len = strlen(ret) + clen[PARSE_TIME] + 1;
-				if (divbool)
-					len += divlen + strlen(divstr);
-				ret = erealloc(ret, len);
-
-				len -= strlen(ret);
-				if (!divbool)
-					len--;
-				memmove(ret + i + len, ret + i, strlen(ret + i) + 1);
+				memmove(ret + i + pad, ret + i, strlen(ret + i) + 1);
 				if (parse_out[PARSE_TIME])
 					memset(ret + i + 1, ' ', clen[PARSE_TIME]);
 				if (divbool) {
-					memset(ret + i + 1 + clen[PARSE_TIME], ' ', len - clen[PARSE_TIME]);
-					memcpy(ret + i + 1 + len - strlen(divstr), divstr, strlen(divstr));
+					memset(ret + i + 1 + clen[PARSE_TIME], ' ', pad - clen[PARSE_TIME]);
+					memcpy(ret + i + 1 + pad - strlen(divstr), divstr, strlen(divstr));
 				}
 				/* no need to increment i, as all the text
 				 * inserted here is after ret[i] and will be
