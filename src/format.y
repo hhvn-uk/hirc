@@ -201,7 +201,7 @@ style:	STYLE LBRACE STRING RBRACE {
 			} else if (strisnum($5, 0)) {
 				$$ = parse_dup("");
 			} else {
-				yyerror("second argument to %{pad:...} must be an integer");
+				yyerror("first argument to %{split:...} must be an integer");
 				YYERROR;
 			}
 		} else {
