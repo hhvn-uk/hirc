@@ -72,10 +72,18 @@ complete_add(char **ret, char *str, int *fullcomplete) {
 
 void
 complete_cmds(char *str, size_t len, char **ret, int *fullcomplete) {
+	struct Alias *p;
+	char *tmp;
 	int i;
 	for (i = 0; commands[i].name; i++)
 		if (strncmp(commands[i].name, str, len) == 0)
 			complete_add(ret, commands[i].name, fullcomplete);
+	tmp = emalloc(len + 2);
+	snprintf(tmp, len + 2, "/%s", str);
+	for (p = aliases; p; p = p->next)
+		if (strncmp(p->alias, tmp, len + 1) == 0)
+			complete_add(ret, p->alias + 1, fullcomplete);
+	pfree(&tmp);
 }
 
 void
