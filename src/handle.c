@@ -604,7 +604,6 @@ handle(struct Server *server, char *msg) {
 	time_t timestamp;
 	char **params;
 	char *cmd;
-	char *schmsg;
 	int i;
 
 	timestamp = time(NULL);
