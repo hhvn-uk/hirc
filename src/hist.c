@@ -125,7 +125,7 @@ hist_add(struct HistInfo *histinfo,
 	struct Nick *from = NULL;
 	struct History *new, *p;
 	struct Ignore *ign;
-	struct tm ptm, ctm, dtm;
+	struct tm ptm, ctm;
 	int i;
 
 	assert_warn(histinfo && msg, NULL);
@@ -170,10 +170,11 @@ hist_add(struct HistInfo *histinfo,
 		localtime_r(&histinfo->history->timestamp, &ptm);
 		localtime_r(&timestamp, &ctm);
 		if (ptm.tm_mday != ctm.tm_mday || ptm.tm_mon != ctm.tm_mon || ptm.tm_year != ctm.tm_year) {
-			memcpy(&dtm, &ctm, sizeof(struct tm));
-			dtm.tm_sec = dtm.tm_min = dtm.tm_hour = 0;
+			ctm.tm_sec = ctm.tm_min = ctm.tm_hour = 0;
 			hist_format(histinfo, Activity_none, histinfo->server ? HIST_DFL : HIST_SHOW,
-					"SELF_NEW_DAY %d :day changed to", (long long)mktime(&dtm));
+					"SELF_NEW_DAY %lld :day changed to", (long long)mktime(&ctm));
+			histinfo->history->timestamp = mktime(&ctm); /* set timestamp of SELF_NEW_DAY:
+									really hist_format should take a timestamp */
 		}
 	}
 
