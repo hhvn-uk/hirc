@@ -430,8 +430,6 @@ command_ping) {
 
 COMMAND(
 command_quote) {
-	char msg[512];
-
 	if (!str) {
 		command_toofew("quote");
 		return;
