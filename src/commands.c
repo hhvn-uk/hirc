@@ -1968,9 +1968,16 @@ alias_add(char *alias, char *cmd) {
 int
 alias_remove(char *alias) {
 	struct Alias *p;
+	char *tmp = NULL;
 
 	if (!alias)
 		return -1;
+	if (*alias != '/') {
+		tmp = emalloc(strlen(alias) + 2);
+		snprintf(tmp, strlen(alias) + 2, "/%s", alias);
+		alias = tmp;
+		/* tmp is guaranteed NULL or freeable */
+	};
 
 	for (p=aliases; p; p = p->next) {
 		if (strcmp(p->alias, alias) == 0) {
@@ -1985,6 +1992,7 @@ alias_remove(char *alias) {
 			pfree(&p->alias);
 			pfree(&p->cmd);
 			pfree(&p);
+			pfree(&tmp);
 			return 0;
 		}
 	}
