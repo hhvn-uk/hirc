@@ -322,7 +322,8 @@ config_window_hide(struct Config *conf, long num) {
 		if (!num)
 			loc = config_getl("nicklist.location");
 	}
-	windows[win].location = loc;
+	if (win != Win_nicklist || selected.hasnicks)
+		windows[win].location = loc;
 	conf->isdef = 0;
 	ui_redraw();
 	return 1;
@@ -332,7 +333,7 @@ config_window_hide(struct Config *conf, long num) {
 static int
 config_window_location(struct Config *conf, long num) {
 	struct Config *otherloc, *otherhide;
-	enum WindowLocation win, otherwin;
+	enum Windows win, otherwin;
 	if (strcmp(conf->name, "buflist.location") == 0) {
 		win = Win_buflist;
 		otherwin = Win_nicklist;
@@ -347,10 +348,12 @@ config_window_location(struct Config *conf, long num) {
 	if (num == otherloc->num) {
 		otherloc->num = (num == Location_left) ? Location_right : Location_left;
 		otherloc->isdef = 0;
-		if (!otherhide->num)
+		if (!otherhide->num && (otherwin != Win_nicklist || selected.hasnicks))
 			windows[otherwin].location = otherloc->num;
 	}
-	conf->num = windows[win].location = num;
+	conf->num = num;
+	if (win != Win_nicklist || selected.hasnicks)
+		windows[win].location = num;
 	conf->isdef = 0;
 	ui_redraw();
 	return 0;
