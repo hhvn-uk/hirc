@@ -22,6 +22,35 @@
 #include <limits.h>
 #include "hirc.h"
 
+/* Helper functions for widechar <-> utf-8 conversion */
+wchar_t *
+stowc(char *str) {
+	wchar_t *ret;
+	size_t len;
+
+	if (!str) return NULL;
+
+	len = mbstowcs(NULL, str, 0) + 1;
+	if (!len) return NULL;
+	ret = emalloc(len * sizeof(wchar_t));
+	mbstowcs(ret, str, len);
+	return ret;
+}
+
+char *
+wctos(wchar_t *str) {
+	char *ret;
+	size_t len;
+
+	if (!str) return NULL;
+
+	len = wcstombs(NULL, str, 0) + 1;
+	if (!len) return NULL;
+	ret = emalloc(len);
+	wcstombs(ret, str, len);
+	return ret;
+}
+
 char *
 homepath(char *path) {
 	static char ret[1024];

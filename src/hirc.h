@@ -56,6 +56,8 @@ int		param_len(char **params);
 char **		param_create(char *msg);
 
 /* str.c */
+wchar_t * 	stowc(char *str);
+char * 		wctos(wchar_t *str);
 char *		homepath(char *path);
 int		strcmp_n(const char *s1, const char *s2);
 char *		struntil(char *str, char until);
@@ -72,8 +74,6 @@ char *		estrdup(const char *str);
 void *		talloc(size_t size);
 char *		tstrdup(const char *str);
 wchar_t * 	ewcsdup(const wchar_t *str);
-wchar_t * 	stowc(char *str);
-char * 		wctos(wchar_t *str);
 
 /* chan.c */
 void		chan_free(struct Channel *channel);
