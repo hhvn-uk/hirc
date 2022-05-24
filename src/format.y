@@ -32,6 +32,7 @@ static char *parse_in = NULL;
 static char *parse_out[PARSE_LAST] = {NULL, NULL, NULL};
 static int parse_pos = PARSE_LEFT;
 static char **parse_params = NULL;
+static struct Server *parse_server = NULL;
 
 enum {
 	var_raw,
@@ -147,7 +148,7 @@ style:	STYLE LBRACE STRING RBRACE {
 			if (strlen($5) <= 2 && isdigit(*$5) && (!*($5+1) || isdigit(*($5+1))))
 				$$ = parse_printf("%c%02d", 3 /* ^C */, atoi($5));
 		} else if (strcmp($3, "nick") == 0) {
-			nick = nick_create($5, ' ', NULL);
+			nick = nick_create($5, ' ', parse_server);
 			$$ = parse_printf("%c%02d", 3 /* ^C */, nick_getcolour(nick));
 			nick_free(nick);
 		} else if (strcmp($3, "rdate") == 0) {
@@ -467,6 +468,7 @@ format(struct Window *window, char *format, struct History *hist) {
 				vars[var_channel].val = hist->origin->channel->name;
 				vars[var_topic].val   = hist->origin->channel->topic;
 			}
+			parse_server = hist->origin->server;
 			if (hist->origin->server) {
 				vars[var_server].val  = hist->origin->server->name;
 			}
@@ -479,7 +481,10 @@ format(struct Window *window, char *format, struct History *hist) {
 		vars[var_cmd].val = *hist->params;
 		if (hist->params)
 			parse_params = hist->params + 1;
-	} else parse_params = NULL;
+	} else {
+		parse_params = NULL;
+		parse_server = NULL;
+	}
 
 	parse_dup(0); /* free memory in use for last parse_ */
 	for (i = 0; i < PARSE_LAST; i++)
