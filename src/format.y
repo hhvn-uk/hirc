@@ -77,9 +77,17 @@ grammar: /* empty */ { parse_append(&parse_out[parse_pos], ""); }
 
 var:	VAR LBRACE STRING RBRACE {
    		char buf[8192];
+		char *tmp;
      		int i, num;
 		if (strisnum($3, 0) && (num = strtoll($3, NULL, 10)) && param_len(parse_params) >= num) {
-			$$ = *(parse_params + num - 1);
+			if (num == 2 && strcmp_n(vars[var_cmd].val, "PRIVMSG") == 0 && **(parse_params + num - 1) == 1 /* ^A */) {
+				if (strncmp(*(parse_params + num - 1) + 1, "ACTION", CONSTLEN("ACTION")) == 0)
+					tmp = parse_dup(*(parse_params + num - 1) + 1 + CONSTLEN("ACTION "));
+				else
+					tmp = parse_dup(*(parse_params + num - 1) + 1);
+				tmp[strlen(tmp) - 1] = '\0';
+				$$ = tmp;
+			} else $$ = *(parse_params + num - 1);
 			goto varfin;
 		}
 		if (*$3 && *($3 + strlen($3) - 1) == '-') {
@@ -554,7 +562,9 @@ format(struct Window *window, char *format, struct History *hist) {
 				break;
 			default:
 				if ((ret[i] & 0xC0) != 0x80)
-					x++;
+					while ((ret[i + 1] & 0xC0) == 0x80)
+						i++;
+				x++;
 			}
 
 			if (x == window->w) {
