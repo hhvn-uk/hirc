@@ -28,7 +28,28 @@ convert(char *line) {
 
 	strftime(time, sizeof(time), "[%Y-%m-%d %H:%M:%S]", localtime(&timestamp));
 
-	if (strncmp(msg, "PRIVMSG ", 8) == 0 && (p = strchr(msg, ':'))) {
+	if (strncmp(msg, "PRIVMSG ", 8) == 0 && strstr(msg, ":\01ACTION")) {
+		if (msg[strlen(msg) - 1] == 1)
+			msg[strlen(msg) - 1] = '\0';
+		p = strchr(msg, ':') + 9;
+		printf("%s *%s %s\n", time, tok[5], p);
+	} else if (strncmp(msg, "PRIVMSG ", 8) == 0 && strstr(msg, ":\01")) {
+		if (msg[strlen(msg) - 1] == 1)
+			msg[strlen(msg) - 1] = '\0';
+		p = strchr(msg, ':') + 2;
+		printf("%s %s requested %s via CTCP\n", time, tok[5], p);
+	} else if (strncmp(msg, "NOTICE ", 7) == 0 && strstr(msg, ":\01")) {
+		if (msg[strlen(msg) - 1] == 1)
+			msg[strlen(msg) - 1] = '\0';
+		p = strchr(msg, ':') + 2;
+		if (msg = strchr(p, ' ')) {
+			*msg = '\0';
+			msg++;
+		} else msg = "";
+		printf("%s %s replied to the CTCP request for %s: %s\n", time, tok[5], p, msg);
+	} else if (strncmp(msg, "NOTICE ", 7) == 0 && (p = strchr(msg, ':'))) {
+		printf("%s -%s%s- %s\n", time, *tok[4] != ' ' ? tok[4] : "", tok[5], p + 1);
+	} else if (strncmp(msg, "PRIVMSG ", 8) == 0 && (p = strchr(msg, ':'))) {
 		printf("%s <%s%s> %s\n", time, *tok[4] != ' ' ? tok[4] : "", tok[5], p + 1);
 	} else if (strncmp(msg, "JOIN ", 5) == 0) {
 		printf("%s %s (%s@%s) joined.\n", time, tok[5], tok[6], tok[7]);
