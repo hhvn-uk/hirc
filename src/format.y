@@ -80,12 +80,14 @@ var:	VAR LBRACE STRING RBRACE {
 		char *tmp;
      		int i, num;
 		if (strisnum($3, 0) && (num = strtoll($3, NULL, 10)) && param_len(parse_params) >= num) {
-			if (num == 2 && strcmp_n(vars[var_cmd].val, "PRIVMSG") == 0 && **(parse_params + num - 1) == 1 /* ^A */) {
+			if (num == 2 && **(parse_params + num - 1) == 1 &&
+					(strcmp_n(vars[var_cmd].val, "PRIVMSG") == 0 || strcmp_n(vars[var_cmd].val, "NOTICE") == 0)) {
 				if (strncmp(*(parse_params + num - 1) + 1, "ACTION", CONSTLEN("ACTION")) == 0)
 					tmp = parse_dup(*(parse_params + num - 1) + 1 + CONSTLEN("ACTION "));
 				else
 					tmp = parse_dup(*(parse_params + num - 1) + 1);
-				tmp[strlen(tmp) - 1] = '\0';
+				if (tmp[strlen(tmp) - 1] == 1)
+					tmp[strlen(tmp) - 1] = '\0';
 				$$ = tmp;
 			} else $$ = *(parse_params + num - 1);
 			goto varfin;
@@ -118,17 +120,17 @@ varfin:
 
 style:	STYLE LBRACE STRING RBRACE {
      		if (strcmp($3, "b") == 0) {
-			$$ = parse_printf("%c", 2 /* ^B */);
+			$$ = parse_printf("\02"); /* ^B */
      		} else if (strcmp($3, "c") == 0) {
-			$$ = parse_printf("%c99,99", 3 /* ^C */);
+			$$ = parse_printf("\0399,99"); /* ^C */
      		} else if (strcmp($3, "i") == 0) {
-			$$ = parse_printf("%c", 9 /* ^I */);
+			$$ = parse_printf("\011"); /* ^I */
      		} else if (strcmp($3, "o") == 0) {
-			$$ = parse_printf("%c", 15 /* ^O */);
+			$$ = parse_printf("\017"); /* ^O */
      		} else if (strcmp($3, "r") == 0) {
-			$$ = parse_printf("%c", 18 /* ^R */);
+			$$ = parse_printf("\022"); /* ^R */
      		} else if (strcmp($3, "u") == 0) {
-			$$ = parse_printf("%c", 21 /* ^U */);
+			$$ = parse_printf("\025"); /* ^U */
      		} else if (strcmp($3, "=") == 0) {
 			if (parse_pos == PARSE_LEFT) {
 				parse_pos = PARSE_RIGHT;
@@ -154,10 +156,10 @@ style:	STYLE LBRACE STRING RBRACE {
 		struct Nick *nick;
 		if (strcmp($3, "c") == 0) {
 			if (strlen($5) <= 2 && isdigit(*$5) && (!*($5+1) || isdigit(*($5+1))))
-				$$ = parse_printf("%c%02d", 3 /* ^C */, atoi($5));
+				$$ = parse_printf("\03%02d" /* ^C */, atoi($5));
 		} else if (strcmp($3, "nick") == 0) {
 			nick = nick_create($5, ' ', parse_server);
-			$$ = parse_printf("%c%02d", 3 /* ^C */, nick_getcolour(nick));
+			$$ = parse_printf("\03%02d" /* ^C */, nick_getcolour(nick));
 			nick_free(nick);
 		} else if (strcmp($3, "rdate") == 0) {
 			if (strisnum($5, 0)) {
@@ -176,7 +178,7 @@ style:	STYLE LBRACE STRING RBRACE {
 		if (strcmp($3, "c") == 0) {
 			if (strlen($5) <= 2 && isdigit(*$5) && (!*($5+1) || isdigit(*($5+1))) &&
 					strlen($7) <= 2 && isdigit(*$7) && (!*($7+1) || isdigit(*($5+1))))
-				$$ = parse_printf("%c%02d,%02d", 3 /* ^C */, atoi($5), atoi($7));
+				$$ = parse_printf("\03%02d,%02d" /* ^C */, atoi($5), atoi($7));
 			else
 				$$ = parse_printf("%%{%s:%s,%s}", $3, $5, $7);
 		} else if (strcmp($3, "pad") == 0) {
