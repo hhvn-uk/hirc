@@ -484,6 +484,8 @@ format(struct Window *window, char *format, struct History *hist) {
 		if (hist->params)
 			parse_params = hist->params + 1;
 	} else {
+		vars[var_raw].val = vars[var_nick].val = vars[var_ident].val =
+			vars[var_host].val = vars[var_priv].val = NULL;
 		parse_params = NULL;
 		parse_server = NULL;
 	}
