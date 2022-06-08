@@ -19,7 +19,6 @@ static int yylex(void);
 #define RETURN(s) do {prev = s; return s;} while (0)
 #define ISSPECIAL(s) isspecial(s, prev, bracelvl, bracetype, styleseg)
 
-
 enum {
 	PARSE_TIME,
 	PARSE_LEFT,
@@ -33,6 +32,7 @@ static char *parse_out[PARSE_LAST] = {NULL, NULL, NULL};
 static int parse_pos = PARSE_LEFT;
 static char **parse_params = NULL;
 static struct Server *parse_server = NULL;
+static int parse_divbool = 0;
 
 enum {
 	var_raw,
@@ -134,14 +134,14 @@ style:	STYLE LBRACE STRING RBRACE {
      		} else if (strcmp($3, "=") == 0) {
 			if (parse_pos == PARSE_LEFT) {
 				parse_pos = PARSE_RIGHT;
-				$$ = parse_dup("");
+				$$ = NULL;
 			} else {
 				$$ = parse_dup(" ");
 			}
 		} else if (strcmp($3, "_time") == 0) { /* special style to mark end of timestamp */
 			if (parse_pos == PARSE_TIME) {
-				parse_pos = PARSE_LEFT; /* let's hope no-one puts it in format.ui.timestamp */
-				$$ = parse_dup("");
+				parse_pos = parse_divbool ? PARSE_LEFT : PARSE_RIGHT;
+				$$ = NULL;
 			} else {
 				yyerror("%{_time} used erroneously here: "
 					"this style is meant for internal use only, "
@@ -210,7 +210,7 @@ style:	STYLE LBRACE STRING RBRACE {
 			if (strisnum($5, 0) && val) {
 				$$ = parse_dup(val);
 			} else if (strisnum($5, 0)) {
-				$$ = parse_dup("");
+				$$ = NULL;
 			} else {
 				yyerror("first argument to %{split:...} must be an integer");
 				YYERROR;
@@ -239,6 +239,9 @@ static void
 parse_append(char **dest, char *str) {
 	size_t size;
 	size_t len;
+
+	if (!str)
+		return;
 
 	if (*dest)
 		len = strlen(*dest);
@@ -445,17 +448,6 @@ format(struct Window *window, char *format, struct History *hist) {
 		format = config_gets(format_get(hist));
 	assert_warn(format, NULL);
 
-	if (hist && config_getl("timestamp.toggle")) {
-		ts = config_gets("format.ui.timestamp");
-		len = strlen(ts) + strlen(format) + CONSTLEN("%{_time}") + 1;
-		rformat = emalloc(len);
-		snprintf(rformat, len, "%s%%{_time}%s", ts, format);
-		parse_pos = PARSE_TIME;
-	} else {
-		rformat = strdup(format);
-		parse_pos = PARSE_LEFT;
-	}
-
 	vars[var_channel].val = selected.channel ? selected.channel->name  : NULL;
 	vars[var_topic].val   = selected.channel ? selected.channel->topic : NULL;
 	vars[var_server].val  = selected.server  ? selected.server->name   : NULL;
@@ -496,11 +488,23 @@ format(struct Window *window, char *format, struct History *hist) {
 		parse_server = NULL;
 	}
 
+	if (hist && config_getl("timestamp.toggle")) {
+		ts = config_gets("format.ui.timestamp");
+		len = strlen(ts) + strlen(format) + CONSTLEN("%{_time}") + 1;
+		rformat = emalloc(len);
+		snprintf(rformat, len, "%s%%{_time}%s", ts, format);
+		parse_pos = PARSE_TIME;
+	} else {
+		rformat = strdup(format);
+		parse_pos = divbool ? PARSE_LEFT : PARSE_RIGHT;
+	}
+
 	parse_dup(0); /* free memory in use for last parse_ */
 	for (i = 0; i < PARSE_LAST; i++)
 		pfree(&parse_out[i]);
 	pfree(&ret);
 	parse_in = rformat;
+	parse_divbool = divbool;
 
 	yyparse();
 	pfree(&rformat);
@@ -510,13 +514,11 @@ format(struct Window *window, char *format, struct History *hist) {
 		return NULL;
 	}
 
-
-	/* If there is no %{=}, then it's on the right */
-	if (hist && parse_out[PARSE_LEFT] && !parse_out[PARSE_RIGHT]) {
+	if (parse_out[PARSE_LEFT] && !parse_out[PARSE_RIGHT]) {
 		parse_out[PARSE_RIGHT] = parse_out[PARSE_LEFT];
 		parse_out[PARSE_LEFT] = NULL;
 	}
-	
+
 	for (i = 0; i < PARSE_LAST; i++) {
 		clen[i] = parse_out[i] ? ui_strlenc(&windows[Win_main], parse_out[i], NULL) : 0;
 		alen[i] = parse_out[i] ? strlen(parse_out[i]) : 0;
@@ -524,9 +526,13 @@ format(struct Window *window, char *format, struct History *hist) {
 
 	/* Space for padding is allocated here (see how len is incremented using pad) */
 	if (divbool) {
-		len = alen[PARSE_TIME] + alen[PARSE_LEFT] + alen[PARSE_RIGHT] + divlen - clen[PARSE_LEFT] + strlen(divstr) + 1;
-		pad = clen[PARSE_TIME] + divlen + strlen(divstr) + 1;
-		len += (clen[PARSE_RIGHT] / (window->w - pad)) * pad + 1;
+		len = alen[PARSE_TIME] + alen[PARSE_LEFT] + alen[PARSE_RIGHT] + strlen(divstr) + 1;
+		if (clen[PARSE_LEFT] < divlen)
+			len += divlen - clen[PARSE_LEFT];
+		if (window) {
+			pad = clen[PARSE_TIME] + divlen + ui_strlenc(NULL, divstr, NULL) + 1;
+			len += ((clen[PARSE_RIGHT] + 1) / (window->w - pad)) * pad + 1;
+		}
 		ret = emalloc(len);
 		snprintf(ret, len, "%1$s %2$*3$s%4$s%5$s",
 				parse_out[PARSE_TIME] ? parse_out[PARSE_TIME] : "",
@@ -534,15 +540,15 @@ format(struct Window *window, char *format, struct History *hist) {
 				divstr,
 				parse_out[PARSE_RIGHT]);
 	} else {
-		len = alen[PARSE_TIME] + alen[PARSE_LEFT] + alen[PARSE_RIGHT] + 1;
+		/* If divbool is zero, then all text is in either PARSE_TIME or PARSE_RIGHT */
+		len = alen[PARSE_TIME] + alen[PARSE_RIGHT] + 1;
 		if (window) {
 			pad = clen[PARSE_TIME];
-			len += ((clen[PARSE_LEFT] + clen[PARSE_RIGHT] + 1) / (window->w - pad)) * pad;
+			len += ((clen[PARSE_RIGHT] + 1) / (window->w - pad)) * pad;
 		}
 		ret = emalloc(len);
-		snprintf(ret, len, "%s%s%s",
+		snprintf(ret, len, "%s%s",
 				parse_out[PARSE_TIME] ? parse_out[PARSE_TIME] : "",
-				parse_out[PARSE_LEFT] ? parse_out[PARSE_LEFT] : "",
 				parse_out[PARSE_RIGHT] ? parse_out[PARSE_RIGHT] : "");
 	}
 
