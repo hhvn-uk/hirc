@@ -25,6 +25,7 @@ SRC	= src/main.c src/mem.c src/handle.c src/hist.c \
 	  src/str.c src/params.c $(PARSE:.y=.c)
 OBJ	= $(SRC:.c=.o)
 MAN	= doc/hirc.1
+MAN5	= doc/hirc.conf.5
 COMMIT	= $(shell git log HEAD...HEAD~1 --pretty=format:%h)
 CFLAGS	= $(DEBUG)
 LDFLAGS = -lncursesw
@@ -58,8 +59,8 @@ $(BIN): $(OBJ)
 
 $(MAN): $(BIN) $(MAN).header $(MAN).footer
 	./$(BIN) -d | \
-		cat $(MAN).header - $(MAN).footer | \
-		sed "s/COMMIT/$(COMMIT)/" > $(MAN)
+		cat $(MAN).header - $(MAN).footer \
+		> $(MAN)
 
 misc:
 	cd misc/ && make \
@@ -84,9 +85,12 @@ misc-clean:
 install: all misc-install
 	mkdir -p $(BINDIR) $(MANDIR)/man1
 	install -m0755 $(BIN) $(BINDIR)/$(BIN)
-	sed 's/COMMIT/$(COMMIT)/' \
+	sed "s/COMMIT/$(COMMIT)/" \
 		< $(MAN) \
 		> $(MANDIR)/man1/`basename $(MAN)`
+	sed "s/COMMIT/$(COMMIT)/" \
+		< $(MAN5) \
+		> $(MANDIR)/man5/`basename $(MAN5)`
 
 uninstall: misc-uninstall
 	-rm -f $(BINDIR)/$(BIN)

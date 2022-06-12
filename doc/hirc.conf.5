@@ -1,0 +1,77 @@
+.\" vim: set syntax=nroff :
+.Dd COMMIT
+.Dt hirc.conf 5
+.Os
+.Sh NAME
+.Nm hirc.conf
+.Nd configuration format for
+.Xr hirc 1
+.Sh DESCRIPTION
+A
+.Nm
+file is made up of lines. Each line can be either a command or a comment.
+A command is a line that begins with a forward-slash
+.Pq Sq / :
+these are executed by hirc as though they were typed by the user.
+Any other line is a comment and results in no action.
+
+The commands that can be used in
+.Nm
+are described in
+.Xr hirc 1 .
+.Sh GENERATION
+See the
+.Ic dump
+command in
+.Xr hirc 1
+.Sh TIPS
+This section is entirely informative in intent and does not constitute a recommendation.
+.Ss Comments
+Comments can usually be written directly at the beginning of a line without worrying about inserting any special characters.
+In order to prevent a command from running, a space
+.Pq Sq \ 
+can be placed at the start of the line.
+It may be hard to tell wether a line is a comment or not with this,
+so using a hash
+.Pq Sq #
+instead may be preferred.
+Syntax highlighting can also be used,
+making it very easy to tell if a line is a comment or not, visually:
+see the
+.Sx FILES
+section.
+.Ss Running Multiple Commands
+With commands that take other commands as arguments (e,g:
+.Ic /alias
+and
+.Ic /bind )
+there is no syntax for passing multiple commands.
+
+However,
+.Nm
+can be used to create macros, that can then be called using the
+.Ic /source
+command.
+
+An example macro named
+.Pa ~/.config/hirc/macros/clutter :
+.Dl /toggle buflist.hidden
+.Dl /toggle nicklist.hidden
+
+Which could be configured to run on a keybind with:
+.Dl /bind ^[b /source ~/.config/hirc/macros/clutter
+.Sh FILES
+Files included with the hirc source repository:
+.Bl -tag -width vim/ftdetect/hirc.vim -compact
+.It Pa doc/example.conf
+Example configuration.
+.It Pa vim/syntax/hirc.vim
+Syntax file for
+.Xr vim 1 .
+.It Pa vim/ftdetect/hirc.vim
+Detection of hirc config files for
+.Xr vim 1 .
+.Sh SEE ALSO
+.Xr hirc 1
+.Sh AUTHOR
+.An hhvn Aq Mt dev@hhvn.uk

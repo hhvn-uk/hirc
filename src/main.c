@@ -87,7 +87,7 @@ main(int argc, char *argv[]) {
 	if (argc == 2 && strcmp(argv[1], "-d") == 0) {
 		printf(".Bl -tag\n");
 		for (i=0; config[i].name; i++) {
-			printf(".It %s\n", config[i].name);
+			printf(".It Ic %s\n", config[i].name);
 			printf(".Bd -literal -compact\n");
 			printf("Default value: %s\n", config_get_pretty(&config[i], 1));
 			for (j=0; config[i].description[j]; j++)
@@ -98,7 +98,7 @@ main(int argc, char *argv[]) {
 		printf(".Sh COMMANDS\n");
 		printf(".Bl -tag\n");
 		for (i=0; commands[i].name && commands[i].func; i++) {
-			printf(".It /%s\n", commands[i].name);
+			printf(".It Ic /%s\n", commands[i].name);
 			printf(".Bd -literal -compact\n");
 			for (j=0; commands[i].description[j]; j++)
 				printf("%s\n", commands[i].description[j]);
