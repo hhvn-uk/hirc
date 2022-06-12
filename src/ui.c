@@ -164,6 +164,7 @@ ui_placewindow(struct Window *window) {
 void
 ui_read(void) {
 	static wchar_t *backup = NULL;
+	static int didcomplete = 0;
 	struct Keybind *kp;
 	char *str;
 	wint_t key;
@@ -259,6 +260,8 @@ ui_read(void) {
 			break;
 		case KEY_ENTER:
 		case '\r':
+			if (didcomplete && input.string[input.counter - 1] == L' ')
+				input.string[input.counter - 1] = '\0';
 			if (*input.string != L'\0') {
 				/* no need to free str as assigned to input.history[0] */
 				str = wctos(input.string);
@@ -280,6 +283,23 @@ ui_read(void) {
 			}
 			break;
 		}
+
+		/* Completion adds a space after the completed text: this
+		 * serves the purpose of showing the user that it has been
+		 * completely successfully and unambiguously, and allowing them
+		 * to begin writing quickly without having to type a space
+		 * (this is common in most tab-completion systems).
+		 *
+		 * The problem is that if something is completed at the end of
+		 * a command, and the user then hits enter, that space would be
+		 * passed to command_* functions (previous versions of hirc did
+		 * this, and put the onus on commands to strip trailing
+		 * spaces).
+		 *
+		 * Instead, this variable is set so that trailing spaces will
+		 * be stripped when tab completed, but not ones inserted
+		 * manually, inside ui_read() - see the KEY_ENTER case. */
+		didcomplete = (key == '\t');
 	}
 }
 

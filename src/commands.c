@@ -689,14 +689,11 @@ command_set) {
 COMMAND(
 command_toggle) {
 	struct Config *conf;
-	char *p;
 
 	if (!str) {
 		command_toofew("toggle");
 		return;
 	}
-	if ((p = strrchr(str, ' ')) && *(p+1) == '\0')
-		*p = '\0';
 	if (strchr(str, ' ')) {
 		command_toomany("toggle");
 		return;
@@ -1097,7 +1094,6 @@ command_alias) {
 
 COMMAND(
 command_help) {
-	char *p;
 	int cmdonly = 0;
 	int found = 0;
 	int i, j;
@@ -1106,10 +1102,6 @@ command_help) {
 		command_help(server, channel, "/help");
 		return;
 	}
-
-	p = strrchr(str, ' ');
-	if (p && *(p+1) == '\0')
-		*p = '\0';
 
 	if (strcmp(str, "commands") == 0) {
 		hist_format(selected.history, Activity_none, HIST_UI, "SELF_HELP_START :%s", str);
@@ -1364,14 +1356,10 @@ narg:
 
 COMMAND(
 command_source) {
-	char *p;
 	if (!str) {
 		command_toofew("source");
 		return;
 	}
-	p = strrchr(str, ' ');
-	if (p && *(p+1) == '\0')
-		*p = '\0'; /* remove trailing spaces */
 	config_read(homepath(str));
 }
 
@@ -1381,7 +1369,7 @@ command_dump) {
 	int selected = 0;
 	int def = 0, ret;
 	int i;
-	char **aup, *p;
+	char **aup;
 	struct Server *sp;
 	struct Channel *chp;
 	struct Alias *ap;
@@ -1441,9 +1429,6 @@ command_dump) {
 		return;
 	}
 	str = homepath(str);
-	p = strrchr(str, ' ');
-	if (p && *(p+1) == '\0')
-		*p = '\0';
 
 	if ((file = fopen(str, "wb")) == NULL) {
 		ui_error("cannot open file '%s': %s", str, strerror(errno));
