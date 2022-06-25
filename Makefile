@@ -26,7 +26,7 @@ SRC	= src/main.c src/mem.c src/handle.c src/hist.c \
 OBJ	= $(SRC:.c=.o)
 MAN	= doc/hirc.1
 MAN5	= doc/hirc.conf.5
-COMMIT	= $(shell git log HEAD...HEAD~1 --pretty=format:%h)
+COMMIT	= $(shell grep -oE '^.{7}' < .git/refs/heads/master)
 CFLAGS	= $(DEBUG)
 LDFLAGS = -lncursesw
 
