@@ -153,20 +153,23 @@ hist_add(struct HistInfo *histinfo,
 
 	if (!(options & HIST_NIGN)) {
 		for (ign = ignores; ign; ign = ign->next) {
-			if (!ign->server || (histinfo->server && strcmp_n(ign->server, histinfo->server->name) == 0)) {
-				if ((!ign->format || strcmp_n(format_get(new), ign->format) == 0) && regexec(&ign->regex, msg, 0, NULL, 0) == 0) {
-					if (!ign->noact) {
-						options |= HIST_IGN;
-						new->options = options;
-					}
-					activity = Activity_none;
+			if ((!ign->server ||
+					(histinfo->server && strcmp_n(ign->server, histinfo->server->name) == 0)) &&
+					(!ign->format || strcmp_n(format_get(new), ign->format) == 0) &&
+					regexec(&ign->regex, msg, 0, NULL, 0) == 0) {
+				if (!ign->noact) {
+					options |= HIST_IGN;
+					new->options = options;
 				}
+				activity = Activity_none;
 			}
 		}
 	}
 
-	if (strncmp(msg, "SELF_NEW_DAY", CONSTLEN("SELF_NEW_DAY")) != 0 && histinfo && histinfo->history &&
-			histinfo->history->timestamp < timestamp && !(histinfo->history->options & HIST_RLOG)) {
+	if (strcmp(msg, "SELF_NEW_DAY") != 0 &&
+			histinfo && histinfo->history &&
+			histinfo->history->timestamp < timestamp &&
+			!(histinfo->history->options & HIST_RLOG)) {
 		localtime_r(&histinfo->history->timestamp, &ptm);
 		localtime_r(&timestamp, &ctm);
 		if (ptm.tm_mday != ctm.tm_mday || ptm.tm_mon != ctm.tm_mon || ptm.tm_year != ctm.tm_year) {
@@ -194,10 +197,14 @@ hist_add(struct HistInfo *histinfo,
 	histinfo->history = new;
 
 ui:
-	if (options & HIST_SHOW && activity >= Activity_hilight && config_getl("misc.bell"))
+	if (options & HIST_SHOW &&
+			activity >= Activity_hilight &&
+			config_getl("misc.bell"))
 		beep();
 
-	if (histinfo && options & HIST_SHOW && activity > histinfo->activity && histinfo != selected.history) {
+	if (histinfo && options & HIST_SHOW &&
+			activity > histinfo->activity &&
+			histinfo != selected.history) {
 		histinfo->activity = activity;
 		windows[Win_buflist].refresh = 1;
 	}
