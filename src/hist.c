@@ -421,8 +421,7 @@ hist_loadlog(struct HistInfo *hist, char *server, char *channel) {
 			len += strlen(tok[6]) + 1;
 		if (*tok[7] != ' ')
 			len += strlen(tok[7]) + 1;
-		prefix = emalloc(len);
-		snprintf(prefix, len, "%s%s%s%s%s",
+		prefix = smprintf(len, "%s%s%s%s%s",
 				tok[5] ? tok[5] : "",
 				tok[6] ? "!" : "", tok[6] ? tok[6] : "",
 				tok[7] ? "@" : "", tok[7] ? tok[7] : "");

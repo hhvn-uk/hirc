@@ -78,8 +78,7 @@ complete_cmds(char *str, size_t len, char **ret, int *fullcomplete) {
 	for (i = 0; commands[i].name; i++)
 		if (strncmp(commands[i].name, str, len) == 0)
 			complete_add(ret, commands[i].name, fullcomplete);
-	tmp = emalloc(len + 2);
-	snprintf(tmp, len + 2, "/%s", str);
+	tmp = smprintf(len + 2, "/%s", str);
 	for (p = aliases; p; p = p->next)
 		if (strncmp(p->alias, tmp, len + 1) == 0)
 			complete_add(ret, p->alias + 1, fullcomplete);
@@ -236,9 +235,7 @@ getcmd:
 		pfree(&stem);
 
 		if (found) {
-			len = strlen(found) + 2;
-			p = emalloc(len);
-			snprintf(p, len, "/%s", found);
+			p = smprintf(strlen(found) + 2, "/%s", found);
 			pfree(&found);
 			found = p;
 
@@ -268,11 +265,10 @@ getcmd:
 			wstem = toks[1];
 
 			p = wctos(wstem);
-			if (type == 3) {
-				len = strlen(p) + CONSTLEN("format.") + 1;
-				stem = emalloc(len);
-				snprintf(stem, len, "format.%s", p);
-			} else stem = p;
+			if (type == 3)
+				stem = smprintf(strlen(p) + CONSTLEN("format.") + 1, "format.%s", p);
+			else
+				stem = p;
 			len = strlen(stem);
 
 			if (type == 1)
@@ -311,9 +307,7 @@ getcmd:
 		if (found) {
 			if (ctok == 0 && fullcomplete) {
 				hchar = config_gets("completion.hchar");
-				len = strlen(found) + strlen(hchar) + 1;
-				p = emalloc(len);
-				snprintf(p, len, "%s%s", found, hchar);
+				p = smprintf(strlen(found) + strlen(hchar) + 1, "%s%s", found, hchar);
 				pfree(&found);
 				found = p;
 			}

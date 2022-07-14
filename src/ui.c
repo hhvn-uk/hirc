@@ -974,8 +974,7 @@ ui_bind(char *binding, char *cmd) {
 	p->binding = estrdup(b);
 	p->wbinding = stowc(p->binding);
 	if (*cmd != '/') {
-		tmp = emalloc(strlen(cmd) + 2);
-		snprintf(tmp, strlen(cmd) + 2, "/%s", cmd);
+		tmp = smprintf(strlen(cmd) + 2, "/%s", cmd);
 		p->cmd = tmp;
 	} else {
 		p->cmd = estrdup(cmd);

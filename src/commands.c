@@ -721,8 +721,7 @@ command_format) {
 	}
 
 	len = strlen(str) + CONSTLEN("format.") + 1;
-	newstr = emalloc(len);
-	snprintf(newstr, len, "format.%s", str);
+	newstr = smprintf(len, "format.%s", str);
 	command_set(server, channel, newstr);
 	pfree(&newstr);
 }
@@ -797,12 +796,10 @@ command_server) {
 			hist_format(selected.history, Activity_none, HIST_UI, "SELF_AUTOCMDS_END %s :End of autocmds for %s",
 					nserver->name, nserver->name);
 		} else {
-			if (*arg == '/') {
+			if (*arg == '/')
 				cmd = arg;
-			} else {
-				cmd = emalloc(strlen(arg) + 2);
-				snprintf(cmd, strlen(arg) + 2, "/%s", arg);
-			}
+			else
+				cmd = smprintf(strlen(arg) + 2, "/%s", arg);
 
 			serv_auto_add(nserver, cmd);
 		}
@@ -1651,8 +1648,7 @@ idrange:
 				format = strdup(command_optarg);
 			} else {
 				len = strlen(command_optarg) + 8;
-				format = emalloc(len);
-				snprintf(format, len, "format.%s", command_optarg);
+				format = smprintf(len, "format.%s", command_optarg);
 			}
 
 			if (!config_gets(format)) {
@@ -1920,8 +1916,7 @@ alias_add(char *alias, char *cmd) {
 		return -1;
 
 	if (*alias != '/') {
-		tmp = emalloc(strlen(alias) + 2);
-		snprintf(tmp, strlen(alias) + 2, "/%s", alias);
+		tmp = smprintf(strlen(alias) + 2, "/%s", alias);
 	}
 
 	for (p = aliases; p; p = p->next)
@@ -1935,8 +1930,7 @@ alias_add(char *alias, char *cmd) {
 		p->alias = estrdup(alias);
 
 	if (*cmd != '/') {
-		tmp = emalloc(strlen(cmd) + 2);
-		snprintf(tmp, strlen(cmd) + 2, "/%s", cmd);
+		tmp = smprintf(strlen(cmd) + 2, "/%s", cmd);
 		p->cmd = tmp;
 	} else p->cmd = estrdup(cmd);
 	p->prev = NULL;
@@ -1956,8 +1950,7 @@ alias_remove(char *alias) {
 	if (!alias)
 		return -1;
 	if (*alias != '/') {
-		tmp = emalloc(strlen(alias) + 2);
-		snprintf(tmp, strlen(alias) + 2, "/%s", alias);
+		tmp = smprintf(strlen(alias) + 2, "/%s", alias);
 		alias = tmp;
 		/* tmp is guaranteed NULL or freeable */
 	};

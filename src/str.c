@@ -182,3 +182,16 @@ strrdate(time_t secs) {
 
 	return ret;
 }
+
+char *
+smprintf(size_t len, char *fmt, ...) {
+	char *ret;
+	va_list ap;
+
+	ret = emalloc(len);
+	va_start(ap, fmt);
+	vsnprintf(ret, len, fmt, ap);
+	va_end(ap);
+
+	return ret;
+}

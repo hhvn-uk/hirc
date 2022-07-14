@@ -64,6 +64,7 @@ char *		struntil(char *str, char until);
 int		strisnum(char *str, int allowneg);
 char *		strntok(char *str, char *sep, int n);
 char *		strrdate(time_t secs);
+char *		smprintf(size_t len, char *fmt, ...);
 
 /* mem.c */
 void		pfree_(void **ptr);

@@ -375,8 +375,7 @@ serv_read(struct Server *sp) {
 		case -1:
 			err = (char *)tls_error(sp->tls_ctx);
 			len = CONSTLEN("tls_read(): ") + strlen(err) + 1;
-			reason = emalloc(len);
-			snprintf(reason, len, "tls_read(): %s", err);
+			reason = smprintf(len, "tls_read(): %s", err);
 			/* fallthrough */
 		case 0:
 			serv_disconnect(sp, 1, "EOF");
@@ -398,8 +397,7 @@ serv_read(struct Server *sp) {
 		case -1:
 			err = estrdup(strerror(errno));
 			len = CONSTLEN("read(): ") + strlen(err) + 1;
-			reason = emalloc(len);
-			snprintf(reason, len, "read(): %s", err);
+			reason = smprintf(len, "read(): %s", err);
 			pfree(&err);
 			/* fallthrough */
 		case 0:
