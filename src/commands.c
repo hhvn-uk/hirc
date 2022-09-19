@@ -1222,7 +1222,7 @@ command_grep) {
 			p->rformat = emalloc(strlen(p->format) + 1);
 			/* since only one or zero characters are added to
 			 * rformat for each char in format, and both are the
-			 * same sie, there is no need to expand rformat or
+			 * same size, there is no need to expand rformat or
 			 * truncate it. */
 			for (i = 0, s = p->format; s && *s; s++) {
 				switch (*s) {

@@ -169,7 +169,9 @@ hist_add(struct HistInfo *histinfo,
 	if (strcmp(msg, "SELF_NEW_DAY") != 0 &&
 			histinfo && histinfo->history &&
 			histinfo->history->timestamp < timestamp &&
-			!(histinfo->history->options & HIST_RLOG)) {
+			!(histinfo->history->options & HIST_RLOG) &&
+			!(histinfo->history->options & HIST_GREP) &&
+			!(options & HIST_GREP)) {
 		localtime_r(&histinfo->history->timestamp, &ptm);
 		localtime_r(&timestamp, &ctm);
 		if (ptm.tm_mday != ctm.tm_mday || ptm.tm_mon != ctm.tm_mon || ptm.tm_year != ctm.tm_year) {
