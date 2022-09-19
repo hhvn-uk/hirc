@@ -333,7 +333,7 @@ command_mode) {
 	}
 
 	if (modes) {
-		if (chan == channel->name)
+		if (channel && chan == channel->name)
 			expect_set(server, Expect_nosuchnick, chan);
 		serv_write(server, Sched_connected, "MODE %s %s\r\n", chan, modes);
 	} else {
