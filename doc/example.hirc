@@ -1,17 +1,17 @@
-If you are using vim or forks thereof, a syntax file
-and an ftdetect file are included in hirc's repository under vim/, install
-these to .vim or .config/nvim to get syntax highlighting in this file.
+If you are using vim or forks thereof, a syntax file and an ftdetect file are
+included in hirc's repository under vim/, install these to .vim or .config/nvim
+to get syntax highlighting in this file.
 
 hirc config files will ignore any messages that do not begin with '/', so this
 is therefore a comment.
 
-When hirc is run with a config file as an argument, or the /source command is
-used, it will execute all commands contained in the file as though they were
-typed into the input (some output is suppressed). As such, there is no /reload
-command, as commands a user may not wish run multiple times will be run
-multiple times. A /source command does however exist, so it is conceivable that
-commands such as /set that are safe to run multiple times could be placed in
-their own file, and an alias could be created to source that file.
+When hirc is run with a config file as an argument, or the /source command
+is used, it will execute all commands contained in the file as though they
+were typed into the input (some output is suppressed). As such, there is
+no /reload command, as commands a user may not wish to run multiple times
+will be. A /source command does however exist, so it is conceivable that
+commands such as /set that are safe to run multiple times could be placed
+in their own file, and an alias could be created to source that file.
 
 hirc does not parse the config file, it only evaluates each line. This means
 that it has no concept of how the config file is layed out or wether commands
@@ -20,8 +20,8 @@ no /save either. The /dump command will attempt to print out a configuration
 file that represents the current state of the client, but it is not aware of
 things such as: comments; formatting and order of commands; or where commands
 were sourced from. It is recommended that you NEVER use /dump to write to any
-existing config files as the, but instead write to a temporary file and
-manually review it.
+existing config files, but instead write to a temporary file and manually
+review it.
 
 If you would like a config file containing all the defaults, start hirc without
 a config file, and use /dump -defaults <file>
