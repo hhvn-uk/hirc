@@ -430,7 +430,7 @@ raw:
 
 char *
 format(struct Window *window, char *format, struct History *hist) {
-	static char *ret;
+	char buf[4096];
 	char *ts;
 	char *rformat;
 	int x;
@@ -504,7 +504,6 @@ format(struct Window *window, char *format, struct History *hist) {
 	parse_dup(0); /* free memory in use for last parse_ */
 	for (i = 0; i < PARSE_LAST; i++)
 		pfree(&parse_out[i]);
-	pfree(&ret);
 	parse_in = rformat;
 	parse_divbool = divbool;
 
@@ -526,72 +525,75 @@ format(struct Window *window, char *format, struct History *hist) {
 		alen[i] = parse_out[i] ? strlen(parse_out[i]) : 0;
 	}
 
-	/* Space for padding is allocated here (see how len is incremented using pad) */
 	if (divbool) {
-		len = alen[PARSE_TIME] + alen[PARSE_LEFT] + alen[PARSE_RIGHT] + strlen(divstr) + 1;
-		if (clen[PARSE_LEFT] < divlen)
-			len += divlen - clen[PARSE_LEFT];
-		if (window) {
+		if (window)
 			pad = clen[PARSE_TIME] + divlen + ui_strlenc(NULL, divstr, NULL) + 1;
-			len += ((clen[PARSE_RIGHT] + 1) / (window->w - pad)) * pad + 1;
-		}
-		ret = emalloc(len);
-		snprintf(ret, len, "%1$s %2$*3$s%4$s%5$s",
+		snprintf(buf, sizeof(buf), "%1$s %2$*3$s%4$s%5$s",
 				parse_out[PARSE_TIME] ? parse_out[PARSE_TIME] : "",
 				parse_out[PARSE_LEFT] ? parse_out[PARSE_LEFT] : "", divlen + alen[PARSE_LEFT] - clen[PARSE_LEFT],
 				divstr,
 				parse_out[PARSE_RIGHT]);
 	} else {
 		/* If divbool is zero, then all text is in either PARSE_TIME or PARSE_RIGHT */
-		len = alen[PARSE_TIME] + alen[PARSE_RIGHT] + 1;
-		if (window) {
+		if (window)
 			pad = clen[PARSE_TIME];
-			len += ((clen[PARSE_RIGHT] + 1) / (window->w - pad)) * pad;
-		}
-		ret = emalloc(len);
-		snprintf(ret, len, "%s%s",
+		snprintf(buf, sizeof(buf), "%s%s",
 				parse_out[PARSE_TIME] ? parse_out[PARSE_TIME] : "",
 				parse_out[PARSE_RIGHT] ? parse_out[PARSE_RIGHT] : "");
 	}
 
+	/* Previously this function would attempt to calculate the size needed and allocate a string for it.
+	 * Now it uses a buffer and duplicates the string that is written to the buffer. This should be fine
+	 * since IRC messages are capped at 512 bytes long, leaving plenty of space in 4096 bytes to write
+	 * the formatted string to. */
+
 	if (window) {
-		for (i = x = 0; ret[i]; i++) {
+		for (i = x = 0; buf[i]; i++) {
+			if (i >= sizeof(buf) - 6) { /* 6 due to ^C handling */
+				ui_error("The buffer was too small to fit a string. Somehow.", NULL);
+				break;
+			}
+
 			/* taken from ui_strlenc */
-			switch (ret[i]) {
+			switch (buf[i]) {
 			case 2: case 9: case 15: case 18: case 21:
 				break;
 			case 3:  /* ^C */
-				if (ret[i] && isdigit(ret[i+1]))
+				if (buf[i] && isdigit(buf[i+1]))
 					i += 1;
-				if (ret[i] && isdigit(ret[i+1]))
+				if (buf[i] && isdigit(buf[i+1]))
 					i += 1;
-				if (ret[i] && ret[i+1] == ',' && isdigit(ret[i+2]))
+				if (buf[i] && buf[i+1] == ',' && isdigit(buf[i+2]))
 					i += 2;
-				if (ret[i] && i && ret[i-1] == ',' && isdigit(ret[i+1]))
+				if (buf[i] && i && buf[i-1] == ',' && isdigit(buf[i+1]))
 					i += 1;
 				break;
 			default:
-				if ((ret[i] & 0xC0) != 0x80)
-					while ((ret[i + 1] & 0xC0) == 0x80)
+				if ((buf[i] & 0xC0) != 0x80)
+					while ((buf[i + 1] & 0xC0) == 0x80 && i < sizeof(buf))
 						i++;
 				x++;
 			}
 
 			if (x == window->w) {
 				x = 0;
-				memmove(ret + i + pad, ret + i, strlen(ret + i) + 1);
+				if (i + pad + strlen(buf + i) >= sizeof(buf) - 1)
+					break;
+				memmove(buf + i + pad, buf + i, strlen(buf + i) + 1);
 				if (parse_out[PARSE_TIME])
-					memset(ret + i + 1, ' ', clen[PARSE_TIME]);
+					memset(buf + i + 1, ' ', clen[PARSE_TIME]);
 				if (divbool) {
-					memset(ret + i + 1 + clen[PARSE_TIME], ' ', pad - clen[PARSE_TIME]);
-					memcpy(ret + i + 1 + pad - strlen(divstr), divstr, strlen(divstr));
+					memset(buf + i + 1 + clen[PARSE_TIME], ' ', pad - clen[PARSE_TIME]);
+					memcpy(buf + i + 1 + pad - strlen(divstr), divstr, strlen(divstr));
 				}
 				/* no need to increment i, as all the text
-				 * inserted here is after ret[i] and will be
+				 * inserted here is after buf[i] and will be
 				 * counted in this for loop */
 			}
 		}
 	}
 
-	return ret;
+	buf[i] = '\0';
+
+	return estrdup(buf);
 }
